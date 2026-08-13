@@ -198,7 +198,7 @@ describe('LocaleRuntime', () => {
     stubLanguages('zh-Hant-TW')
     expect(make().svc.getLocale().active).toBe('zh')
     stubLanguages('ko-KR')
-    expect(make().svc.getLocale().active).toBe('ko')
+    expect(make().svc.getLocale().active).toBe('zh')
     // An unshipped language walks the list to the first one this app ships.
     stubLanguages('fr-FR', 'en-US')
     expect(make().svc.getLocale().active).toBe('en')
@@ -232,12 +232,47 @@ describe('LocaleRuntime', () => {
     expect(svc.getLocale().active).toBe('zh')
   })
 
-  it('exposes the shipped locales with self-described labels', () => {
+  it('exposes the base locales with self-described labels', () => {
     const { svc } = make()
     expect(svc.getLocale().locales).toEqual([
       { id: 'zh', label: '中文' },
       { id: 'en', label: 'English' },
-      { id: 'ko', label: '한국어' },
     ])
+  })
+
+  it('registers and removes a language-pack locale, adopting a waiting browser preference', () => {
+    stubLanguages('ko-KR')
+    const { svc, events } = make()
+    const dispose = svc.registerLocale({ id: 'ko', label: '한국어' })
+    expect(svc.getLocale()).toMatchObject({
+      active: 'ko',
+      locales: [
+        { id: 'zh', label: '中文' },
+        { id: 'en', label: 'English' },
+        { id: 'ko', label: '한국어' },
+      ],
+    })
+    expect(events).toHaveLength(1)
+    expect(() => svc.registerLocale({ id: 'ko', label: '한국어' })).toThrow('already registered')
+    dispose()
+    expect(svc.getLocale().active).toBe('zh')
+    expect(svc.getLocale().locales.map(locale => locale.id)).toEqual(['zh', 'en'])
+    dispose()
+  })
+
+  it('adopts a stored language-pack preference when that locale registers', () => {
+    const host = stubSettingsScope<LocaleSettings>()
+    host.publish({ status: 'ready', value: { preference: 'ko' }, revision: 1, writable: true })
+    const { svc } = make(host)
+    expect(svc.getLocale().active).toBe('zh')
+    svc.registerLocale({ id: 'ko', label: '한국어' })
+    expect(svc.getLocale().active).toBe('ko')
+  })
+
+  it('rejects empty and duplicate locale definitions', () => {
+    const { svc } = make()
+    expect(() => svc.registerLocale({ id: '', label: 'Empty' })).toThrow('id must not be empty')
+    expect(() => svc.registerLocale({ id: 'fr', label: '' })).toThrow('label must not be empty')
+    expect(() => svc.registerLocale({ id: 'en', label: 'English' })).toThrow('already registered')
   })
 })

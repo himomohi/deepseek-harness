@@ -8,7 +8,6 @@ import { SessionLogDownloadController } from './controller.ts'
 import type { SessionLogDownloadDialogInjected } from './Dialog.tsx'
 import { SessionLogDownloadHeaderAction } from './HeaderAction.tsx'
 import { en, NS, zh, type SessionLogDownloadKey } from './locales.ts'
-import { ko } from './ko.ts'
 
 declare module '@deepseek-ai/cordis' {
   interface Context {
@@ -34,7 +33,7 @@ export function apply(ctx: ClientContext): void {
   const controller = new SessionLogDownloadController()
   ctx.provide('sessionLogDownload', controller)
   ctx.effect(() => async () => { await controller.dispose() }, 'session-log-download: browser download lifecycle')
-  ctx.effect(() => ctx.locale.register(NS, { zh, en, ko }), 'session-log-download: browser dictionaries')
+  ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'session-log-download: browser dictionaries')
   ctx.on('command/executed', (sessionId, commandName, result) => {
     if (commandName === 'export' && result.kind === 'success') void controller.download(sessionId)
   })

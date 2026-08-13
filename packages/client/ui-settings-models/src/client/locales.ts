@@ -198,4 +198,3 @@ export const zh: { [Key in keyof typeof en]: string } = {
   onboardingSaving: '保存中…',
   keyRequired: '请输入 API 密钥后继续。',
 }
-export { ko } from './ko.ts'

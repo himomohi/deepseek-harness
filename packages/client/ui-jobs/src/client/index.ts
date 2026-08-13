@@ -8,7 +8,6 @@ import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client'
 import { JobListAction } from './JobListAction.tsx'
 import type {} from '@deepseek-ai/dsh-client-locale/client'
 import { en, NS, zh, type JobKey } from './locales.ts'
-import { ko } from './ko.ts'
 
 declare module '@deepseek-ai/dsh-client-ui-slots' {
   interface LocaleNamespaceMap {
@@ -27,7 +26,7 @@ export const inject = ['sessions', 'slots', 'locale']
  * @param ctx - client root context.
  */
 export function apply(ctx: ClientContext): void {
-  ctx.effect(() => ctx.locale.register(NS, { zh, en, ko }), 'ui-job: dictionaries')
+  ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'ui-job: dictionaries')
   ctx.slots.inject(
     'conversation.session.header.actions',
     () => ctx.slots.register({

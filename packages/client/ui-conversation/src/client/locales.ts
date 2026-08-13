@@ -342,4 +342,3 @@ export const en = {
   'clock.md': '{m}/{d}',
   'clock.ymd': '{y}-{m}-{d}',
 } satisfies Record<ConversationKey, string>
-export { ko } from './ko.ts'

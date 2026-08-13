@@ -1,0 +1,4 @@
+# Install the Korean browser language pack after the Web bundle.
+- insert:
+    - id: locale-ko
+      name: '@deepseek-ai/dsh-client-locale-ko'

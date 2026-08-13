@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-client-locale",
-  "description": "Locale plugin: Host-backed zh/en/ko preference, browser-derived fallback, locale snapshots, and typed namespace dictionaries",
+  "description": "Extensible locale plugin: Host-backed preference, browser-derived fallback, locale snapshots, and typed namespace dictionaries",
   "version": "0.1.0-rc.5",
   "publishConfig": {
     "access": "public"

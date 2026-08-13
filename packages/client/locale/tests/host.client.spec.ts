@@ -23,7 +23,10 @@ describe('locale host', () => {
     expect(ctx.settings.get(ns)).toEqual({})
     await ctx.settings.update(ns, { preference: 'en' })
     expect(ctx.settings.get(ns)).toEqual({ preference: 'en' })
-    await expect(ctx.settings.update(ns, { preference: 'fr' })).rejects.toThrow()
+    // Language-pack ids are stored before their browser plugin is available;
+    // LocaleRuntime activates the value only after that locale registers.
+    await ctx.settings.update(ns, { preference: 'fr' })
+    expect(ctx.settings.get(ns)).toEqual({ preference: 'fr' })
     await fiber.dispose()
     expect(ctx.settings.describe().map(row => row.ns)).not.toContain(ns)
   })

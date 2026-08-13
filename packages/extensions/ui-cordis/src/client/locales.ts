@@ -117,4 +117,3 @@ export const en = {
   'body.copy': 'Copy',
   'body.copied': 'Copied',
 } satisfies Record<CordisKey, string>
-export { ko } from './ko.ts'

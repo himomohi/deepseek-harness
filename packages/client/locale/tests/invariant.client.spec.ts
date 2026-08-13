@@ -34,6 +34,5 @@ describe('invariant companion', () => {
     // Seeded dictionaries occupy the (ns, locale) seats even while empty.
     expect(() => (locale as LocaleRuntime).register(COMMON_NS, 'zh', {})).toThrow('already has locale')
     expect(() => (locale as LocaleRuntime).register(COMMON_NS, 'en', {})).toThrow('already has locale')
-    expect(() => (locale as LocaleRuntime).register(COMMON_NS, 'ko', {})).toThrow('already has locale')
   })
 })

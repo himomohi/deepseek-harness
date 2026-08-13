@@ -36,4 +36,3 @@ export const en = {
   'plan.decline': 'Refuse',
   'plan.discuss': 'Chat about it',
 } satisfies Record<QuestionKey, string>
-export { ko } from './ko.ts'

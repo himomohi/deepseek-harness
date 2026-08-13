@@ -4,11 +4,6 @@
  * preference row into the settings General section — the locale feature owns
  * its own settings surface.
  */
-/* oxlint-disable typescript/no-redundant-type-constituents --
- * `keyof LocaleNamespaceMap & string` is the declare-merge key pattern (see
- * ui-slots): in THIS unit the map holds only this package's own merges, but
- * consumers merge more namespaces in and the intersection keeps them
- * string-typed. The rule fires on the narrow-map view, not real redundancy. */
 import type { Context } from '@deepseek-ai/cordis'
 import {
   type BoundActions, type LocaleDictOf, type LocaleNamespaceMap, type Translate, type TranslateNS,
@@ -19,13 +14,12 @@ import type { ClientContext, SettingsScope } from '@deepseek-ai/dsh-client-runti
 // (client bundle purity gate).
 import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
 import {
-  LOCALE_PREFERENCE_FIELD, LOCALE_SETTINGS_NAMESPACE, type LocaleId, type LocaleSettings,
+  type BaseLocaleId, LOCALE_PREFERENCE_FIELD, LOCALE_SETTINGS_NAMESPACE, type LocaleId, type LocaleSettings,
 } from '../locale-settings.ts'
-import { en, ko, zh, type CommonKey } from '../locales/index.ts'
+import { en, zh, type CommonKey } from '../locales/index.ts'
 import {
   en as settingsEn, zh as settingsZh, type SettingsLocaleKey,
 } from '../locales/settings.ts'
-import { ko as settingsKo } from '../locales/settings-ko.ts'
 import type { LanguageRowInjected } from './LanguageRow.tsx'
 import { LanguageRow } from './LanguageRow.tsx'
 import { createLanguageRowStore } from './settings-store.ts'
@@ -33,7 +27,7 @@ import { createLanguageRowStore } from './settings-store.ts'
 export type { LanguageRowComponentProps, LanguageRowInjected } from './LanguageRow.tsx'
 export type { LanguageOptionRow, LanguageRowState } from './settings-store.ts'
 export type { CommonKey } from '../locales/index.ts'
-export type { LocaleId, LocaleSettings } from '../locale-settings.ts'
+export type { BaseLocaleId, LocaleId, LocaleSettings } from '../locale-settings.ts'
 
 // The translate currency lives in ui-slots (the render machinery synthesizes
 // the seat); re-exported here so dictionary owners import one package.
@@ -56,7 +50,7 @@ export type LocaleDict = Record<string, string>
 export interface LocaleDefinition {
   /** Locale id (persisted; the setLocale argument). */
   id: LocaleId
-  /** Display name in its own language (中文 / English / 한국어). */
+  /** Display name in its own language. */
   label: string
 }
 
@@ -96,11 +90,10 @@ export const COMMON_NS = 'common'
 /** Namespace owning this feature's settings-row copy. */
 export const SETTINGS_NS = 'settings.locale'
 
-/** The shipped locales. */
-const LOCALES: readonly LocaleDefinition[] = Object.freeze([
+/** Locales supplied by the base locale plugin. */
+const BASE_LOCALES: readonly LocaleDefinition[] = Object.freeze([
   { id: 'zh', label: '中文' },
   { id: 'en', label: 'English' },
-  { id: 'ko', label: '한국어' },
 ])
 
 /**
@@ -120,8 +113,8 @@ export class LocaleRuntime {
   private listeners = new Set<() => void>()
   private readonly ctx: Context
   private readonly host: SettingsScope<LocaleSettings> | undefined
-  /** Browser-derived locale standing wherever no explicit Host selection does. */
-  private readonly provisional: LocaleId
+  /** Ordered browser language tags consulted as language packs register. */
+  private readonly preferred: readonly LocaleId[]
 
   /**
    * @param ctx - owning context (change events are emitted on it; the scope
@@ -132,8 +125,9 @@ export class LocaleRuntime {
   constructor(ctx: Context, host?: SettingsScope<LocaleSettings>) {
     this.ctx = ctx
     this.host = host
-    this.provisional = resolveInitialLocale()
-    this.snapshot = Object.freeze({ active: this.provisional, locales: LOCALES, revision: 0 })
+    this.preferred = detectBrowserLocales()
+    const active = this.preferred.find(id => BASE_LOCALES.some(locale => locale.id === id)) ?? FALLBACK_LOCALE
+    this.snapshot = Object.freeze({ active, locales: BASE_LOCALES, revision: 0 })
     if (host !== undefined) {
       ctx.effect(() => host.subscribe(() => { this.adopt(host) }), 'locale: settings scope adoption')
       this.adopt(host)
@@ -182,6 +176,33 @@ export class LocaleRuntime {
   }
 
   /**
+   * Add one selectable locale supplied by a language-pack plugin.
+   * Browser and stored preferences waiting for this id become active as soon
+   * as the registration completes.
+   * @param definition - stable locale id and self-described label.
+   * @returns disposer removing this registration.
+   */
+  registerLocale(definition: LocaleDefinition): () => void {
+    if (definition.id.length === 0) throw new Error('locale id must not be empty')
+    if (definition.label.length === 0) throw new Error(`locale "${definition.id}" label must not be empty`)
+    if (this.snapshot.locales.some(locale => locale.id === definition.id)) {
+      throw new Error(`locale "${definition.id}" is already registered`)
+    }
+    const registered = Object.freeze({ ...definition })
+    const locales = Object.freeze([...this.snapshot.locales, registered])
+    const stored = this.host?.getSnapshot().value?.preference
+    const activate = stored === registered.id
+      || (stored === undefined && this.preferred.includes(registered.id))
+    this.publish(activate ? registered.id : this.snapshot.active, activate, locales)
+    return () => {
+      if (!this.snapshot.locales.includes(registered)) return
+      const nextLocales = Object.freeze(this.snapshot.locales.filter(locale => locale !== registered))
+      const active = this.snapshot.active === registered.id ? FALLBACK_LOCALE : this.snapshot.active
+      this.publish(active, active !== this.snapshot.active, nextLocales)
+    }
+  }
+
+  /**
    * Adopt the scope's accepted durable selection without writing it back; an
    * absent selection returns to the browser-derived locale.
    * @param host - the constructor-narrowed scope driving this adoption.
@@ -189,7 +210,10 @@ export class LocaleRuntime {
   private adopt(host: SettingsScope<LocaleSettings>): void {
     const section = host.getSnapshot().value
     if (section === undefined) return
-    const target = section.preference ?? this.provisional
+    const target = section.preference
+      ?? this.preferred.find(id => this.snapshot.locales.some(locale => locale.id === id))
+      ?? FALLBACK_LOCALE
+    if (!this.snapshot.locales.some(locale => locale.id === target)) return
     if (this.snapshot.active === target) return
     this.publish(target, true)
   }
@@ -206,7 +230,8 @@ export class LocaleRuntime {
    * @param dicts - complete dictionaries keyed by locale id.
    * @returns disposer removing every locale registered by this call (idempotent).
    */
-  register<N extends keyof LocaleNamespaceMap & string>(ns: N, dicts: Record<LocaleId, LocaleDictOf<N>>): () => void
+  // oxlint-disable-next-line typescript/no-redundant-type-constituents -- consumers declaration-merge more namespaces into the map.
+  register<N extends keyof LocaleNamespaceMap & string>(ns: N, dicts: Record<BaseLocaleId, LocaleDictOf<N>>): () => void
   /**
    * Single-locale untyped form for namespaces outside the merge table
    * (dynamic composition, tests).
@@ -256,6 +281,7 @@ export class LocaleRuntime {
    * @param ns - a namespace merged into LocaleNamespaceMap.
    * @returns the typed translate function (reads the active locale at call time).
    */
+  // oxlint-disable-next-line typescript/no-redundant-type-constituents -- consumers declaration-merge more namespaces into the map.
   bind<N extends keyof LocaleNamespaceMap & string>(ns: N): TranslateNS<N>
   /**
    * Untyped form for namespaces outside the merge table (dynamic
@@ -295,10 +321,14 @@ export class LocaleRuntime {
    * registration-heavy boot cannot storm event listeners (which may
    * re-register slots in response).
    */
-  private publish(active: LocaleId, localeChanged: boolean): void {
+  private publish(
+    active: LocaleId,
+    localeChanged: boolean,
+    locales: readonly LocaleDefinition[] = this.snapshot.locales,
+  ): void {
     this.snapshot = Object.freeze({
       active,
-      locales: this.snapshot.locales,
+      locales,
       revision: this.snapshot.revision + 1,
     })
     if (localeChanged) this.ctx.emit('locale/change', this.snapshot)
@@ -318,31 +348,20 @@ export class LocaleRuntime {
  * The browser's own language wins over {@link FALLBACK_LOCALE}; an explicit
  * Host preference may replace this provisional value after plugin activation.
  */
-function resolveInitialLocale(): LocaleId {
-  return detectBrowserLocale() ?? FALLBACK_LOCALE
-}
-
 /**
- * The first shipped locale the browser asks for, matched on the primary
- * subtag so every regional variant lands on its language (`zh-Hans-CN` -> zh,
- * `en-GB` -> en). `window` is the browser test, not `navigator`: Node exposes
- * a global `navigator` reporting the machine's own language, which would
- * otherwise decide the locale for non-browser runs (node e2e booting the
- * client tree). `navigator.language` trails the ordered `languages` list and
- * covers its absence on hosts that expose only the single tag.
+ * Browser languages reduced to ordered primary subtags. A later language-pack
+ * registration can therefore satisfy a preference unavailable at base boot.
  */
-function detectBrowserLocale(): LocaleId | undefined {
-  if (typeof window === 'undefined') return undefined
-  /* oxlint-disable-next-line typescript/no-unnecessary-condition --
-   * The DOM lib types `languages` as always present; embedders and older
-   * WebViews ship a Navigator without it, and spreading undefined would
-   * throw at boot. */
-  for (const tag of [...(navigator.languages ?? []), navigator.language]) {
-    const primary = tag.toLowerCase().split('-')[0]
-    const match = LOCALES.find(locale => locale.id === primary)
-    if (match) return match.id
-  }
-  return undefined
+function detectBrowserLocales(): readonly LocaleId[] {
+  if (typeof window === 'undefined') return []
+  const languages = (navigator as unknown as {
+    readonly languages?: readonly string[]
+  }).languages ?? []
+  return [...new Set(
+    [...languages, navigator.language]
+      .map(tag => tag.toLowerCase().split('-')[0])
+      .filter((tag): tag is string => tag !== undefined && tag.length > 0),
+  )]
 }
 
 /** Required services: slot registration plus the settings transport. */
@@ -357,8 +376,8 @@ export const inject = ['slots', 'connection', 'remote', 'settingsScope']
 export function apply(ctx: ClientContext): void {
   const host = ctx.settingsScope.bind<LocaleSettings>({ namespace: LOCALE_SETTINGS_NAMESPACE })
   const locale = new LocaleRuntime(ctx, host)
-  locale.register(COMMON_NS, { zh, en, ko })
-  locale.register(SETTINGS_NS, { zh: settingsZh, en: settingsEn, ko: settingsKo })
+  locale.register(COMMON_NS, { zh, en })
+  locale.register(SETTINGS_NS, { zh: settingsZh, en: settingsEn })
   ctx.provide('locale', locale)
   // The service IS the LocaleFace (bind + getSnapshot/subscribe): install it
   // so the render machinery can synthesize the `t` standard seat.
@@ -373,7 +392,7 @@ export function apply(ctx: ClientContext): void {
       snapshot.revision,
     )
   }
-  ctx.on('locale/change', sync)
+  ctx.effect(() => locale.subscribe(() => { sync(locale.getLocale()) }), 'locale: language row snapshot')
   const injected = (actions: BoundActions<typeof store>): LanguageRowInjected => {
     bound = actions
     // Re-sync from the getter so no event is lost between registration and

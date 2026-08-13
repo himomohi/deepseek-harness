@@ -23,4 +23,3 @@ export const en = {
   'row.instructions': 'Instructions',
   'menu.userOnly': 'user-only',
 } satisfies Record<SkillKey, string>
-export { ko } from './ko.ts'

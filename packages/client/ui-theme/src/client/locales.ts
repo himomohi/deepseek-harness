@@ -18,4 +18,3 @@ export const en = {
   'appearance.dark': 'Dark',
   'appearance.system': 'System',
 } satisfies Record<ThemeKey, string>
-export { ko } from './ko.ts'

@@ -138,4 +138,3 @@ export const en = {
   'time.years': '{n}y',
   'time.ago': '{t} ago',
 } satisfies Record<WorkspaceKey, string>
-export { ko } from './ko.ts'

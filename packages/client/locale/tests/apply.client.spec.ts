@@ -119,7 +119,7 @@ describe('locale apply', () => {
     const { entry, instance, face } = faceOf(b.slots)
     // The inject-time re-sync sealed the init window: the mirror is current.
     expect(instance.getSnapshot().active).toBe('en')
-    expect(instance.getSnapshot().options.map(o => o.id)).toEqual(['zh', 'en', 'ko'])
+    expect(instance.getSnapshot().options.map(o => o.id)).toEqual(['zh', 'en'])
     // Copy rides the standard locale seat: the entry declares the namespace.
     expect(entry.locale).toBe(SETTINGS_NS)
     expect(locale.bind(SETTINGS_NS)('language.title')).toBe('Language')
@@ -128,11 +128,7 @@ describe('locale apply', () => {
     expect(locale.getLocale().active).toBe('zh')
     expect(instance.getSnapshot().active).toBe('zh')
     expect(locale.bind(SETTINGS_NS)('language.title')).toBe('语言')
-    face.setLocale('ko')
-    expect(locale.getLocale().active).toBe('ko')
-    expect(instance.getSnapshot().active).toBe('ko')
-    expect(locale.bind(SETTINGS_NS)('language.title')).toBe('언어')
-    await vi.waitFor(() => { expect(b.mutate).toHaveBeenCalledTimes(3) })
+    await vi.waitFor(() => { expect(b.mutate).toHaveBeenCalledTimes(2) })
   })
 
   it('loads and refreshes the explicit Host preference after nonblocking activation', async () => {
