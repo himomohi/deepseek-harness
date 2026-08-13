@@ -22,3 +22,4 @@ export const en = {
   'openDocument.error': 'Could not open configuration file',
   'general.nav': 'General',
 } satisfies Record<SettingsKey, string>
+export { ko } from './ko.ts'

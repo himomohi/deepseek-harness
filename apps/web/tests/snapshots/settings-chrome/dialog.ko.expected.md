@@ -1,0 +1,45 @@
+- dialog "설정":
+  - navigation:
+    - text: 설정
+    - button "일반":
+      - img
+      - text: 일반
+    - button "모델":
+      - img
+      - text: 모델
+    - button "플러그인":
+      - img
+      - text: 플러그인
+    - button "에이전트 프리셋":
+      - img
+      - text: 에이전트 프리셋
+  - button "설정 파일 열기"
+  - button "닫기":
+    - img
+    - text: 닫기
+  - text: 에이전트 프리셋 새로 시작하는 세션에 적용됩니다. 이미 실행 중인 세션은 시작할 때 설정된 프리셋을 유지합니다.
+  - button "표준 모드":
+    - text: 표준 모드
+    - img
+  - text: 권한 새 세션의 기본 권한 모드를 선택하세요
+  - button "Workspace Write":
+    - text: Workspace Write
+    - img
+  - text: 언어
+  - button "한국어":
+    - text: 한국어
+    - img
+  - text: 테마
+  - button "라이트":
+    - img
+    - text: 라이트
+  - button "다크":
+    - img
+    - text: 다크
+  - button "시스템" [pressed]:
+    - img
+    - text: 시스템
+  - text: 실행 중 Enter 키 동작 에이전트가 실행 중일 때만 적용됩니다. Cmd/Ctrl+Enter는 다른 동작을 사용합니다
+  - button "대기열":
+    - text: 대기열
+    - img

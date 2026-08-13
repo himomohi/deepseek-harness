@@ -11,7 +11,11 @@ import { createLanguageRowStore } from '../src/client/settings-store.ts'
 
 afterEach(cleanup)
 
-const OPTIONS = [{ id: 'zh', label: '中文' }, { id: 'en', label: 'English' }]
+const OPTIONS = [
+  { id: 'zh', label: '中文' },
+  { id: 'en', label: 'English' },
+  { id: 'ko', label: '한국어' },
+]
 
 /** Empty global standard-kit hooks (the row reads neither). */
 function emptySessions() {
@@ -61,6 +65,13 @@ describe('LanguageRow', () => {
     expect(b.setLocale).toHaveBeenCalledWith('zh')
     expect(trigger.getAttribute('aria-expanded')).toBe('false')
     expect(screen.queryByRole('menuitem', { name: '中文' })).toBeNull()
+  })
+
+  it('selects Korean from the language menu', () => {
+    const b = mount('en')
+    fireEvent.click(screen.getByRole('button', { name: /English/ }))
+    fireEvent.click(screen.getByRole('menuitem', { name: '한국어' }))
+    expect(b.setLocale).toHaveBeenCalledWith('ko')
   })
 
   it('closes on outside pointerdown without selecting', () => {

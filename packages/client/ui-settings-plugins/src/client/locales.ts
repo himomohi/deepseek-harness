@@ -93,3 +93,4 @@ export const zh: Record<PluginsSettingsLocaleKey, string> = {
   webSearchMaxUses: '单次请求最多搜索次数',
   webSearchMaxUsesHint: '一次请求在必须作答前最多可以搜索多少次。',
 }
+export { ko } from './ko.ts'

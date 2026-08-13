@@ -18,3 +18,4 @@ export const en = {
   'chip.off.aria': 'Plan mode off, press to turn on',
   'chip.off.title': 'Plan mode off — click to turn on (/plan)',
 } satisfies Record<PlanKey, string>
+export { ko } from './ko.ts'

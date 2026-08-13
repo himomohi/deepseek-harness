@@ -23,6 +23,7 @@ import { ZH_BROWSER_LOCALE, saveFailureShot } from './support.ts'
 
 const SNAPSHOT_DIR = fileURLToPath(new URL('./snapshots/settings-chrome', import.meta.url))
 const DIALOG_EXPECTED = join(SNAPSHOT_DIR, 'dialog.expected.md')
+const KOREAN_DIALOG_EXPECTED = join(SNAPSHOT_DIR, 'dialog.ko.expected.md')
 const PLUGINS_EXPECTED = join(SNAPSHOT_DIR, 'plugins.expected.md')
 const PLUGIN_ROW_SELECTOR = '[data-plugin-entry$="ui-settings"]'
 const MODE = webSnapshotMode()
@@ -478,8 +479,35 @@ describe('web e2e: settings modal and General preferences', () => {
     }
   }, 90_000)
 
+  it('opens a Korean browser in Korean without any stored preference', async () => {
+    const fresh = await launchWebScaffold({})
+    const koPage = await browser.newPage({ viewport: { width: 1680, height: 1000 }, locale: 'ko-KR' })
+    const koTripwire = watchConsole(koPage)
+    onTestFailed(() => saveFailureShot(koPage, 'web-e2e-settings-browser-language-ko'))
+    try {
+      await koPage.goto(fresh.baseUrl, { waitUntil: 'load' })
+      await koPage.waitForSelector('[class*="frame"]', { timeout: 30_000 })
+      expect(await koPage.evaluate(() => localStorage.getItem('dsh.locale'))).toBeNull()
+      await koPage.getByRole('button', { name: '설정', exact: true }).click()
+      const dialog = koPage.getByRole('dialog', { name: '설정' })
+      await dialog.waitFor({ timeout: 10_000 })
+      await dialog.getByRole('button', { name: '한국어' }).waitFor({ timeout: 10_000 })
+      const snapshot = await captureStableAria(koPage, '[role="dialog"]', fresh.workspaceCwd)
+      await compareOrRefreshGolden(KOREAN_DIALOG_EXPECTED, snapshot, MODE)
+      expect(koTripwire.pageErrors).toEqual([])
+      expect(koTripwire.warnings).toEqual([])
+    } finally {
+      await koPage.close()
+      await fresh.close()
+    }
+  }, 90_000)
+
   it.skipIf(MODE === 'record')('keeps the fixture inventory closed', async () => {
     expect(tripwire.warnings).toEqual([])
-    await assertFixtureInventory(SNAPSHOT_DIR, ['dialog.expected.md', 'plugins.expected.md'])
+    await assertFixtureInventory(SNAPSHOT_DIR, [
+      'dialog.expected.md',
+      'dialog.ko.expected.md',
+      'plugins.expected.md',
+    ])
   })
 })

@@ -12,7 +12,7 @@ typed locale 标准席位（`locale:` 注册声明 → 框架注入强类型 `t`
 
 **注册期文本走 label thunk。** ui-slots 的 list 注册项 `label` 接受 `SlotLabel = string | (() => string)`；owner 投影 ledger 行时必须经 `resolveSlotLabel` 解析（不裸读 `options.label`），并让读取点跟随 locale revision（outlet 自身订阅 revision；ledger 外的投影如 ui-settings 导航把 revision 并进缓存键、订阅双源）。thunk 每次读取时求值，语言切换零 ledger churn——没有重注册、version 不动，`locale/change` 重注册接线全部删除。
 
-**组件文案走标准 `t` 席位；深层子组件用 prop 下传**，类型写 `XxxProps['t']`。字典规范形态不变：`zh satisfies Record<string, string>` 为 key 源、`en satisfies Record<XxxKey, string>` 锁双语平衡。
+**组件文案走标准 `t` 席位；深层子组件用 prop 下传**，类型写 `XxxProps['t']`。字典规范以 `zh satisfies Record<string, string>` 为 key 源，并按同一 key 集校验所有随产品提供的字典。
 
 **zero-cordis 原子组件（ui-primitives）文案 props 化**：`HoverCard` 的 `copyLabel`/`copiedLabel`、`TerminalBlock`/`JsonTree` 的 `labels`、`CodeBlock` 的 `copyLabel`/`copiedLabel`、`MarkdownText` 的 `codeLabels`、`JsonBlock` 的 `truncatedLabel`、`ConnectionBanner` 的 `label`、`Modal` 的 `closeLabel`——默认值即原硬编码字符串，不传 props 的消费方渲染逐字节不变。已本地化的插件从自己的 `t` 席位传字典驱动的 label；传对象 props 的调用点按 `t` 身份 memo（`MarkdownText` 的组件表按 `codeLabels` 身份缓存）。
 
@@ -20,7 +20,7 @@ typed locale 标准席位（`locale:` 注册声明 → 框架注入强类型 `t`
 
 - **错误/失败类字符串一律英文**：client 自产的兜底串（`command failed`、plan 切换失败）、RpcError 消息、wire 透出的 `error.message (code)` 原样呈现。
 - **设计字面量不进字典**：工具行 variant 标题（Think/Bash/…）、SYSTEM/USER 类 kind 徽标、Plan chip 字标、整个 StatsLine——中英界面显示一致。
-- **ui-trajectory 整包缓做**（开发者检查面，术语密集，单独裁决）。
+- **ui-trajectory 与其他 client 包使用同一 locale 注册表**，包括其检查工具栏的专用术语。
 - **boot 文案保持硬编码**（AppRoot 渲染早于 locale 服务可用）。
 
 **派生层保持纯函数，本地化只在渲染层**：ui-workspace 的 `relativeTime` 返回结构化 `{unit, n}` 由渲染组合字典模板；blank 会话/未分组桶的存储标题不变，渲染按 `blank` 标志/`workspaceId` 缺席替换本地化文案；**搜索态 blank 行一律排除**（双语标题无法与单语查询稳定匹配）。日期不引 Intl：格式模板进字典（消息时钟 `clock.md`/`clock.ymd`，workspace hover `date.ymd`），格式化函数吃 `t` 参数保持纯。
@@ -41,5 +41,5 @@ typed locale 标准席位（`locale:` 注册声明 → 框架注入强类型 `t`
 
 - 语言切换全 UI 即时刷新且零重注册；新包接入 = 字典 + declare-merge + `locale: NS` 三步，无手写胶水。
 - 代价：list label 的消费方必须知道 `resolveSlotLabel`（裸读 `options.label` 现在可能拿到函数）；类型上 `SlotLabel` 已挡住多数误用。
-- ui-primitives 的中文默认值在英文语言下依旧是中文，**直到消费方传入 labels**——未迁移的 JsonTree 消费方（ui-trajectory）显示其英文默认值，恰好符合其整包英文现状。
-- e2e 英文钉死意味着 zh 默认态主要靠包级组件测试与 settings 语言切换用例覆盖，浏览器 e2e 不再验证 zh 文案。
+- ui-primitives 的默认值会一直显示到消费方传入 labels；已本地化的插件会显式传入当前语言文案。
+- e2e 英文钉死意味着非英文默认态主要靠包级组件测试与 settings 语言切换用例覆盖，浏览器 e2e 不验证所有随产品提供语言的文案。

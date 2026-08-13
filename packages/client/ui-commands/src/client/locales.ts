@@ -24,3 +24,4 @@ export const en = {
   'overlay.aria': '/{command} options',
   'listbox.aria': '/{command} matches',
 } satisfies Record<CommandKey, string>
+export { ko } from './ko.ts'

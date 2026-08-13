@@ -30,6 +30,7 @@ import type { PermissionRowInjected } from './PermissionRow.tsx'
 import {
   accessEn, accessZh, en, zh,
 } from './locales.ts'
+import { ko } from './ko.ts'
 import {
   displayPermissionPreset, FULL_ACCESS_PRESET,
 } from './presentation.ts'
@@ -110,7 +111,7 @@ export function apply(ctx: ClientContext): void {
   const sessionFor = (session: ClientSessionContext): SessionFace | undefined =>
     sessions.binding(session.sessionId)?.session
 
-  ctx.effect(() => ctx.locale.register('settings.permission', { zh, en }), 'ui-permission: settings row dictionaries')
+  ctx.effect(() => ctx.locale.register('settings.permission', { zh, en, ko }), 'ui-permission: settings row dictionaries')
 
   const connection = ctx.get('connection') as ConnectionHandle
   const controller = new PermissionPresetSettingsController(connection.api)

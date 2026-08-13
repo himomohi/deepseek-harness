@@ -79,3 +79,4 @@ export const en: Record<SubagentKey, string> = {
 
 /** Key domain of the `subagent` namespace (zh is the source of truth). */
 export type SubagentKey = keyof typeof zh
+export { ko } from './ko.ts'

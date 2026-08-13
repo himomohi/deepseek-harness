@@ -46,3 +46,4 @@ export const en = {
   failed: 'Mount failed',
   unloading: 'Unloading',
 } satisfies Record<PluginInventoryLocaleKey, string>
+export { ko } from './ko.ts'

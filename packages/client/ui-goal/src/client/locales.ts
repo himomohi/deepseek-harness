@@ -32,3 +32,4 @@ export const en = {
   'action.edit': 'Edit goal',
   'action.clear': 'Clear goal',
 } satisfies Record<GoalKey, string>
+export { ko } from './ko.ts'

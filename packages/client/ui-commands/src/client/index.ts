@@ -16,6 +16,7 @@ import { CommandUiRuntime } from './service.ts'
 import type { PopupSelectInjected } from './PopupSelectView.tsx'
 import { PopupSelectView } from './PopupSelectView.tsx'
 import { en, zh, type CommandKey } from './locales.ts'
+import { ko } from './ko.ts'
 
 export { CommandUiRuntime } from './service.ts'
 export { CommandDirectory } from './directory.ts'
@@ -53,7 +54,7 @@ export const inject = ['inputTriggers', 'sessions', 'remote', 'remote.commands',
  * @param ctx - client root context.
  */
 export function apply(ctx: ClientContext): void {
-  ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'ui-commands: dictionaries')
+  ctx.effect(() => ctx.locale.register(NS, { zh, en, ko }), 'ui-commands: dictionaries')
   ctx.plugin(CommandUiRuntime)
   ctx.inject(['slots', 'commandUi', 'sessions'], (scope: ClientContext) => {
     const command = scope.commandUi
