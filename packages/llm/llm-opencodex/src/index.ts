@@ -21,6 +21,8 @@ import {
   DeepSeekAdapter as OpenCodexAdapter,
 } from './adapter.ts'
 import type { DeepSeekCatalogModel as OpenCodexCatalogModel, DeepSeekConnectionOptions as OpenCodexConnectionOptions } from './adapter.ts'
+import { discoverModels } from './discovery.ts'
+
 
 export {
   DEFAULT_CONTEXT_WINDOW,
@@ -206,6 +208,11 @@ export function apply(ctx: Context, config: Config): void {
     registration.replace([PROVIDER])
     registeredPolicy = policy
   }
+
+  const storedApiKey = async (): Promise<string | undefined> => {
+    return resolveApiKey(options())
+  }
+  ctx.llm.registerModelDiscovery(NS, request => discoverModels(request, storedApiKey))
 
   installSettingsSection(ctx, NS, Config, config, {
     setSource: (source) => {

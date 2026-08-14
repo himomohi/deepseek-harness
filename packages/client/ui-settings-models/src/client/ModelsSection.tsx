@@ -306,7 +306,8 @@ function Loaded({ injected }: { injected: ModelsSectionInjected }): ReactNode {
             )
           }
           const open = !adding && editing?.provider === row.entry.provider
-          const credentialConfigured = row.credential?.configured === true
+          const isLocalOpenCodex = row.entry.provider === 'opencodex' && row.entry.active
+          const credentialConfigured = row.credential?.configured === true || isLocalOpenCodex
           const credentialMissing = !credentialConfigured
             && row.apiKeyEnv !== undefined
             && row.credential?.configured === false
@@ -341,6 +342,7 @@ function Loaded({ injected }: { injected: ModelsSectionInjected }): ReactNode {
                       )
                       : null}
                 </span>
+
                 <span className={styles['rowActions']}>
                   <button
                     type="button"
