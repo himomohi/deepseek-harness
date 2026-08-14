@@ -84,7 +84,11 @@ pnpm dsh web
 
 ```sh
 dsh update
+dsh update --dry-run
+dsh update --yes
 ```
+
+Prints a short official-vs-fork preview and asks before merging. git/pnpm noise stays hidden. Failures print an **AI에게 요청:** block you can paste to an agent.
 
 This is a **git merge of `deepseek-ai/deepseek-harness`**, then `pnpm install` + `pnpm run build`, then a file/marker check for:
 

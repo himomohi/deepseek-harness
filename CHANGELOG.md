@@ -4,6 +4,16 @@ All notable changes and release notes for DeepSeek Harness (`dsh`) are documente
 
 ---
 
+## [0.1.0-rc.11] - 2026-08-15
+
+### 🎛️ `dsh update` is short and interactive
+* Preview official vs fork (SHA, version, incoming commits) then ask `진행할까요? [y/N]`.
+* `--dry-run` preview only; `--yes` skips the prompt.
+* Hide git/pnpm walls of text; show `[1/4] 머지…` style steps.
+* On failure print an **AI에게 요청:** copy-paste prompt (repo, step, conflicts/markers, last output) so an agent can self-heal.
+
+---
+
 ## [0.1.0-rc.10] - 2026-08-15
 
 ### 🇰🇷 Workspace picker Korean copy

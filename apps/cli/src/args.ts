@@ -47,6 +47,10 @@ interface PluginInvocation {
 /** Update the harness by syncing upstream official changes. */
 interface UpdateInvocation {
   mode: 'update'
+  /** Skip the confirmation prompt. */
+  yes: boolean
+  /** Print the official-vs-fork preview and exit without merging. */
+  dryRun: boolean
 }
 
 /** The resolved `dsh` invocation. Help, version, and errors exit inside {@link parseDshArgs}. */
@@ -183,10 +187,12 @@ export function parseDshArgs(argv: readonly string[], version: string): DshInvoc
       resolved = { mode: 'plugin', profile: options.profile, args }
     })
 
-  program.command('update').description('merge official upstream, rebuild, and verify fork features still exist')
-    .action(() => {
+  program.command('update').description('preview official commits, confirm, then merge/rebuild/verify')
+    .option('-y, --yes', 'skip the confirmation prompt')
+    .option('--dry-run', 'print the preview and exit without merging')
+    .action((options: { yes?: boolean; dryRun?: boolean }) => {
       rejectParentOptions('update')
-      resolved = { mode: 'update' }
+      resolved = { mode: 'update', yes: options.yes === true, dryRun: options.dryRun === true }
     })
 
   try {

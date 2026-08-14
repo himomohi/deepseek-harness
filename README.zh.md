@@ -84,7 +84,11 @@ pnpm dsh web
 
 ```sh
 dsh update
+dsh update --dry-run
+dsh update --yes
 ```
+
+先打印简短预览并询问后再合并。失败时输出可粘贴给 AI 的 **AI에게 요청:** 块。
 
 实际流程是 **合并 `deepseek-ai/deepseek-harness`**，再 `pnpm install` + `pnpm run build`，然后检查这些标记：
 

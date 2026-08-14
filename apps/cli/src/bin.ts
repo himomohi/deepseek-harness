@@ -49,7 +49,7 @@ switch (invocation.mode) {
   }
   case 'update': {
     const { runUpdate } = await import('./update.ts')
-    await runUpdate()
+    await runUpdate({ yes: invocation.yes, dryRun: invocation.dryRun })
     break
   }
   default:
