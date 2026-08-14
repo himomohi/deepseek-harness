@@ -27,8 +27,8 @@ export const inject = ['slots', 'workspaces', 'locale']
  */
 export function apply(ctx: ClientContext): void {
   ctx.effect(() => {
-    // The two dictionaries land as a unit: if the second registration hits a
-    // rival owner of the namespace, the first rolls back before the throw —
+    // All shipped dictionaries land as a unit: if a later registration hits a
+    // rival owner of the namespace, earlier ones roll back before the throw —
     // a failed activation must not squat the namespace's other locale.
     const disposers: (() => void)[] = []
     const dictionaries: [locale: string, dict: Record<string, string>][] = [
@@ -61,6 +61,21 @@ export function apply(ctx: ClientContext): void {
         'browser.loading': 'Loading…',
         'browser.truncated': 'Too many folders to list; only the beginning is shown.',
         'browser.showHidden': 'Show hidden files',
+      }],
+      ['ko', {
+        'browser.title': '작업 공간 폴더 선택',
+        'browser.home': '홈',
+        'browser.newFolder': '새 폴더',
+        'browser.folderName': '폴더 이름',
+        'browser.createIn': '"{name}"에 새 폴더 만들기',
+        'browser.untitledFolder': '제목 없는 폴더',
+        'browser.create': '만들기',
+        'browser.cancel': '취소',
+        'browser.open': '열기',
+        'browser.editPath': '경로 편집',
+        'browser.loading': '불러오는 중…',
+        'browser.truncated': '폴더가 너무 많아 앞부분만 표시합니다.',
+        'browser.showHidden': '숨긴 파일 표시',
       }],
     ]
     try {

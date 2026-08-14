@@ -171,6 +171,12 @@ describe('directory-picker-browse client half', () => {
     expect(injected.t('browser.title')).toBe('选择工作区目录')
     expect(injected.t('browser.newFolder')).toBe('新建文件夹')
     expect(injected.t('browser.showHidden')).toBe('显示隐藏文件')
+    const locale = b.ctx.get('locale') as LocaleRuntime
+    locale.registerLocale({ id: 'ko', label: '한국어' })
+    locale.setLocale('ko')
+    expect(injected.t('browser.title')).toBe('작업 공간 폴더 선택')
+    expect(injected.t('browser.open')).toBe('열기')
+    expect(injected.t('browser.cancel')).toBe('취소')
   })
 
   it('drives the injected browse calls through the hole entry', async () => {

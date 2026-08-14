@@ -58,9 +58,9 @@ export const ko = {
   'date.ymd': '{y}-{m}-{d}',
   'time.now': '지금',
   'time.minutes': '{n}분',
-  'time.hours': '{n}h',
-  'time.days': '{n}d',
-  'time.months': '{n}mo',
-  'time.years': '{n}y',
+  'time.hours': '{n}시간',
+  'time.days': '{n}일',
+  'time.months': '{n}개월',
+  'time.years': '{n}년',
   'time.ago': '{t} 전',
 } satisfies Record<string, string>

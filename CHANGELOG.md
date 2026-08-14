@@ -4,6 +4,15 @@ All notable changes and release notes for DeepSeek Harness (`dsh`) are documente
 
 ---
 
+## [0.1.0-rc.10] - 2026-08-15
+
+### 🇰🇷 Workspace picker Korean copy
+* The in-app browse dialog (`directory-browser`) shipped only `zh`/`en`, so a Korean UI fell back to Chinese/English on **Select Workspace Directory**, **Open**, **Cancel**, **New folder**, **Home**.
+* Register a `ko` dictionary next to the official locales (this package owns the namespace — `locale-ko` must not also register it).
+* Finish leftover English time units in the Korean workspace dictionary (`시간`/`일`/`개월`/`년`).
+
+---
+
 ## [0.1.0-rc.9] - 2026-08-15
 
 ### 🧪 `dsh update` verifies fork features after merge
