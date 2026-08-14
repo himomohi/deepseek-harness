@@ -163,18 +163,12 @@ describe('connection node half', () => {
 
   it('pins privileged methods to loopback even for a declared trusted authority', async () => {
     const { routes, dispose } = await mounted({ trustedHosts: ['harness.example'] })
-    // The privileged set: native dialogs plus the whole settings/credential
-    // configuration plane, reads included, plus the one method that makes the
-    // host fetch a caller-chosen URL. The same declared authority reaches
-    // ordinary reads (carrier-level 404 from the empty proxy proves the fence
-    // passed), but each privileged method stays loopback-only and 403s.
+    // Native dialogs and opening host documents stay loopback-only.
+    // Settings/credentials are allowed on a declared trusted host so a
+    // Tailscale phone can load Models and apply a catalog sync.
     for (const method of [
       'host.pickDirectory', 'host.openPath',
-      'settings.describe', 'settings.openDocument', 'settings.update', 'settings.replace', 'settings.mutate',
-      'credentials.describe', 'credentials.set', 'credentials.unset',
-      // A composition names the plugins a session runs: reading one is
-      // reconnaissance, and copy/remove/openDocument manage the roster and
-      // drive the host desktop.
+      'settings.openDocument',
       'agentPreset.read', 'agentPreset.copy', 'agentPreset.openDocument', 'agentPreset.remove',
     ]) {
       const denied = fakeResponse()
@@ -463,22 +457,25 @@ describe('connection node half over a real HTTP server', () => {
       // Reads are as privileged as writes: describe returns the exposed
       // configuration, and credentials.describe probes arbitrary env-var names.
       for (const method of [
-        'settings.describe', 'settings.openDocument', 'settings.update', 'settings.replace', 'settings.mutate',
-        'credentials.describe', 'credentials.set', 'credentials.unset',
+        'settings.openDocument',
         'host.pickDirectory', 'host.openPath',
         'agentPreset.read', 'agentPreset.copy', 'agentPreset.openDocument', 'agentPreset.remove',
       ]) {
         expect([method, await call(port, method, 'harness.example')]).toEqual([method, 403])
       }
-      // The model catalog stays reachable for the same authority: a LAN
-      // client's model picker needs it, and it carries no key or endpoint
-      // state (404 is the empty proxy's carrier answer — the fence passed).
+      // Settings/credentials plus the model catalog stay reachable for a
+      // declared trusted host (404 is the empty proxy's carrier answer).
       // `agentPreset.list` joins the model catalog for the same reason: ids and
       // trust only, and a LAN client's preset picker needs it. `select` is
       // reachable too: `session.create` already takes an `agentPreset`, and the
       // deployment's own default already carries bash, so pinning the switch
       // would be a fence beside an open gate.
-      for (const method of ['llm.providers', 'llm.models', 'agentPreset.list', 'agentPreset.select']) {
+      for (const method of [
+        'settings.describe', 'settings.update', 'settings.replace', 'settings.mutate',
+        'credentials.describe', 'credentials.set', 'credentials.unset',
+        'llm.providers', 'llm.models', 'llm.discoverModels',
+        'agentPreset.list', 'agentPreset.select',
+      ]) {
         expect([method, await call(port, method, 'harness.example')]).toEqual([method, 404])
       }
       // Loopback reaches everything, configuration included.

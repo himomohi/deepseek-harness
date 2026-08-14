@@ -28,6 +28,7 @@ All notable changes and release notes for DeepSeek Harness (`dsh`) are documente
 ### 🔄 OpenCodex model catalog sync
 * Settings → Models button **Sync from OpenCodex** replaces the whole catalog from live `GET /models` (not a one-shot default list, not an add-only picker).
 * `llm.discoverModels` is reachable on a trusted Tailscale host. OpenCodex discovery always uses the configured proxy URL.
+* Settings/credentials RPCs (`settings.describe` / mutate, `credentials.*`) are allowed on a trusted Tailscale host so the Models page can load. Native pickers stay loopback-only.
 
 ---
 
