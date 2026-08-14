@@ -168,7 +168,19 @@ export function apply(ctx: Context, config: Config): void {
       const lanCandidate = runtime.lanAddresses[0]
       const port = ctx.webServer.port
       const url = localWebUrl(ctx)
-      const locale = Intl.DateTimeFormat().resolvedOptions().locale || process.env['LANG'] || 'en'
+      // Robust locale detection across macOS, Linux, and Windows
+      let locale = 'en'
+      try {
+        if (process.platform === 'darwin') {
+          // macOS AppleLanguages check or LANG fallback
+          locale = process.env['LANG'] || process.env['LC_ALL'] || Intl.DateTimeFormat().resolvedOptions().locale || 'en'
+        } else {
+          locale = Intl.DateTimeFormat().resolvedOptions().locale || process.env['LANG'] || process.env['LC_ALL'] || 'en'
+        }
+      } catch {
+        locale = process.env['LANG'] || 'en'
+      }
+
       const isKo = locale.toLowerCase().startsWith('ko')
       const isZh = locale.toLowerCase().startsWith('zh')
 
@@ -181,7 +193,7 @@ export function apply(ctx: Context, config: Config): void {
       console.log(`\n🚀 ${openMsg}`)
       console.log(`🔗 dsh web: ${url}${lanCandidate === undefined ? '' : ` (LAN: http://${lanCandidate}:${String(port)})`}\n`)
 
-      // Automatically open browser on startup if interactive
+      // Automatically open browser on startup (Windows, macOS, Linux)
       try {
         if (process.platform === 'win32') {
           spawn('cmd', ['/c', 'start', '', url], { detached: true, stdio: 'ignore' }).unref()
@@ -193,6 +205,7 @@ export function apply(ctx: Context, config: Config): void {
       } catch {
         // non-blocking
       }
+
     }
 
     // This row's own activation can precede a sibling failure. The app owns
