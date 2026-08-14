@@ -43,11 +43,37 @@ const DEFAULT_API_KEY_ENV = 'OPENCODEX_API_KEY'
 const PROVIDER = 'opencodex'
 
 const DEFAULT_MODELS: OpenCodexCatalogModel[] = [
-  { id: 'gpt-5.6-sol', name: 'GPT-5.6 Sol', contextWindow: 1_000_000 },
-  { id: 'gpt-5.6-terra', name: 'GPT-5.6 Terra', contextWindow: 1_000_000 },
-  { id: 'claude-sonnet-4-5', name: 'Claude Sonnet 4.5', contextWindow: 200_000 },
-  { id: 'grok-4.5', name: 'Grok 4.5', contextWindow: 500_000 },
+  { id: 'gpt-5.6-sol', name: 'GPT-5.6 Sol', contextWindow: 1_000_000, maxTokens: 64_000 },
+  { id: 'gpt-5.6-terra', name: 'GPT-5.6 Terra', contextWindow: 1_000_000, maxTokens: 64_000 },
+  { id: 'gpt-5.6-luna', name: 'GPT-5.6 Luna', contextWindow: 1_000_000, maxTokens: 64_000 },
+  { id: 'gpt-5.3-codex-spark', name: 'GPT-5.3 Codex Spark', contextWindow: 500_000, maxTokens: 32_000 },
+  { id: 'deepseek/deepseek-v4-flash', name: 'DeepSeek V4 Flash', contextWindow: 1_000_000, maxTokens: 64_000 },
+  { id: 'deepseek/deepseek-v4-pro', name: 'DeepSeek V4 Pro', contextWindow: 1_000_000, maxTokens: 64_000 },
+  { id: 'xai/grok-4.5', name: 'xAI Grok 4.5', contextWindow: 500_000, maxTokens: 32_000 },
+  { id: 'xai/grok-4.6', name: 'xAI Grok 4.6', contextWindow: 500_000, maxTokens: 32_000 },
+  { id: 'minimax/MiniMax-M3', name: 'MiniMax M3', contextWindow: 1_000_000, maxTokens: 64_000 },
+  { id: 'zai/glm-5.2', name: 'Z-AI GLM 5.2', contextWindow: 1_000_000, maxTokens: 64_000 },
+  { id: 'alibaba-token-plan-intl/deepseek-v4-flash-0731', name: 'Alibaba DeepSeek V4 Flash', contextWindow: 1_000_000, maxTokens: 64_000 },
+  { id: 'alibaba-token-plan-intl/qwen3.8-max', name: 'Alibaba Qwen 3.8 Max', contextWindow: 1_000_000, maxTokens: 64_000 },
+  { id: 'commandcode/deepseek/deepseek-v4-flash', name: 'CommandCode DeepSeek V4 Flash', contextWindow: 500_000, maxTokens: 32_000 },
+  { id: 'commandcode/deepseek/deepseek-v4-pro', name: 'CommandCode DeepSeek V4 Pro', contextWindow: 500_000, maxTokens: 32_000 },
+  { id: 'commandcode/google/gemini-3.7-flash', name: 'CommandCode Gemini 3.7 Flash', contextWindow: 1_000_000, maxTokens: 64_000 },
+  { id: 'commandcode/gpt-5.6-luna', name: 'CommandCode GPT-5.6 Luna', contextWindow: 500_000, maxTokens: 32_000 },
+  { id: 'commandcode/meta/muse-spark-1.2-contributor', name: 'CommandCode Muse Spark 1.2', contextWindow: 500_000, maxTokens: 32_000 },
+  { id: 'commandcode/moonshotai/Kimi-K3', name: 'CommandCode Kimi K3', contextWindow: 1_000_000, maxTokens: 64_000 },
+  { id: 'commandcode/nvidia/nemotron-3-ultra-550b-a55b', name: 'CommandCode Nemotron 3 Ultra', contextWindow: 500_000, maxTokens: 32_000 },
+  { id: 'commandcode/poolside/laguna-s-2.1-free', name: 'CommandCode Laguna S 2.1 Free', contextWindow: 200_000, maxTokens: 16_000 },
+  { id: 'commandcode/Qwen/Qwen3.8-Max', name: 'CommandCode Qwen 3.8 Max', contextWindow: 500_000, maxTokens: 32_000 },
+  { id: 'commandcode/sakana/fugu-ultra', name: 'CommandCode Fugu Ultra', contextWindow: 200_000, maxTokens: 16_000 },
+  { id: 'commandcode/stepfun/Step-3.5-Flash', name: 'CommandCode Step 3.5 Flash', contextWindow: 500_000, maxTokens: 32_000 },
+  { id: 'commandcode/stepfun/Step-3.7-Flash', name: 'CommandCode Step 3.7 Flash', contextWindow: 500_000, maxTokens: 32_000 },
+  { id: 'commandcode/tencent/hy3-paid', name: 'CommandCode HY3 Paid', contextWindow: 500_000, maxTokens: 32_000 },
+  { id: 'commandcode/thinkingmachines/inkling', name: 'CommandCode Inkling', contextWindow: 200_000, maxTokens: 16_000 },
+  { id: 'commandcode/xai/grok-4.6', name: 'CommandCode Grok 4.6', contextWindow: 500_000, maxTokens: 32_000 },
+  { id: 'commandcode/xiaomi/mimo-v2.5', name: 'CommandCode MiMo V2.5', contextWindow: 500_000, maxTokens: 32_000 },
+  { id: 'commandcode/xiaomi/mimo-v2.5-pro', name: 'CommandCode MiMo V2.5 Pro', contextWindow: 500_000, maxTokens: 32_000 },
 ]
+
 
 export interface Config {
   apiKeyEnv?: string
