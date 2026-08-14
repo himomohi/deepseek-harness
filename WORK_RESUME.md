@@ -56,6 +56,14 @@
 * **동작 원리**:
   * 사이드바, 대화창, 설정, 모델 선택기, 플러그인 관리, 환영 가이드 등 웹 UI 전반의 완전한 한국어 번역 팩 제공.
 
+### ⑦ 텍스트 전용 모델 자동 비전 폴백 (Automatic Vision Fallback)
+* **패키지**: `packages/llm/vision-fallback/` (`@deepseek-ai/dsh-vision-fallback`)
+* **동작 원리**:
+  * `deepseek-chat`, `deepseek-v3`, `deepseek-r1` 등 텍스트 전용 모델을 사용 중일 때, 사용자가 업로드한 이미지나 `read_image` 도구 호출로 반환된 이미지 블록을 감지.
+  * 런타임에 등록된 멀티모달 비전 모델(`gpt-5.6-sol`, `claude-3-7-sonnet`, `gemini-3.7-flash` 등)을 자동 탐색하여 고정밀 OCR 및 다이어그램/UI/코드 시각적 분석 수행.
+  * 생성된 시각 분석 결과를 텍스트 블록으로 구조화 변환하여 프롬프트에 주입함으로써, 텍스트 전용 모델도 이미지 내용을 완벽히 이해하고 추론할 수 있도록 지원 (`MODEL_DOES_NOT_SUPPORT_IMAGES` 에러 원천 차단).
+  * `AttachmentId` 기반 인메모리 캐싱으로 중복 호출 비용 제로화.
+
 ---
 
 ## 🛠️ 3. 주요 실행 명령어 치트시트

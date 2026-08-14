@@ -35,6 +35,7 @@ Built on the **"Everything is a Plugin"** philosophy and powered by the [Cordis]
 
 | Feature | Description |
 | :--- | :--- |
+| 👁️ **Automatic Vision Fallback** | Routes image attachments on text-only models (`deepseek-chat`, etc.) through multimodal models for OCR & visual reasoning |
 | ⚡ **Ultra-High KV Cache Hit Rate** | Preserves `reasoning_content` across multi-turn sessions for **90%+ Cache Hit Rates** and **70~80% lower TTFT latency** |
 | 🔄 **Auto-Continue on Token Limit** | Automatically resumes generation when reaching `max-tokens` to prevent truncated outputs or incomplete code |
 | 🌐 **Seamless OpenCodex (`ocx`) Support** | Auto-detects local `ocx` proxy with instant green readiness, dynamic discovery, and **29 top-tier models** built-in |

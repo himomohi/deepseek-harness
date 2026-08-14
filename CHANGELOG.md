@@ -4,6 +4,22 @@ All notable changes and release notes for DeepSeek Harness (`dsh`) are documente
 
 ---
 
+## [0.1.0-rc.7] - 2026-08-14
+
+### 👁️ Automatic Vision Fallback (`@deepseek-ai/dsh-vision-fallback`)
+* **Seamless Multi-Modal Fallback for Text-Only Models**:
+  * Added new Cordis service plugin `@deepseek-ai/dsh-vision-fallback` mounted across all bundles and profiles.
+  * When using pure text-only models (such as `deepseek-chat`, `deepseek-v3`, `deepseek-r1`), image inputs from users and `read_image` tool dispatches are automatically routed to an active vision-capable fallback model (e.g. `gpt-5.6-sol`, `claude-3-7-sonnet`, `gemini-3.7-flash` via OpenCodex or Pi-AI).
+  * Automatically performs visual analysis, diagram comprehension, OCR text extraction, UI layout analysis, and injects structured visual annotations into the prompt.
+  * Ensures text-only models seamlessly process images without modal rejection errors (`MODEL_DOES_NOT_SUPPORT_IMAGES`).
+* **Intelligent Auto-Discovery & Caching**:
+  * Automatically scans and ranks the best available vision model candidates in runtime.
+  * In-memory deduplication caching by `AttachmentId` ensures zero redundant vision LLM calls across multi-turn sessions.
+* **Non-Destructive & Upstream Upgrade Safe**:
+  * Implemented via independent Cordis plugin architecture, preserving complete 100% compatibility across official upstream `dsh update` syncs.
+
+---
+
 ## [0.1.0-rc.6] - 2026-08-14
 
 ### ⚡ Performance & Caching (Prompt Cache & KV Cache)

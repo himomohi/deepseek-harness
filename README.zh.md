@@ -35,6 +35,7 @@
 
 | 特性 | 说明 |
 | :--- | :--- |
+| 👁️ **自动视觉回退 (Vision Fallback)** | 使用纯文本模型（如 `deepseek-chat`）遇到图片输入时，自动调度多模态模型进行 OCR 与视觉解析并注入提示词 |
 | ⚡ **超高 KV Cache 缓存命中率** | 多轮对话中完整保留思考标记（`reasoning_content`），达成 **90%+ 缓存命中率**，首字延迟（TTFT）**降低 70~80%** |
 | 🔄 **输出 Token 上限自动续写** | 触发输出长度上限（`max-tokens`）时由 Agent Loop 自动无缝续写，彻底解决长代码生成截断问题 |
 | 🌐 **OpenCodex (`ocx`) 无缝接入** | 自动发现本地 `ocx` 代理，免配置 API Key 即刻就绪，内置 GPT-5.6、Claude 3.7、DeepSeek V4、Grok 4.6 等 **29 款模型** |
