@@ -44,8 +44,13 @@ interface PluginInvocation {
   args: string[]
 }
 
+/** Update the harness by syncing upstream official changes. */
+interface UpdateInvocation {
+  mode: 'update'
+}
+
 /** The resolved `dsh` invocation. Help, version, and errors exit inside {@link parseDshArgs}. */
-export type DshInvocation = ProfileInvocation | DumpConfigInvocation | PluginInvocation
+export type DshInvocation = ProfileInvocation | DumpConfigInvocation | PluginInvocation | UpdateInvocation
 
 /** Launcher flags shared by the default command and the `web` alias. */
 interface BootOptions {
@@ -178,11 +183,18 @@ export function parseDshArgs(argv: readonly string[], version: string): DshInvoc
       resolved = { mode: 'plugin', profile: options.profile, args }
     })
 
+  program.command('update').description('sync and update to the latest official version while preserving custom plugins and localization')
+    .action(() => {
+      rejectParentOptions('update')
+      resolved = { mode: 'update' }
+    })
+
   try {
     program.parse(argv, { from: 'user' })
   } catch (error) {
     return process.exit(error instanceof CommanderError ? error.exitCode : 1)
   }
+
   /* v8 ignore next -- an action resolves or Commander throws */
   if (resolved === undefined) throw new Error('dsh: no invocation resolved')
   return resolved
