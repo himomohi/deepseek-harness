@@ -21,10 +21,12 @@ import {
   BlockAssembler,
   LlmError,
   createAssistantMessage,
+  createUserMessage,
   deepFreeze,
   errorChain,
   markAgentLoopRequest,
 } from '@deepseek-ai/dsh-llm'
+
 import type { Scope } from '@deepseek-ai/dsh-scope'
 import { createScope } from '@deepseek-ai/dsh-scope'
 import type { EpochHeader, RequestContext, Session, SessionId, TurnEndReason, UserMessage } from '@deepseek-ai/dsh-session'
@@ -388,9 +390,21 @@ export class ReactLoopAgent implements Agent {
         },
         { surfaceOp: 'append', sourceEventSeqs: chunkSeqs },
       )
-      if (finish.kind === 'max-tokens') return { kind: 'max-tokens' }
 
       const toolCalls = message.content.filter(block => block.type === 'tool-call')
+      if (finish.kind === 'max-tokens') {
+        if (toolCalls.length === 0) {
+          // Auto-continue when hitting token limit on pure text responses
+          const continueMessage = createUserMessage({
+            source: { kind: 'user' },
+            content: [{ type: 'text', text: 'Output token limit reached. Please continue seamlessly from where you left off.' }],
+          })
+          this.inbox.splice('next-step', this.inbox.nextStep.length, 0, [continueMessage])
+          return null
+        }
+      }
+
+
       if (toolCalls.length === 0) return { kind: 'completed' }
       const { concluded } = await executeToolCalls(
         this.loopCtx, turn, step, toolCalls, signal,
@@ -402,6 +416,7 @@ export class ReactLoopAgent implements Agent {
 
   /**
    * Compose one frozen request and bind it to the adapter registration that
+
    * resolved its exact-model defaults.
    */
   private async buildRequest(
