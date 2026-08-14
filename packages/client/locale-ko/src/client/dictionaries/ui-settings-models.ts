@@ -70,6 +70,8 @@ export const ko = {
   'fetchTitle': '추가할 모델 선택',
   'fetchDescription': '이 제공자가 지원하는 모델입니다. 추가할 모델을 선택하세요.',
   'fetchAdopt': '선택 항목 추가',
+  'syncModels': 'OpenCodex에서 동기화',
+  'syncing': 'OpenCodex에서 동기화 중…',
   'customAdd': '사용자 지정 제공자 추가',
   'customTitle': '맞춤 제공자',
   'customTag': '사용자 지정',

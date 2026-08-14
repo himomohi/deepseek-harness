@@ -143,7 +143,9 @@ function capacitySpelling(value: number | undefined): string {
   return value === undefined ? '' : formatCapacity(value)
 }
 
-/** Adopt a candidate, keeping whatever capacities the provider disclosed. */
+function isOpenCodexProbe(probe: ProbeTarget): boolean {
+  return probe.settingsNs === 'llm-opencodex' || probe.provider === 'opencodex'
+}
 function adopt(candidate: DiscoveredModelView): ModelDraft {
   return {
     id: candidate.id,
@@ -247,6 +249,12 @@ export function ModelListEditor(props: ModelListEditorProps): ReactNode {
         setFailure(t('fetchEmpty'))
         return
       }
+      if (isOpenCodexProbe(probe)) {
+        onChange(found.map(adopt))
+        setCandidates(undefined)
+        setPicked(new Set())
+        return
+      }
       // Everything already configured starts unchecked, so adopting a
       // selection never silently rewrites a capacity the user corrected.
       const known = new Set(models.map(model => textOf(model, 'id')))
@@ -327,7 +335,7 @@ export function ModelListEditor(props: ModelListEditorProps): ReactNode {
             : askable ? undefined : t('fetchNeedsBaseUrl')}
           onClick={() => { void fetchModels() }}
         >
-          {busy ? t('fetching') : t('fetchModels')}
+          {busy ? (isOpenCodexProbe(probe) ? t('syncing') : t('fetching')) : isOpenCodexProbe(probe) ? t('syncModels') : t('fetchModels')}
         </button>
       </div>
       {models.length === 0 ? <p className={styles['modelEmpty']}>{t('modelsEmpty')}</p> : null}

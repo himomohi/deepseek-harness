@@ -23,6 +23,16 @@ All notable changes and release notes for DeepSeek Harness (`dsh`) are documente
 
 ---
 
+## [0.1.0-rc.13] - 2026-08-15
+
+### 🔄 OpenCodex model catalog sync
+* Settings → Models button **Sync from OpenCodex** replaces the whole catalog from live `GET /models` (not a one-shot default list, not an add-only picker).
+* `llm.discoverModels` is reachable on a trusted Tailscale host. OpenCodex discovery always uses the configured proxy URL.
+
+---
+
+---
+
 ---
 
 ## [0.1.0-rc.10] - 2026-08-15

@@ -238,7 +238,10 @@ export function apply(ctx: Context, config: Config): void {
   const storedApiKey = async (): Promise<string | undefined> => {
     return resolveApiKey(options())
   }
-  ctx.llm.registerModelDiscovery(NS, request => discoverModels(request, storedApiKey))
+  ctx.llm.registerModelDiscovery(NS, request => discoverModels({
+    ...request,
+    baseURL: options().baseURL,
+  }, storedApiKey))
 
   installSettingsSection(ctx, NS, Config, config, {
     setSource: (source) => {
