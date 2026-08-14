@@ -27,9 +27,11 @@ import type { ConfigurablePluginsTabInjected } from './ConfigurablePluginsTab.ts
 import { PluginsSettingsSection } from './PluginsSettingsSection.tsx'
 import type { PluginsSettingsSectionInjected, PluginsSettingsTabEntry } from './PluginsSettingsSection.tsx'
 import { WebSearchCard } from './WebSearchCard.tsx'
+import { OpenCodexCard } from './OpenCodexCard.tsx'
 import { AGENT_LOOP_NS, AgentLoopCardController } from './agent-loop-card-controller.ts'
 import { SHELL_NS, BashCardController } from './bash-card-controller.ts'
 import { WEB_SEARCH_NS, WebSearchCardController } from './web-search-card-controller.ts'
+import { OPENCODEX_NS, OpenCodexCardController } from './opencodex-card-controller.ts'
 import { en, zh } from './locales.ts'
 
 export type { PluginsSettingsSectionInjected, PluginsSettingsSectionProps } from './PluginsSettingsSection.tsx'
@@ -43,6 +45,7 @@ export type {
 export type { AgentLoopCardFace, AgentLoopCardState } from './agent-loop-card-controller.ts'
 export type { BashCardFace, BashCardState } from './bash-card-controller.ts'
 export type { WebSearchCardFace, WebSearchCardState } from './web-search-card-controller.ts'
+export type { OpenCodexCardFace, OpenCodexCardState } from './opencodex-card-controller.ts'
 
 /** Dictionary namespace owned by this plugin. */
 const NS = 'settings.plugins'
@@ -62,14 +65,19 @@ export function apply(ctx: ClientContext): void {
   const bash = new BashCardController(ctx.settingsScope.bind({ namespace: SHELL_NS }))
   const agentLoop = new AgentLoopCardController(ctx.settingsScope.bind({ namespace: AGENT_LOOP_NS }))
   const webSearch = new WebSearchCardController(ctx.settingsScope.bind({ namespace: WEB_SEARCH_NS }), api)
+  const openCodex = new OpenCodexCardController(ctx.settingsScope.bind({ namespace: OPENCODEX_NS }), api)
 
   // The credential a card reports is not part of any settings section, so its
   // scope publishes nothing when one is written. This is the only signal that
   // a key written on another surface reached the Host.
   ctx.effect(
-    () => ctx.remote.$on('credentials/updated', (ref) => { webSearch.refreshCredential(ref) }),
+    () => ctx.remote.$on('credentials/updated', (ref) => {
+      webSearch.refreshCredential(ref)
+      openCodex.refreshCredential(ref)
+    }),
     'ui-settings-plugins: credential invalidations',
   )
+
 
   let tabsVersion = -1
   let tabsRevision = -1
@@ -154,5 +162,12 @@ export function apply(ctx: ClientContext): void {
       locale: NS,
       inject: () => webSearch.inject(),
     }, WebSearchCard)
+    yield ctx.slots.register({
+      name: 'settings.plugin.item',
+      id: 'opencodex',
+      order: 30,
+      locale: NS,
+      inject: () => openCodex.inject(),
+    }, OpenCodexCard)
   })
 }

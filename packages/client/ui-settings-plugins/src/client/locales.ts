@@ -11,6 +11,8 @@ export type PluginsSettingsLocaleKey =
   | 'webSearchTitle' | 'webSearchDescription'
   | 'webSearchApiKey' | 'webSearchApiKeyHint' | 'webSearchApiKeySet' | 'webSearchApiKeyUnset'
   | 'webSearchBaseUrl' | 'webSearchBaseUrlHint' | 'webSearchMaxUses' | 'webSearchMaxUsesHint'
+  | 'openCodexTitle' | 'openCodexDescription' | 'openCodexBaseUrl' | 'openCodexBaseUrlHint'
+  | 'openCodexApiKey' | 'openCodexApiKeyHint' | 'openCodexApiKeySet' | 'openCodexApiKeyUnset'
 
 /** English copy. */
 export const en: Record<PluginsSettingsLocaleKey, string> = {
@@ -51,6 +53,14 @@ export const en: Record<PluginsSettingsLocaleKey, string> = {
   webSearchBaseUrlHint: 'Leave blank to use the provider default.',
   webSearchMaxUses: 'Max searches per request',
   webSearchMaxUsesHint: 'How many times one request may search before it must answer.',
+  openCodexTitle: 'OpenCodex Proxy',
+  openCodexDescription: 'Universal provider proxy for ChatGPT, Claude, Grok, Kimi & more.',
+  openCodexBaseUrl: 'Proxy URL',
+  openCodexBaseUrlHint: 'Default is http://127.0.0.1:10100/v1 for local OpenCodex.',
+  openCodexApiKey: 'API key / Auth token',
+  openCodexApiKeyHint: 'Stored in credential storage. Leave blank for unauthenticated local proxy.',
+  openCodexApiKeySet: 'A key is configured.',
+  openCodexApiKeyUnset: 'No key configured (local proxy access).',
 }
 
 /** Simplified Chinese copy. */
@@ -92,4 +102,12 @@ export const zh: Record<PluginsSettingsLocaleKey, string> = {
   webSearchBaseUrlHint: '留空则使用提供方默认地址。',
   webSearchMaxUses: '单次请求最多搜索次数',
   webSearchMaxUsesHint: '一次请求在必须作答前最多可以搜索多少次。',
+  openCodexTitle: 'OpenCodex 代理',
+  openCodexDescription: '用于 ChatGPT, Claude, Grok, Kimi 等多模型的通用代理。',
+  openCodexBaseUrl: '代理地址',
+  openCodexBaseUrlHint: '本地 OpenCodex 默认使用 http://127.0.0.1:10100/v1。',
+  openCodexApiKey: 'API 密钥 / 令牌',
+  openCodexApiKeyHint: '保存在凭据存储中。本地代理留空即可。',
+  openCodexApiKeySet: '已配置密钥。',
+  openCodexApiKeyUnset: '未配置密钥（直接访问本地代理）。',
 }
