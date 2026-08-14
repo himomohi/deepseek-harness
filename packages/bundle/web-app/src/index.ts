@@ -168,7 +168,19 @@ export function apply(ctx: Context, config: Config): void {
       const lanCandidate = runtime.lanAddresses[0]
       const port = ctx.webServer.port
       const url = localWebUrl(ctx)
-      console.log(`dsh web: ${url}${lanCandidate === undefined ? '' : ` (LAN: http://${lanCandidate}:${String(port)})`}`)
+      const locale = Intl.DateTimeFormat().resolvedOptions().locale || process.env['LANG'] || 'en'
+      const isKo = locale.toLowerCase().startsWith('ko')
+      const isZh = locale.toLowerCase().startsWith('zh')
+
+      const openMsg = isKo
+        ? `[웹 GUI] 기본 브라우저를 실행하여 웹 서비스를 엽니다... (${url})`
+        : isZh
+          ? `[Web GUI] 正在打开默认浏览器访问 Web 服务... (${url})`
+          : `[Web GUI] Opening default browser to access Web interface... (${url})`
+
+      console.log(`\n🚀 ${openMsg}`)
+      console.log(`🔗 dsh web: ${url}${lanCandidate === undefined ? '' : ` (LAN: http://${lanCandidate}:${String(port)})`}\n`)
+
       // Automatically open browser on startup if interactive
       try {
         if (process.platform === 'win32') {
@@ -182,6 +194,7 @@ export function apply(ctx: Context, config: Config): void {
         // non-blocking
       }
     }
+
     // This row's own activation can precede a sibling failure. The app owns
     // readiness by waiting for its Loader tree, or prints at once in a
     // hand-built context without Loader.
