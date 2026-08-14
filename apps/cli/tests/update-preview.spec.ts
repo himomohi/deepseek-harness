@@ -93,3 +93,13 @@ describe('previewFromGithubCompare', () => {
     expect(shortSha(preview.commits[0]?.sha ?? '')).toBe('deadbee')
   })
 })
+
+describe('toolName', () => {
+  it('uses pnpm.cmd on Windows and pnpm elsewhere', async () => {
+    const { toolName } = await import('../src/update.ts')
+    expect(toolName('git', 'win32')).toBe('git')
+    expect(toolName('pnpm', 'win32')).toBe('pnpm.cmd')
+    expect(toolName('pnpm', 'darwin')).toBe('pnpm')
+    expect(toolName('pnpm', 'linux')).toBe('pnpm')
+  })
+})

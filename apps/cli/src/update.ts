@@ -5,7 +5,7 @@
  * @module @deepseek-ai/dsh/update
  */
 
-import { execSync } from 'node:child_process'
+import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import { createInterface } from 'node:readline/promises'
 import { stdin as stdinStream, stdout as stdoutStream } from 'node:process'
@@ -27,17 +27,19 @@ export interface UpdateOptions {
   readonly dryRun?: boolean
 }
 
-function git(rootDir: string, args: string): string {
-  return execSync(`git ${args}`, {
+function git(rootDir: string, args: readonly string[]): string {
+  return execFileSync('git', args, {
     cwd: rootDir,
     encoding: 'utf8',
+    shell: false,
     stdio: ['ignore', 'pipe', 'pipe'],
+    windowsHide: true,
   })
 }
 
 function listUpstreamRefs(rootDir: string): string[] {
   try {
-    return git(rootDir, 'for-each-ref --format=%(refname:short) refs/remotes/upstream')
+    return git(rootDir, ['for-each-ref', '--format=%(refname:short)', 'refs/remotes/upstream'])
       .split(/\r?\n/)
       .map(line => line.trim())
       .filter(Boolean)
@@ -48,7 +50,7 @@ function listUpstreamRefs(rootDir: string): string[] {
 
 function mergeInProgress(rootDir: string): boolean {
   try {
-    git(rootDir, 'rev-parse -q --verify MERGE_HEAD')
+    git(rootDir, ['rev-parse', '-q', '--verify', 'MERGE_HEAD'])
     return true
   } catch {
     return false
@@ -57,7 +59,7 @@ function mergeInProgress(rootDir: string): boolean {
 
 function unmergedFiles(rootDir: string): string[] {
   try {
-    return git(rootDir, 'diff --name-only --diff-filter=U')
+    return git(rootDir, ['diff', '--name-only', '--diff-filter=U'])
       .split(/\r?\n/)
       .map(line => line.trim())
       .filter(Boolean)
@@ -68,7 +70,7 @@ function unmergedFiles(rootDir: string): string[] {
 
 function isShallow(rootDir: string): boolean {
   try {
-    return git(rootDir, 'rev-parse --is-shallow-repository').trim() === 'true'
+    return git(rootDir, ['rev-parse', '--is-shallow-repository']).trim() === 'true'
   } catch {
     return false
   }
@@ -88,11 +90,18 @@ function tail(text: string, maxLines = 20): string {
   return lines.slice(-maxLines).join('\n')
 }
 
-function runQuiet(command: string, rootDir: string): { ok: boolean; output: string } {
+export function toolName(bin: 'git' | 'pnpm', platform: NodeJS.Platform = process.platform): string {
+  if (bin === 'git') return 'git'
+  return platform === 'win32' ? 'pnpm.cmd' : 'pnpm'
+}
+
+function runQuiet(bin: 'git' | 'pnpm', args: readonly string[], rootDir: string): { ok: boolean; output: string } {
   try {
-    const output = execSync(command, {
+    const output = execFileSync(toolName(bin), args, {
       cwd: rootDir,
       encoding: 'utf8',
+      shell: false,
+      windowsHide: true,
       stdio: ['ignore', 'pipe', 'pipe'],
       env: { ...process.env, npm_config_loglevel: 'error', CI: process.env.CI ?? '1' },
     })
@@ -160,13 +169,13 @@ async function loadGithubCompare(): Promise<{ compare: GithubCompare; officialSh
 function localGitPreview(rootDir: string, upstreamBranch: string): Pick<UpdatePreview, 'officialAhead' | 'commits' | 'officialSha'> {
   let officialSha = ''
   try {
-    officialSha = git(rootDir, `rev-parse ${upstreamBranch}`).trim()
+    officialSha = git(rootDir, ['rev-parse', upstreamBranch]).trim()
   } catch {
     officialSha = ''
   }
   let commits: UpstreamCommit[] = []
   try {
-    const raw = git(rootDir, `log --format=%H%x09%cI%x09%s HEAD..${upstreamBranch}`)
+    const raw = git(rootDir, ['log', '--format=%H%x09%cI%x09%s', `HEAD..${upstreamBranch}`])
     commits = raw.split(/\r?\n/).filter(Boolean).map((line) => {
       const [sha, date, ...rest] = line.split('\t')
       return { sha: sha ?? '', date: date ?? '', title: rest.join('\t') }
@@ -179,17 +188,14 @@ function localGitPreview(rootDir: string, upstreamBranch: string): Pick<UpdatePr
 
 export async function runUpdate(options: UpdateOptions = {}): Promise<void> {
   const rootDir = resolve(fileURLToPath(new URL('../../..', import.meta.url)))
-  const localSha = git(rootDir, 'rev-parse HEAD').trim()
+  const localSha = git(rootDir, ['rev-parse', 'HEAD']).trim()
   const localVersion = readPackageVersion(rootDir)
   const shallow = isShallow(rootDir)
 
   try {
-    const remotes = git(rootDir, 'remote').split(/\r?\n/)
+    const remotes = git(rootDir, ['remote']).split(/\r?\n/)
     if (!remotes.includes('upstream')) {
-      execSync('git remote add upstream https://github.com/deepseek-ai/deepseek-harness.git', {
-        cwd: rootDir,
-        stdio: ['ignore', 'pipe', 'pipe'],
-      })
+      git(rootDir, ['remote', 'add', 'upstream', 'https://github.com/deepseek-ai/deepseek-harness.git'])
     }
   } catch (error) {
     fail({
@@ -200,7 +206,7 @@ export async function runUpdate(options: UpdateOptions = {}): Promise<void> {
   }
 
   process.stdout.write('공식 저장소 확인 중…\n')
-  const fetched = runQuiet('git fetch upstream --tags --prune', rootDir)
+  const fetched = runQuiet('git', ['fetch', 'upstream', '--tags', '--prune'], rootDir)
   const github = await loadGithubCompare()
   let upstreamBranch: 'upstream/master' | 'upstream/main' | undefined
   try {
@@ -269,7 +275,7 @@ export async function runUpdate(options: UpdateOptions = {}): Promise<void> {
   }
 
   process.stdout.write('[1/4] 머지… ')
-  const merged = runQuiet(`git merge ${upstreamBranch} --no-edit --no-stat`, rootDir)
+  const merged = runQuiet('git', ['merge', upstreamBranch, '--no-edit', '--no-stat'], rootDir)
   if (!merged.ok) {
     const conflicts = unmergedFiles(rootDir)
     console.log('실패')
@@ -286,7 +292,7 @@ export async function runUpdate(options: UpdateOptions = {}): Promise<void> {
   console.log('완료')
 
   process.stdout.write('[2/4] 의존성… ')
-  const installed = runQuiet('pnpm install --reporter=silent', rootDir)
+  const installed = runQuiet('pnpm', ['install', '--reporter=silent'], rootDir)
   if (!installed.ok) {
     console.log('실패')
     fail({ step: 'install', rootDir, detail: installed.output })
@@ -294,7 +300,7 @@ export async function runUpdate(options: UpdateOptions = {}): Promise<void> {
   console.log('완료')
 
   process.stdout.write('[3/4] 빌드… ')
-  const built = runQuiet('pnpm run build', rootDir)
+  const built = runQuiet('pnpm', ['run', 'build'], rootDir)
   if (!built.ok) {
     console.log('실패')
     fail({ step: 'build', rootDir, detail: built.output })

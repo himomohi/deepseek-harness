@@ -11,6 +11,7 @@ All notable changes and release notes for DeepSeek Harness (`dsh`) are documente
 * `--dry-run` preview only; `--yes` skips the prompt.
 * Hide git/pnpm walls of text; show `[1/4] 머지…` style steps.
 * On failure print an **AI에게 요청:** copy-paste prompt (repo, step, conflicts/markers, last output) so an agent can self-heal.
+* Windows: spawn git/pnpm with argv (`pnpm.cmd` on win32). Do not run `--format=%(...)` through `cmd.exe`.
 
 ---
 
