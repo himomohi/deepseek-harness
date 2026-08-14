@@ -53,8 +53,13 @@ interface UpdateInvocation {
   dryRun: boolean
 }
 
+/** Stop every live dsh web server on this machine. */
+interface StopInvocation {
+  mode: 'stop'
+}
+
 /** The resolved `dsh` invocation. Help, version, and errors exit inside {@link parseDshArgs}. */
-export type DshInvocation = ProfileInvocation | DumpConfigInvocation | PluginInvocation | UpdateInvocation
+export type DshInvocation = ProfileInvocation | DumpConfigInvocation | PluginInvocation | UpdateInvocation | StopInvocation
 
 /** Launcher flags shared by the default command and the `web` alias. */
 interface BootOptions {
@@ -78,6 +83,7 @@ Examples:
   dsh --profile tui --resume <session>       arguments after the launcher flags reach the app
   dsh --profile web --help                   the web app's own flags and help
   dsh plugin --profile tui add <package>     install a plugin into the tui profile
+  dsh stop                                   stop running dsh web servers (any cwd)
 `
 
 /**
@@ -193,6 +199,12 @@ export function parseDshArgs(argv: readonly string[], version: string): DshInvoc
     .action((options: { yes?: boolean; dryRun?: boolean }) => {
       rejectParentOptions('update')
       resolved = { mode: 'update', yes: options.yes === true, dryRun: options.dryRun === true }
+    })
+
+  program.command('stop').description('find and stop running dsh web servers on this machine')
+    .action(() => {
+      rejectParentOptions('stop')
+      resolved = { mode: 'stop' }
     })
 
   try {

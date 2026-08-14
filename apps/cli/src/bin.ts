@@ -52,6 +52,11 @@ switch (invocation.mode) {
     await runUpdate({ yes: invocation.yes, dryRun: invocation.dryRun })
     break
   }
+  case 'stop': {
+    const { runStop } = await import('./stop.ts')
+    await runStop()
+    break
+  }
   default:
     invocation satisfies never
     throw new Error(`dsh: unhandled invocation mode ${JSON.stringify(invocation)}`)

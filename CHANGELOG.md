@@ -15,6 +15,16 @@ All notable changes and release notes for DeepSeek Harness (`dsh`) are documente
 
 ---
 
+## [0.1.0-rc.12] - 2026-08-15
+
+### 🛑 `dsh stop`
+* Find every live dsh web server on this machine from any cwd and stop it (`ps` / `wmic` + `taskkill` on Windows).
+* Does not depend on the current directory or a pid file.
+
+---
+
+---
+
 ## [0.1.0-rc.10] - 2026-08-15
 
 ### 🇰🇷 Workspace picker Korean copy

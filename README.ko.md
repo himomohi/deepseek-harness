@@ -90,6 +90,12 @@ dsh update --yes
 
 미리보기로 공식/포크 SHA와 가져올 커밋만 짧게 보여 주고 `진행할까요?`를 묻는다. `pnpm`/`git` 장문은 숨긴다. 실패하면 **AI에게 요청:** 블록을 출력하니 그대로 붙여 넣으면 된다.
 
+```sh
+dsh stop
+```
+
+어느 디렉터리에서든 이 기기의 dsh 웹 서버를 찾아 중지한다.
+
 실제 동작은 **`deepseek-ai/deepseek-harness` Git 머지** → `pnpm install` + `pnpm run build` → 아래 마커 검사다.
 
 - 패키지: `locale-ko`, `llm-opencodex`, `vision-fallback`
