@@ -79,6 +79,11 @@ pnpm dsh web
   - 完美连接本地 `ocx` 代理（`http://127.0.0.1:10100/v1`），免配置 API Key 即可显示就绪（绿灯）状态。
   - 支持动态模型发现（Model Discovery），支持实时拉取 `ocx` 代理提供的所有在线模型。
   - 默认内置 `ocx` 代理的 **全部 29 个模型**（包含 GPT-5.6、DeepSeek V4、Grok 4.5/4.6、MiniMax M3、GLM 5.2、CommandCode 全系列等）。
+- **输出 Token 限制自动续写 (Auto-Continue)**:
+  - 当模型输出达到最大 Token 上限（`max-tokens`）而被截断时，Agent Loop 自动续写生成，实现长文本无缝完整输出。
+- **Prompt 缓存与 KV Cache 前缀匹配深度优化**:
+  - 融合 `earendil-works/pi` 缓存优化机制，在多轮对话中始终完整保留 Assistant 的思考过程（`reasoning_content`），避免 DeepSeek / OpenCodex 前缀缓存失效，极大提升 Cache Hit Rate。
+  - 在 `llm-pi-ai` 适配器中默认启用 Prompt Cache 保持策略（`cacheRetention: 'short'`），全面提升 Anthropic 及兼容供应商的缓存命中率。
 - **全平台跨系统兼容**:
   - 完整兼容 Windows、macOS（`darwin`）、Linux 的浏览器拉起与环境变量检测。
 - **匿名临时配置支持**:

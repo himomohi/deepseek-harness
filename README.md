@@ -62,6 +62,11 @@ For agents, follow [AGENTS.md](AGENTS.md).
   - Seamless connection to local `ocx` proxy (`http://127.0.0.1:10100/v1`) with instant active status (green indicator) without requiring API key configuration.
   - Implemented dynamic model discovery via `GET /models` endpoint.
   - Included all 29 models served by `ocx` (GPT-5.6 series, DeepSeek V4, Grok 4.5/4.6, MiniMax M3, GLM 5.2, CommandCode series, etc.) in the default catalog.
+- **Auto-Continue on Output Token Limit**:
+  - Automatically and seamlessly resumes model generation when hitting `max-tokens` limits, ensuring complete responses without premature cutoffs.
+- **Prompt Caching & KV Cache Prefix Match Optimization**:
+  - Incorporates cache retention strategies from `earendil-works/pi` to preserve `reasoning_content` across multi-turn requests, preventing DeepSeek / OpenCodex KV cache invalidation.
+  - Enabled default prompt cache retention (`cacheRetention: 'short'`) in `llm-pi-ai` adapter for Anthropic and compatible providers.
 - **Cross-Platform Compatibility**:
   - Fully compatible with Windows, macOS (`darwin`), and Linux (`xdg-open`, `open`, `start`).
 - **Anonymous Ephemeral Profile Fallback**:

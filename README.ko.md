@@ -68,6 +68,11 @@ pnpm dsh web
   - 로컬 `ocx` 프록시(`http://127.0.0.1:10100/v1`) 실행 시 설정 화면에서 별도 API Key 입력 없이도 즉시 활성화(초록색 불) 상태로 인식되도록 개선.
   - `Model Discovery` 구현으로 "사용 가능한 모델 가져오기" 클릭 시 `ocx`가 서빙하는 실시간 모델 목록 동적 패칭 지원.
   - GPT-5.6 시리즈, DeepSeek V4 시리즈, Grok 4.5/4.6, MiniMax M3, GLM 5.2, CommandCode 등 `ocx`가 프록시로 서빙하는 **총 29개 모델**을 기본 카탈로그에 전면 수록.
+- **출력 토큰 한도 자동 이어쓰기(Auto-Continue)**:
+  - 모델의 응답 길이가 출력 토큰 한도(`max-tokens`)에 도달하여 중간에 끊기더라도 끊김 없이 자동으로 이어서 완벽하게 응답을 완성하도록 Agent Loop 개선.
+- **프롬프트 캐시 및 KV 캐시 적중률(Cache Hit Rate) 최적화**:
+  - `earendil-works/pi`의 캐시 보존 기법을 융합하여 멀티턴 대화 시 어시스턴트의 추론(`reasoning_content`) 토큰을 완벽하게 보존, DeepSeek/OpenCodex의 Prefix Caching KV 캐시 무효화를 방지하고 캐시 적중률 대폭 향상.
+  - `llm-pi-ai` 어댑터의 프롬프트 캐시 지속성(`cacheRetention: 'short'`)을 기본 활성화하여 Anthropic 및 호환 프로바이더의 캐싱 효율 극대화.
 - **크로스 플랫폼 호환성 확보**:
   - Windows, macOS(`darwin`), Linux 전반에서 브라우저 스폰(`open`, `start`, `xdg-open`) 및 언어 환경 감지 일관성 보장.
 - **사용자 임시 프로필 자동 생성 지원**:
