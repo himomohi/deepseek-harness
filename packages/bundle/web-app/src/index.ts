@@ -10,9 +10,11 @@
  * @module @deepseek-ai/dsh-web-app
  */
 
+import { spawn } from 'node:child_process'
 import { createRequire } from 'node:module'
 import { networkInterfaces } from 'node:os'
 import { fileURLToPath } from 'node:url'
+
 import type { Context } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import { addHarnessSourceSection } from '@deepseek-ai/dsh-app-boot'
@@ -165,7 +167,20 @@ export function apply(ctx: Context, config: Config): void {
       // Reuse the exact LAN snapshot provided to the /api trust fence.
       const lanCandidate = runtime.lanAddresses[0]
       const port = ctx.webServer.port
-      console.log(`dsh web: ${localWebUrl(ctx)}${lanCandidate === undefined ? '' : ` (LAN: http://${lanCandidate}:${String(port)})`}`)
+      const url = localWebUrl(ctx)
+      console.log(`dsh web: ${url}${lanCandidate === undefined ? '' : ` (LAN: http://${lanCandidate}:${String(port)})`}`)
+      // Automatically open browser on startup if interactive
+      try {
+        if (process.platform === 'win32') {
+          spawn('cmd', ['/c', 'start', '', url], { detached: true, stdio: 'ignore' }).unref()
+        } else if (process.platform === 'darwin') {
+          spawn('open', [url], { detached: true, stdio: 'ignore' }).unref()
+        } else {
+          spawn('xdg-open', [url], { detached: true, stdio: 'ignore' }).unref()
+        }
+      } catch {
+        // non-blocking
+      }
     }
     // This row's own activation can precede a sibling failure. The app owns
     // readiness by waiting for its Loader tree, or prints at once in a
