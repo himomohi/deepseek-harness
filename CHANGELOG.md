@@ -4,6 +4,16 @@ All notable changes and release notes for DeepSeek Harness (`dsh`) are documente
 
 ---
 
+## [0.1.0-rc.9] - 2026-08-15
+
+### 🧪 `dsh update` verifies fork features after merge
+* Stop claiming custom plugins stay 100% intact. `dsh update` is a git merge of `upstream`, then install/build, then a file/marker check.
+* After a successful merge it checks `locale-ko`, `llm-opencodex`, `vision-fallback`, auto-continue, and `reasoning_content` preserve markers.
+* Merge conflicts now abort with the conflicted file list instead of falling through to a fake success message.
+* Upstream default branch is detected from fetched refs (`master` preferred, then `main`).
+
+---
+
 ## [0.1.0-rc.8] - 2026-08-14
 
 ### 🎛️ Web GUI Vision Fallback Customization (`ui-settings-models`)
@@ -63,7 +73,7 @@ All notable changes and release notes for DeepSeek Harness (`dsh`) are documente
 * **Terminal Multi-Language Feedback**:
   * Automatically detects system locale (`ko`, `zh`, `en`) and prints friendly terminal startup messages.
 * **`dsh update` Command**:
-  * One-touch command to synchronize upstream releases (`deepseek-ai/deepseek-harness`), auto-merging updates while preserving custom plugins and Korean localization.
+  * Merges official upstream (`deepseek-ai/deepseek-harness`), rebuilds, then verifies fork feature markers. Conflicts abort. This is not a 100% preserve guarantee.
 * **Ephemeral Profile Fallback**:
   * Instant session initialization without mandatory profile prompts.
 

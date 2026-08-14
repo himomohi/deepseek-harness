@@ -183,7 +183,7 @@ export function parseDshArgs(argv: readonly string[], version: string): DshInvoc
       resolved = { mode: 'plugin', profile: options.profile, args }
     })
 
-  program.command('update').description('sync and update to the latest official version while preserving custom plugins and localization')
+  program.command('update').description('merge official upstream, rebuild, and verify fork features still exist')
     .action(() => {
       rejectParentOptions('update')
       resolved = { mode: 'update' }

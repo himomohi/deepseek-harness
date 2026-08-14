@@ -34,7 +34,7 @@
 | 🔄 **输出 Token 上限自动续写** | 触发输出长度上限（`max-tokens`）时由 Agent Loop 自动无缝续写，彻底解决长代码生成截断问题 |
 | 🌐 **OpenCodex (`ocx`) 无缝接入** | 自动发现本地 `ocx` 代理，免配置 API Key 即刻就绪，内置 GPT-5.6、Claude 3.7、DeepSeek V4、Grok 4.6 等 **29 款模型** |
 | 🚀 **零配置启动与自动打开浏览器** | 运行 `dsh` 自动识别系统语言并在后台拉起默认浏览器（`http://127.0.0.1:3080`） |
-| 🔄 **`dsh update` 一键更新** | 自动合并官方 upstream 仓库最新更新，同时 100% 完整保留自定义插件与汉化配置 |
+| 🔄 **`dsh update` 上游同步** | 合并官方 `upstream` 并重建后**检查**分叉功能。独立插件通常能留下；改过官方核心文件的补丁可能冲突。 |
 | 🌍 **全量多语言支持** | 完整支持中文（`zh`）、韩语（`ko`）与英语（`en`）界面与设置 |
 | 🧩 **Cordis 微内核架构** | 沙箱、文件系统、终端、工具与 LLM 适配器全部支持热插拔与动态重载 |
 
@@ -80,11 +80,18 @@ pnpm run build
 pnpm dsh web
 ```
 
-### 3. 一键同步官方最新版本
+### 3. 上游同步 (`dsh update`)
 
 ```sh
 dsh update
 ```
+
+实际流程是 **合并 `deepseek-ai/deepseek-harness`**，再 `pnpm install` + `pnpm run build`，然后检查这些标记：
+
+- 包：`locale-ko`、`llm-opencodex`、`vision-fallback`
+- 核心补丁：auto-continue、`reasoning_content` 保留
+
+它不会神奇地保住所有核心文件改动。合并冲突会中止；干净合并若覆盖了分叉标记，检查也会失败。
 
 ---
 

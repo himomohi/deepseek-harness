@@ -48,8 +48,7 @@
 ### ⑤ `dsh update` 원터치 공식 버전 동기화 명령어
 * **패키지**: `apps/cli/src/update.ts`
 * **동작 원리**:
-  * 터미널에서 `dsh update` 입력 시 공식 upstream(`deepseek-ai/deepseek-harness`)의 최신 릴리스 및 커밋을 3-way merge로 가져와 자동 빌드.
-  * 우리가 개발한 한국어 번역 및 OpenCodex 플러그인 등 커스텀 기능을 100% 안전하게 보존.
+  * 터미널에서 `dsh update` 입력 시 공식 upstream(`deepseek-ai/deepseek-harness`)을 머지하고 다시 빌드한 뒤, 포크 기능 마커를 검사한다. 충돌이면 중단한다. 100% 자동 보존은 아니다.
 
 ### ⑥ 웹 UI 전체 한국어 로컬라이제이션
 * **패키지**: `packages/client/locale-ko/`

@@ -34,7 +34,7 @@ Built on the **"Everything is a Plugin"** philosophy and powered by the [Cordis]
 | 🔄 **Auto-Continue on Token Limit** | Automatically resumes generation when reaching `max-tokens` to prevent truncated outputs or incomplete code |
 | 🌐 **Seamless OpenCodex (`ocx`) Support** | Auto-detects local `ocx` proxy with instant green readiness, dynamic discovery, and **29 top-tier models** built-in |
 | 🚀 **Zero-Setup Auto Launch** | Running `dsh` detects system locale and automatically pops open the default browser at `http://127.0.0.1:3080` |
-| 🔄 **`dsh update` Smart Sync** | One-touch command to synchronize upstream releases while keeping custom plugins and localizations 100% intact |
+| 🔄 **`dsh update` Upstream Sync** | Merges official `upstream`, rebuilds, then **checks** fork features. Independent plugins usually survive; core-file patches can conflict and must be verified. |
 | 🌍 **Multi-Language Localization** | Comprehensive Korean (`ko`), English (`en`), and Chinese (`zh`) UI and plugin support |
 | 🧩 **Cordis Microkernel Architecture** | Sandboxes, filesystems, shells, tools, and LLM adapters all operate as hot-reloadable plugins |
 
@@ -80,11 +80,18 @@ pnpm run build
 pnpm dsh web
 ```
 
-### 3. One-Touch Upstream Sync
+### 3. Upstream Sync (`dsh update`)
 
 ```sh
 dsh update
 ```
+
+This is a **git merge of `deepseek-ai/deepseek-harness`**, then `pnpm install` + `pnpm run build`, then a file/marker check for:
+
+- packages: `locale-ko`, `llm-opencodex`, `vision-fallback`
+- core patches: auto-continue, `reasoning_content` preserve
+
+It does **not** magically keep every core-file edit. Merge conflicts abort. A clean merge that overwrote a fork marker also fails the check.
 
 ---
 
