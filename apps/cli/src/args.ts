@@ -137,10 +137,8 @@ export function parseDshArgs(argv: readonly string[], version: string): DshInvoc
       // `dsh -h` (no profile to hand it to) must print.
       if (options.profile === undefined) {
         if (args.some(argument => argument === '-h' || argument === '--help')) program.help()
-        program.error('error: --profile <name> is required')
       }
-      const profile = options.profile
-      if (profile === '') program.error('error: --profile needs a name')
+      const profile = options.profile || 'web'
       resolved = resolveBoot(program, profile, options, args)
     })
 
