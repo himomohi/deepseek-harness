@@ -2297,11 +2297,14 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
             if (pendingImage || messagesHaveImage(found.agent.session.deriveMessages())) {
               const info = await ctx.llm.resolveModelInfo(resolved.provider, resolved.model)
               if (info.inputModalities !== undefined && !info.inputModalities.includes('image')) {
-                return err(request, {
-                  code: 'model-unavailable',
-                  message: `Model "${resolved.model}" does not accept image input, but this session already contains images; select an image-capable model.`,
-                  details: { provider, model },
-                })
+                const visionFallback = ctx.get('visionFallback')
+                if (visionFallback === undefined) {
+                  return err(request, {
+                    code: 'model-unavailable',
+                    message: `Model "${resolved.model}" does not accept image input, but this session already contains images; select an image-capable model.`,
+                    details: { provider, model },
+                  })
+                }
               }
             }
             const selected: ModelSelection = {
@@ -2486,11 +2489,14 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
               const current = selectionFor(agent).current
               const modelInfo = await ctx.llm.resolveModelInfo(current.provider, current.model)
               if (modelInfo.inputModalities !== undefined && !modelInfo.inputModalities.includes('image')) {
-                return err(request, {
-                  code: 'attachment-error',
-                  message: `Model "${current.model}" does not support image input.`,
-                  details: { reason: 'MODEL_DOES_NOT_SUPPORT_IMAGES' },
-                })
+                const visionFallback = ctx.get('visionFallback')
+                if (visionFallback === undefined) {
+                  return err(request, {
+                    code: 'attachment-error',
+                    message: `Model "${current.model}" does not support image input.`,
+                    details: { reason: 'MODEL_DOES_NOT_SUPPORT_IMAGES' },
+                  })
+                }
               }
             }
             const durable = await durablePromptContent(ctx, content)

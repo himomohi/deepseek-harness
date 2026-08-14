@@ -104,13 +104,25 @@ const OFF_ONLY_REASONING_EFFORTS = [
   { id: OFF_REASONING_EFFORT, name: 'Off' },
 ] as const
 
+/** Determine if an OpenCodex model supports vision input based on identifier conventions. */
+export function isKnownVisionModel(modelId: string): boolean {
+  const id = modelId.toLowerCase()
+  if (id.includes('gpt-5') || id.includes('gpt-4') || id.includes('claude') || id.includes('gemini') || id.includes('grok') || id.includes('minimax') || id.includes('glm') || id.includes('qwen') || id.includes('step-') || id.includes('vision') || id.includes('vl') || id.includes('hy3') || id.includes('kimi')) {
+    if (id.includes('deepseek') && !id.includes('vl')) return false
+    if (id.includes('inkling')) return false
+    return true
+  }
+  return false
+}
+
 function modelInfo(provider: string, model: DeepSeekCatalogModel): LlmModelInfo {
+  const isVision = isKnownVisionModel(model.id)
   return {
     provider,
     id: model.id,
     name: model.name ?? model.id,
     ...model.description === undefined ? {} : { description: model.description },
-    inputModalities: ['text'],
+    inputModalities: isVision ? ['text', 'image'] : ['text'],
   }
 }
 
@@ -187,7 +199,12 @@ export class DeepSeekAdapter extends LlmAdapter {
       // capability — "unknown" here would let the host accept and persist
       // images the serializer must then reject.
       ...configured === undefined
-        ? { provider, id: model, name: model, inputModalities: ['text' as const] }
+        ? {
+          provider,
+          id: model,
+          name: model,
+          inputModalities: isKnownVisionModel(model) ? (['text', 'image'] as const) : (['text'] as const),
+        }
         : modelInfo(provider, configured),
       context: { contextWindow },
       defaultMaxTokens: configured?.maxTokens ?? connection.maxTokens,

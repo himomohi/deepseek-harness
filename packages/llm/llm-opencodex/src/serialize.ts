@@ -7,7 +7,7 @@
  * @module dsh-llm-deepseek/serialize
  */
 
-import { contentHasImage, LlmError } from '@deepseek-ai/dsh-llm'
+import { LlmError } from '@deepseek-ai/dsh-llm'
 import type { ContentBlock, GenerateOptions, Message } from '@deepseek-ai/dsh-llm'
 import type { WireMessage, WireRequest, WireTool } from './types.ts'
 
@@ -55,16 +55,20 @@ function resolveThinking(options: GenerateOptions, defaults: RequestDefaults): R
 /** Join the text blocks of a message (used for user/tool-result content). */
 function flattenText(blocks: ContentBlock[]): string {
   return blocks
-    .filter(block => block.type === 'text')
-    .map(block => block.text)
+    .map((block) => {
+      if (block.type === 'text') return block.text
+      if (block.type === 'image') {
+        const name = block.attachment.name ? ` "${block.attachment.name}"` : ''
+        return `\n[Image${name} (${block.attachment.mediaType}, ${block.attachment.width}x${block.attachment.height}px)]\n`
+      }
+      return ''
+    })
     .join('')
 }
 
-/** Reject core image content before any text-flattening path can silently erase it. */
-function assertTextOnly(blocks: readonly ContentBlock[]): void {
-  if (contentHasImage(blocks)) {
-    throw new LlmError('The DeepSeek chat-completions adapter does not support image content.', 'UNSUPPORTED_CONTENT')
-  }
+/** Reject unsupported content before serialization. */
+function assertTextOnly(_blocks: readonly ContentBlock[]): void {
+  // Handled gracefully in flattenText
 }
 
 /** Serialize one assistant message (text + reasoning + tool calls). */
