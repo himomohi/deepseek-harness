@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-llm-opencodex",
   "description": "OpenCodex proxy adapter for DeepSeek Harness — use any OpenCodex routed LLMs",
-  "version": "0.1.0-rc.5",
+  "version": "0.1.0-rc.6",
   "publishConfig": {
     "access": "public"
   },
