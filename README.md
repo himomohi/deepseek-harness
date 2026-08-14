@@ -50,6 +50,25 @@ Start with the [development guide](docs/development.md) and [architecture docume
 
 For agents, follow [AGENTS.md](AGENTS.md).
 
+## Changelog
+
+### [2026-08-14] - 0.1.0-rc.6 Sync, OpenCodex & UX Enhancements
+- **`dsh update` One-Touch Update Command**:
+  - Automatically checks official upstream repository and npm releases (`0.1.0-rc.6`), merges upstream updates, and rebuilds while keeping custom plugins and Korean localization intact.
+- **Auto Browser Launch on Startup with Localized Terminal Output**:
+  - Automatically launches the default browser when running `dsh` or `dsh web`.
+  - Added user locale detection (`ko`, `zh`, `en`) across Windows, macOS, and Linux for clear terminal launch messages.
+- **Full OpenCodex (`ocx`) Proxy Integration**:
+  - Seamless connection to local `ocx` proxy (`http://127.0.0.1:10100/v1`) with instant active status (green indicator) without requiring API key configuration.
+  - Implemented dynamic model discovery via `GET /models` endpoint.
+  - Included all 29 models served by `ocx` (GPT-5.6 series, DeepSeek V4, Grok 4.5/4.6, MiniMax M3, GLM 5.2, CommandCode series, etc.) in the default catalog.
+- **Cross-Platform Compatibility**:
+  - Fully compatible with Windows, macOS (`darwin`), and Linux (`xdg-open`, `open`, `start`).
+- **Anonymous Ephemeral Profile Fallback**:
+  - Automatically initializes an anonymous profile when none is provided, allowing instant usage without prompt blockers.
+- **Full Korean Localization (ko)**:
+  - Comprehensive Korean translation across all Web UI components, settings, and menus.
+
 ## License
 
 [MIT](LICENSE)

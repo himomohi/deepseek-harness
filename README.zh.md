@@ -67,6 +67,25 @@ pnpm dsh web
 
 面向 agent：请遵循 [AGENTS.md](AGENTS.md)。
 
+## 更新日志 (Changelog)
+
+### [2026-08-14] - 同步官方 0.1.0-rc.6、OpenCodex 与体验优化
+- **`dsh update` 一键更新指令**:
+  - 自动检测并同步官方 upstream 仓库与 npm 最新发布版本（`0.1.0-rc.6`），保留自定义插件与汉化/韩化配置的同时完成更新与重构。
+- **启动自动唤起浏览器与终端多语言提示**:
+  - 运行 `dsh` 或 `dsh web` 时自动在后台打开默认浏览器访问 Web 页面。
+  - 支持 Windows、macOS 与 Linux 环境的多语言 Locale（`ko`, `zh`, `en`）智能识别与友好的终端启动提示。
+- **完整 OpenCodex (`ocx`) 代理无缝接入**:
+  - 完美连接本地 `ocx` 代理（`http://127.0.0.1:10100/v1`），免配置 API Key 即可显示就绪（绿灯）状态。
+  - 支持动态模型发现（Model Discovery），支持实时拉取 `ocx` 代理提供的所有在线模型。
+  - 默认内置 `ocx` 代理的 **全部 29 个模型**（包含 GPT-5.6、DeepSeek V4、Grok 4.5/4.6、MiniMax M3、GLM 5.2、CommandCode 全系列等）。
+- **全平台跨系统兼容**:
+  - 完整兼容 Windows、macOS（`darwin`）、Linux 的浏览器拉起与环境变量检测。
+- **匿名临时配置支持**:
+  - 无需强制选择或输入 Profile，自动生成临时 Profile 即刻开始会话。
+- **全套 Web UI 韩国语（ko）本地化**:
+  - 覆盖侧边栏、对话流、设置、模型管理、插件列表等全界面。
+
 ## 许可证
 
 [MIT](LICENSE)
