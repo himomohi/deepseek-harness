@@ -9,15 +9,9 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-^22.19%20||%20>=24-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
 [![OpenCodex Ready](https://img.shields.io/badge/OpenCodex-29%20Models-8A2BE2?style=for-the-badge)](packages/llm/llm-opencodex)
-[![Cache Hit](https://img.shields.io/badge/KV%20Cache%20Hit-90%25+-FF6B6B?style=for-the-badge)](#-performance--cache-optimization-benchmark)
+[![Cache Hit](https://img.shields.io/badge/KV%20Cache%20Hit-90%25+-FF6B6B?style=for-the-badge)](#benchmark)
 
-<p align="center">
-  <a href="README.md"><b>English</b></a> •
-  <a href="README.ko.md">한국어</a> •
-  <a href="README.zh.md">中文</a> •
-  <a href="CHANGELOG.md"><b>Changelog & Releases</b></a> •
-  <a href="WORK_RESUME.md">Work Resume Guide</a>
-</p>
+English | [中文](README.zh.md) | [한국어](README.ko.md) | [Changelog](CHANGELOG.md) | [Resume](WORK_RESUME.md)
 
 </div>
 
@@ -45,6 +39,7 @@ Built on the **"Everything is a Plugin"** philosophy and powered by the [Cordis]
 | 🧩 **Cordis Microkernel Architecture** | Sandboxes, filesystems, shells, tools, and LLM adapters all operate as hot-reloadable plugins |
 
 ---
+<a id="benchmark"></a>
 
 ## 📊 Performance & Cache Optimization (Benchmark)
 
@@ -69,10 +64,7 @@ graph LR
 ### 1. Run with Global CLI
 
 ```sh
-# Start Web GUI (auto-opens default browser)
 dsh
-
-# Or explicit web mode
 dsh web
 ```
 
@@ -81,15 +73,10 @@ dsh web
 ### 2. Build and Run from Source
 
 ```sh
-# 1. Clone the repository
 git clone https://github.com/himomohi/deepseek-harness.git
 cd deepseek-harness
-
-# 2. Install dependencies & build
 pnpm install
 pnpm run build
-
-# 3. Launch
 pnpm dsh web
 ```
 

@@ -9,15 +9,9 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-^22.19%20||%20>=24-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
 [![OpenCodex Ready](https://img.shields.io/badge/OpenCodex-29%20Models-8A2BE2?style=for-the-badge)](packages/llm/llm-opencodex)
-[![Cache Hit](https://img.shields.io/badge/KV%20Cache%20Hit-90%25+-FF6B6B?style=for-the-badge)](#-性能与缓存优化-benchmark)
+[![Cache Hit](https://img.shields.io/badge/KV%20Cache%20Hit-90%25+-FF6B6B?style=for-the-badge)](#benchmark)
 
-<p align="center">
-  <a href="README.md">English</a> •
-  <a href="README.ko.md">한국어</a> •
-  <a href="README.zh.md"><b>中文</b></a> •
-  <a href="CHANGELOG.md"><b>更新日志 (Changelog)</b></a> •
-  <a href="WORK_RESUME.md">工作继续指南</a>
-</p>
+[English](README.md) | 中文 | [한국어](README.ko.md) | [Changelog](CHANGELOG.md) | [Resume](WORK_RESUME.md)
 
 </div>
 
@@ -45,6 +39,7 @@
 | 🧩 **Cordis 微内核架构** | 沙箱、文件系统、终端、工具与 LLM 适配器全部支持热插拔与动态重载 |
 
 ---
+<a id="benchmark"></a>
 
 ## 📊 性能与缓存优化 (Benchmark)
 
@@ -52,10 +47,10 @@
 
 ```mermaid
 graph LR
-    A[用户提问轮次] --> B[固定 System 与 Tools 前缀]
-    B --> C[保留 Assistant 思考 Token]
-    C --> D[服务端 KV Cache 100% 前缀匹配]
-    D --> E[⚡ 90%+ 缓存命中 / 0.3s TTFT]
+    A[User Prompt Turn] --> B[Fixed System & Tools Prefix]
+    B --> C[Preserve Reasoning Tokens]
+    C --> D[Server KV Cache 100% Prefix Match]
+    D --> E[⚡ 90%+ Cache Hit / 0.3s TTFT]
 ```
 
 * **首字生成延迟 (TTFT)**: 3~8 秒 ➔ **0.3~0.8 秒**（大幅缩短 ~75%）
@@ -69,10 +64,7 @@ graph LR
 ### 1. 使用全局 CLI 启动
 
 ```sh
-# 启动 Web GUI（自动打开浏览器）
 dsh
-
-# 或指定 Web 模式
 dsh web
 ```
 
@@ -81,15 +73,10 @@ dsh web
 ### 2. 源码构建与运行
 
 ```sh
-# 1. 克隆仓库
 git clone https://github.com/himomohi/deepseek-harness.git
 cd deepseek-harness
-
-# 2. 安装依赖并构建
 pnpm install
 pnpm run build
-
-# 3. 运行
 pnpm dsh web
 ```
 
@@ -113,16 +100,16 @@ dsh update
 
 ```
 packages/
-  ├── core/            # Agent Loop、会话、系统提示词、工具核心
+  ├── core/            # Agent loop, session, system prompt, tool spine
   ├── llm/
-  │    ├── llm-opencodex/   # 🌟 OpenCodex 代理适配器与 29 款模型发现
-  │    ├── llm-deepseek/    # DeepSeek 官方 API 适配器（KV Cache 优化）
-  │    ├── llm-pi-ai/       # pi-ai 多供应商适配器（Cache Retention）
+  │    ├── llm-opencodex/   # 🌟 OpenCodex adapter & 29-model discovery
+  │    ├── llm-deepseek/    # Official DeepSeek adapter (KV Cache optimized)
+  │    ├── llm-pi-ai/       # pi-ai multi-provider adapter (Cache Retention)
   ├── client/
-  │    ├── locale-ko/       # 🇰🇷 Web 客户端韩语语言包
-  │    ├── ui-*/            # Web UI 界面组件插件
-  ├── bundle/          # installable dsh --profile 配置层
-  └── shell/fs/lsp/    # 沙箱、终端、文件系统、语言服务器插件
+  │    ├── locale-ko/       # 🇰🇷 Web client Korean language pack
+  │    ├── ui-*/            # Web UI component plugins
+  ├── bundle/          # installable dsh --profile patch layers
+  └── shell/fs/lsp/    # Sandboxes, shells, filesystems, language server plugins
 ```
 
 ---

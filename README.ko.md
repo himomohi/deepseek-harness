@@ -9,15 +9,9 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-^22.19%20||%20>=24-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
 [![OpenCodex Ready](https://img.shields.io/badge/OpenCodex-29%20Models-8A2BE2?style=for-the-badge)](packages/llm/llm-opencodex)
-[![Cache Hit](https://img.shields.io/badge/KV%20Cache%20Hit-90%25+-FF6B6B?style=for-the-badge)](#-성능--캐시-최적화-benchmark)
+[![Cache Hit](https://img.shields.io/badge/KV%20Cache%20Hit-90%25+-FF6B6B?style=for-the-badge)](#benchmark)
 
-<p align="center">
-  <a href="README.md">English</a> •
-  <a href="README.ko.md"><b>한국어</b></a> •
-  <a href="README.zh.md">中文</a> •
-  <a href="CHANGELOG.md"><b>릴리즈 노트(Changelog)</b></a> •
-  <a href="WORK_RESUME.md">작업 재개 가이드</a>
-</p>
+[English](README.md) | [中文](README.zh.md) | 한국어 | [Changelog](CHANGELOG.md) | [Resume](WORK_RESUME.md)
 
 </div>
 
@@ -45,55 +39,48 @@
 | 🧩 **Cordis 마이크로커널 아키텍처** | 샌드박스, 파일시스템, 셸, 도구, LLM 어댑터가 모두 핫 리로딩 가능한 플러그인으로 동작 |
 
 ---
+<a id="benchmark"></a>
 
 ## 📊 성능 & 캐시 최적화 (Benchmark)
 
-`earendil-works/pi`의 캐시 보존 기법을 융합하여 멀티턴 대화에서 발생하는 **Prefix Invalidation(캐시 무효화)**을 원천 차단했습니다.
+`earendil-works/pi`에서 검증된 프롬프트 캐시 보존 기법을 적용하여 다중 턴 실행 시 **프리픽스 캐시 무효화(Prefix Cache Invalidation)**를 완벽하게 방지합니다:
 
 ```mermaid
 graph LR
-    A[사용자 질문 턴] --> B[시스템 프롬프트 & 도구 고정]
-    B --> C[어시스턴트 추론 토큰 보존]
-    C --> D[서버 KV Cache 100% Prefix Match]
+    A[User Prompt Turn] --> B[Fixed System & Tools Prefix]
+    B --> C[Preserve Reasoning Tokens]
+    C --> D[Server KV Cache 100% Prefix Match]
     D --> E[⚡ 90%+ Cache Hit / 0.3s TTFT]
 ```
 
-* **첫 토큰 생성 지연 (TTFT)**: 3~8초 ➔ **0.3~0.8초** (약 75% 단축)
-* **입력 토큰 비용 절감**: Cache Hit 단가 적용으로 **최대 80~90% 절감**
-* **출력 완결성**: 장문 코드 생성 중 잘림 없는 완벽한 응답 보장
+* **첫 토큰 생성 지연(TTFT)**: 3~8초 ➔ **0.3~0.8초** (약 ~75% 획기적 단축)
+* **입력 토큰 비용 절감**: Cache Hit 할인 적용으로 **최대 80~90% 비용 절약**
+* **출력 무결성 보장**: 대규모 파일 생성 및 코드 리팩토링 중단 현상 원천 차단
 
 ---
 
 ## 💻 빠른 시작 (Quick Start)
 
-### 1. 전역 명령어로 바로 실행
+### 1. 전역 CLI로 즉시 실행
 
 ```sh
-# 웹 GUI 실행 (기본 브라우저 자동 팝업)
 dsh
-
-# 또는 명시적 웹 모드 실행
 dsh web
 ```
 
-> 웹 UI는 기본적으로 `http://127.0.0.1:3080` 포트로 실행됩니다.
+> 웹 UI는 기본적으로 `http://127.0.0.1:3080` 포트로 서빙됩니다.
 
-### 2. 소스 코드에서 빌드 및 실행
+### 2. 소스코드 빌드 및 개발 실행
 
 ```sh
-# 1. 저장소 클론
 git clone https://github.com/himomohi/deepseek-harness.git
 cd deepseek-harness
-
-# 2. 의존성 설치 및 빌드
 pnpm install
 pnpm run build
-
-# 3. 실행
 pnpm dsh web
 ```
 
-### 3. 공식 최신 버전으로 원터치 업데이트
+### 3. 공식 최신 버전 원클릭 동기화
 
 ```sh
 dsh update

@@ -112,4 +112,38 @@ describe('VisionFallbackService', () => {
     expect((firstMessage!.content[1] as { text: string }).text).toContain('[Visual Description (via Vision Fallback)]')
     expect((firstMessage!.content[1] as { text: string }).text).toContain('Detailed visual description of image via gpt-5.6-sol')
   })
+
+  it('respects dynamic custom settings and disabled state', async () => {
+    const ctx = new Context()
+    new MockLlmService(ctx, [
+      { provider: 'anthropic', id: 'claude-3-7-sonnet-latest', name: 'Claude', inputModalities: ['text', 'image'] },
+    ])
+    new MockAttachmentService(ctx)
+
+    // Mock settings service
+    class MockSettingsService extends Service {
+      private store: Record<string, unknown> = {}
+      constructor(c: Context) {
+        super(c, 'settings')
+      }
+      register() {}
+      get(ns: string) {
+        return this.store[ns]
+      }
+      set(ns: string, val: unknown) {
+        this.store[ns] = val
+      }
+    }
+    const settings = new MockSettingsService(ctx)
+    const service = new VisionFallbackService(ctx)
+
+    // With custom fallback override
+    settings.set('vision-fallback', { fallbackProvider: 'anthropic', fallbackModel: 'claude-3-7-sonnet-latest' })
+    const route = await service.findFallbackRoute()
+    expect(route).toEqual({ provider: 'anthropic', model: 'claude-3-7-sonnet-latest' })
+
+    // When disabled
+    settings.set('vision-fallback', { enabled: false })
+    expect(await service.findFallbackRoute()).toBeUndefined()
+  })
 })

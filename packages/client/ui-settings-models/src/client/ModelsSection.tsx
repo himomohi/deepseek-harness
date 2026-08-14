@@ -21,6 +21,7 @@ import { CustomProviderCard } from './CustomProviderCard.tsx'
 import { deriveKeyRef, messageOf, protocolChoices, providerUsable } from './store.ts'
 import type { ModelsSettingsState, ModelsSettingsStore, ProviderRow } from './store.ts'
 import { ProviderEditor, type ProviderEditorProps } from './ProviderEditor.tsx'
+import { VisionFallbackCard } from './VisionFallbackCard.tsx'
 import type { en } from './locales.ts'
 import styles from './ModelsSection.module.css'
 
@@ -488,6 +489,7 @@ function Loaded({ injected }: { injected: ModelsSectionInjected }): ReactNode {
               </div>
             )}
       </div>
+      <VisionFallbackCard api={api} t={t} readOnly={!state.writable} />
       <Modal
         open={deleteTarget !== undefined}
         onClose={closeDelete}

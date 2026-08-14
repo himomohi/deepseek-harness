@@ -68,6 +68,24 @@ export class VisionFallbackService extends Service implements VisionFallback {
     public readonly config: VisionFallbackConfig = {},
   ) {
     super(ctx, 'visionFallback')
+
+    ctx.inject(['settings'], (settingsCtx) => {
+      const settings = settingsCtx.get('settings') as { register?: (ns: string, schema: unknown, opts: unknown) => void } | undefined
+      settings?.register?.('vision-fallback', Config, {
+        base: config,
+        applies: 'live',
+      })
+    })
+  }
+
+  /** Current effective config merging initial plugin config and live user settings. */
+  get effectiveConfig(): VisionFallbackConfig {
+    const settings = this.ctx.get('settings') as { get?: (ns: string) => unknown } | undefined
+    const userConfig = settings?.get?.('vision-fallback') as VisionFallbackConfig | undefined
+    return {
+      ...this.config,
+      ...userConfig,
+    }
   }
 
   /** Check if a specific model route supports image input. */
@@ -84,11 +102,14 @@ export class VisionFallbackService extends Service implements VisionFallback {
 
   /** Find the best available vision fallback model route. */
   async findFallbackRoute(signal?: AbortSignal): Promise<{ provider: string; model: string } | undefined> {
+    const cfg = this.effectiveConfig
+    if (cfg.enabled === false) return undefined
+
     const llm = this.ctx.get('llm')
     if (!llm) return undefined
 
-    if (this.config.fallbackProvider && this.config.fallbackModel) {
-      return { provider: this.config.fallbackProvider, model: this.config.fallbackModel }
+    if (cfg.fallbackProvider && cfg.fallbackModel) {
+      return { provider: cfg.fallbackProvider, model: cfg.fallbackModel }
     }
 
     // 1. Check preferred vision models in order
@@ -142,9 +163,10 @@ export class VisionFallbackService extends Service implements VisionFallback {
       return fallbackSummary
     }
 
+    const cfg = this.effectiveConfig
     const instruction = options?.userPrompt
       ? `The user is asking: "${options.userPrompt}".\nPlease analyze this image thoroughly with full attention to any visual details, text, diagrams, or numbers relevant to answering the user's question accurately.`
-      : (this.config.prompt || DEFAULT_PROMPT)
+      : (cfg.prompt || DEFAULT_PROMPT)
 
     const userMessage: Message = createUserMessage({
       source: { kind: 'plugin', plugin: 'vision-fallback' },
@@ -164,7 +186,7 @@ export class VisionFallbackService extends Service implements VisionFallback {
       provider: route.provider,
       model: route.model,
       messages: [userMessage],
-      maxTokens: this.config.maxTokens ?? 2048,
+      maxTokens: cfg.maxTokens ?? 2048,
       ...options?.signal === undefined ? {} : { signal: options.signal },
     }
 

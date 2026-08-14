@@ -4,6 +4,22 @@ All notable changes and release notes for DeepSeek Harness (`dsh`) are documente
 
 ---
 
+## [0.1.0-rc.8] - 2026-08-14
+
+### 🎛️ Web GUI Vision Fallback Customization (`ui-settings-models`)
+* **Dedicated Vision Fallback Settings Card (`VisionFallbackCard`)**:
+  * Added a dedicated, beautifully styled Vision Fallback card in the Web GUI Settings ➔ **Models** page.
+  * **Enable / Disable Toggle**: One-click switch with instant UI feedback.
+  * **Fallback Strategy Selector**:
+    * `Automatic (권장 / 推荐)`: Automatically detects and selects the best available multimodal model (`gpt-5.6-sol`, `claude-3-7-sonnet`, `gemini-3.7-flash`, etc.).
+    * `Custom Provider & Model (수동 지정 / 自定义)`: Lets users choose any provider (`opencodex`, `anthropic`, `openai`, `google`, `deepseek`) and specific vision model, or type any custom model ID.
+  * **Max Tokens Tuning**: Configurable maximum tokens limit for image OCR & scene analysis.
+  * **Live Settings Persistence**: Writes directly to `vision-fallback` settings namespace (`api.settings.mutate`) taking effect in real time without restart.
+* **Full Multi-Language Localization**:
+  * Complete translations in Korean (`ko`), English (`en`), and Chinese (`zh`).
+
+---
+
 ## [0.1.0-rc.7] - 2026-08-14
 
 ### 👁️ Automatic Vision Fallback (`@deepseek-ai/dsh-vision-fallback`)

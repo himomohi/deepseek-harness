@@ -64,6 +64,18 @@
   * 생성된 시각 분석 결과를 텍스트 블록으로 구조화 변환하여 프롬프트에 주입함으로써, 텍스트 전용 모델도 이미지 내용을 완벽히 이해하고 추론할 수 있도록 지원 (`MODEL_DOES_NOT_SUPPORT_IMAGES` 에러 원천 차단).
   * `AttachmentId` 기반 인메모리 캐싱으로 중복 호출 비용 제로화.
 
+### ⑧ 웹 GUI 비전 폴백 모델 커스텀 설정 카드 (`ui-settings-models`)
+* **패키지**: `packages/client/ui-settings-models/` (`VisionFallbackCard.tsx`)
+* **동작 원리**:
+  * 웹 GUI 설정 ➔ **모델(Models)** 페이지에 전용 **시각 모델 자동 폴백(Vision Fallback)** 설정 카드 추가.
+  * **원클릭 활성화/비활성화 스위치**: 비전 폴백 기능 온/오프 토글.
+  * **폴백 전략 선택**:
+    * `자동 감지 (Auto - 권장)`: 환경에 등록된 최적 비전 모델 자동 탐색 (`gpt-5.6-sol`, `claude-3-7-sonnet`, `gemini-3.7-flash` 등).
+    * `직접 지정 (Custom)`: 제공자(`opencodex`, `anthropic`, `openai`, `google`) 및 모델을 직접 선택하거나 임의의 모델 ID 직접 입력.
+  * **최대 토큰 한도(Max Tokens) 조절**: 이미지 OCR 및 장면 분석 출력 토큰 크기 지정 (기본 2048).
+  * **실시간 동적 반영**: `api.settings.mutate`를 통해 설정을 저장하면 서버 재부팅 없이 백엔드 서비스에 즉시 반영.
+  * **전체 다국어 로컬라이제이션**: 한국어(`ko`), 영어(`en`), 중국어(`zh`) 완벽 지원.
+
 ---
 
 ## 🛠️ 3. 주요 실행 명령어 치트시트
