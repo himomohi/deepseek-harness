@@ -426,3 +426,22 @@
   gap: 8px;
   margin-top: 8px;
 }
+
+@media (max-width: 720px) {
+  .dialog.dialog {
+    width: 100%;
+    height: min(100dvh, 100%);
+    border-radius: 0;
+  }
+
+  .header,
+  .content,
+  .footerBar {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .column {
+    min-width: min(256px, 100%);
+  }
+}

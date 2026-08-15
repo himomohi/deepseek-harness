@@ -111,3 +111,14 @@
   line-height: 1.5;
   color: var(--dsw-alias-label-tertiary);
 }
+
+@media (max-width: 720px) {
+  .head {
+    flex-wrap: wrap;
+  }
+
+  .label,
+  .hint {
+    overflow-wrap: anywhere;
+  }
+}

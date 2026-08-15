@@ -83,3 +83,15 @@
   font-size: 13px;
   color: var(--dsw-alias-label-tertiary);
 }
+
+@media (max-width: 720px) {
+  .tabs {
+    flex-wrap: wrap;
+    gap: 8px 16px;
+  }
+
+  .heading,
+  .intro {
+    overflow-wrap: anywhere;
+  }
+}

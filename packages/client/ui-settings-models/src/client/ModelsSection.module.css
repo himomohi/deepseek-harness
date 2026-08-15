@@ -473,6 +473,16 @@
   gap: 6px;
 }
 
+@media (max-width: 720px) {
+  .modelListHead {
+    flex-wrap: wrap;
+  }
+
+  .modelRow {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+  }
+}
+
 /* Square, label-free affordances: the row's own inputs carry the meaning, so
    the actions stay glyphs and announce themselves through aria-label. */
 .iconButton {

@@ -155,3 +155,18 @@
   outline: 2px solid var(--dsw-alias-brand-primary);
   outline-offset: 1px;
 }
+
+@media (max-width: 720px) {
+  .header {
+    flex-wrap: wrap;
+  }
+
+  .name,
+  .description {
+    overflow-wrap: anywhere;
+  }
+
+  .footer {
+    flex-wrap: wrap;
+  }
+}

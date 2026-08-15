@@ -363,3 +363,24 @@
 .root[data-phase='settling'] .composerSeat {
   visibility: hidden;
 }
+
+@media (max-width: 720px) {
+  .root {
+    --dsh-composer-side-clearance: 10px;
+  }
+
+  .header {
+    padding: 8px 12px 0 12px;
+  }
+
+  .headerUtilities {
+    margin-left: 8px;
+  }
+
+  .tabs {
+    gap: 16px;
+    padding-left: 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+}

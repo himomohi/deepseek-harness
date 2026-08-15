@@ -46,7 +46,7 @@
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(268px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(268px, 100%), 1fr));
   /* Every row the same height, so a short description does not make its card
      shorter than the one beside it. */
   grid-auto-rows: 1fr;
@@ -406,4 +406,18 @@
 .creatorButton:disabled {
   opacity: 0.4;
   cursor: default;
+}
+
+@media (max-width: 720px) {
+  .cardHead,
+  .cardFoot,
+  .revealedPath {
+    flex-wrap: wrap;
+  }
+
+  .title,
+  .intro,
+  .cardName {
+    overflow-wrap: anywhere;
+  }
 }

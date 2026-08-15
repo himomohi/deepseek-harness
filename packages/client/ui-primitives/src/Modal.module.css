@@ -101,3 +101,36 @@
   gap: 8px;
   padding: 0 24px;
 }
+
+@media (max-width: 720px) {
+  .root {
+    padding: 0;
+    align-items: stretch;
+    justify-content: stretch;
+  }
+
+  .dialog {
+    width: 100%;
+    max-width: none;
+    height: 100%;
+    max-height: 100dvh;
+    border-radius: 0;
+  }
+
+  .header,
+  .description,
+  .body,
+  .footer {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .footer {
+    flex-wrap: wrap;
+  }
+
+  .title,
+  .description {
+    overflow-wrap: anywhere;
+  }
+}

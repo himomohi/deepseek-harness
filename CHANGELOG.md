@@ -40,6 +40,15 @@ All notable changes and release notes for DeepSeek Harness (`dsh`) are documente
 
 ---
 
+## [0.1.0-rc.15] - 2026-08-15
+
+### 📱 Other panels on phone
+* Plugins / agent-preset settings wrap tabs, cards, and footers.
+* Shared Modal and workspace directory picker go edge-to-edge below 720px.
+* Conversation header/tabs tighten; hero headline shrinks.
+
+---
+
 ---
 
 ---
