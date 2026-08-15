@@ -5,11 +5,13 @@
  * the built frontend dist (workspace knowledge of this bundle, never user
  * config), mounts the `frontend-static` fallback owner over it, registers the
  * harness-source and web-surface prompt sections, the bash-visible web runtime
- * variable, and the URL line. App command-line values arrive through the
+ * variable, the URL line, and interactive default-browser launch. App
+ * command-line values arrive through the
  * `webStartup` service expressions in the bundle patch.
  * @module @deepseek-ai/dsh-web-app
  */
 
+import { execFileSync, spawn } from 'node:child_process'
 import { createRequire } from 'node:module'
 import { networkInterfaces } from 'node:os'
 import { fileURLToPath } from 'node:url'
@@ -38,6 +40,8 @@ export const inject = ['webServer']
 export interface Config {
   /** Print the URL line on activation; a non-interactive layer can turn it off. */
   printUrl: boolean
+  /** Open the canonical URL after settled startup. */
+  openBrowser: boolean
   /**
    * Register the model-visible surface context (the `app:web-surface` prompt
    * section and the `DSH_WEB_URL` bash variable). A one-shot non-interactive
@@ -51,6 +55,7 @@ export interface Config {
 
 export const Config: z<Config> = z.object({
   printUrl: z.boolean().default(true),
+  openBrowser: z.boolean().default(false),
   surfaceContext: z.boolean().default(true),
   trustedHosts: z.array(String).default([]),
 })
@@ -123,8 +128,101 @@ function resolveDistIndex(): string {
   }
 }
 
-/** Test hook: hosts with no built frontend dist substitute the resolver; production never touches this. */
-export const internals: { resolveDistIndex: () => string } = { resolveDistIndex }
+interface BrowserLaunchCommand {
+  command: string
+  args: string[]
+}
+
+/** Resolve the operating-system handoff command for one local Web URL. */
+function browserLaunchCommand(platform: NodeJS.Platform, url: string): BrowserLaunchCommand {
+  if (platform === 'win32') {
+    return { command: 'cmd.exe', args: ['/d', '/s', '/c', 'start', '', url] }
+  }
+  if (platform === 'darwin') return { command: 'open', args: [url] }
+  return { command: 'xdg-open', args: [url] }
+}
+
+/** User-visible progress text for the default-browser handoff. */
+function browserOpeningMessage(locale: string, url: string): string {
+  const language = locale.toLowerCase()
+  if (language.startsWith('ko')) return `기본 브라우저에서 DeepSeek Harness를 여는 중… ${url}`
+  if (language.startsWith('zh')) return `正在默认浏览器中打开 DeepSeek Harness… ${url}`
+  return `Opening DeepSeek Harness in the default browser… ${url}`
+}
+
+/** Read the macOS user locale without a shell. */
+function readMacLocale(): string {
+  return execFileSync('defaults', ['read', '-g', 'AppleLocale'], {
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'ignore'],
+  }).trim()
+}
+
+/** Best-effort locale used only for the terminal's browser-launch message. */
+function systemLocale(
+  platform: NodeJS.Platform = process.platform,
+  lcAll: string | undefined = process.env['LC_ALL'],
+  lang: string | undefined = process.env['LANG'],
+  resolveLocale: () => string = () => Intl.DateTimeFormat().resolvedOptions().locale,
+  readAppleLocale: () => string = readMacLocale,
+): string {
+  if (platform === 'darwin') {
+    try {
+      const locale = readAppleLocale()
+      if (locale) return locale
+    } catch {
+      // `defaults` may be absent in a restricted runtime; environment and Intl follow.
+    }
+  }
+  if (lcAll) return lcAll
+  if (lang) return lang
+  try {
+    return resolveLocale() || 'en'
+  } catch {
+    return 'en'
+  }
+}
+
+/** Hand the URL to the desktop without keeping its short-lived helper referenced. */
+function launchDefaultBrowser(url: string): void {
+  const launch = browserLaunchCommand(process.platform, url)
+  try {
+    const child = spawn(launch.command, launch.args, {
+      stdio: 'ignore',
+      windowsHide: true,
+    })
+    child.once('error', (error) => {
+      console.warn(`dsh web: could not open the default browser (${error.message}); open ${url} manually`)
+    })
+    child.unref()
+  } catch (error: unknown) {
+    const detail = error instanceof Error ? error.message : String(error)
+    console.warn(`dsh web: could not open the default browser (${detail}); open ${url} manually`)
+  }
+}
+
+/** Test hooks for built-dist resolution and platform browser handoff. */
+export const internals: {
+  resolveDistIndex: () => string
+  browserLaunchCommand: (platform: NodeJS.Platform, url: string) => BrowserLaunchCommand
+  browserOpeningMessage: (locale: string, url: string) => string
+  readMacLocale: () => string
+  systemLocale: (
+    platform?: NodeJS.Platform,
+    lcAll?: string,
+    lang?: string,
+    resolveLocale?: () => string,
+    readAppleLocale?: () => string,
+  ) => string
+  openBrowser: (url: string) => void
+} = {
+  resolveDistIndex,
+  browserLaunchCommand,
+  browserOpeningMessage,
+  readMacLocale,
+  systemLocale,
+  openBrowser: launchDefaultBrowser,
+}
 
 /**
  * Mount the Web runtime: dist serving, surface prompt, the bash runtime
@@ -165,7 +263,12 @@ export function apply(ctx: Context, config: Config): void {
       // Reuse the exact LAN snapshot provided to the /api trust fence.
       const lanCandidate = runtime.lanAddresses[0]
       const port = ctx.webServer.port
-      console.log(`dsh web: ${localWebUrl(ctx)}${lanCandidate === undefined ? '' : ` (LAN: http://${lanCandidate}:${String(port)})`}`)
+      const url = localWebUrl(ctx)
+      console.log(`dsh web: ${url}${lanCandidate === undefined ? '' : ` (LAN: http://${lanCandidate}:${String(port)})`}`)
+      if (config.openBrowser) {
+        console.log(browserOpeningMessage(systemLocale(), url))
+        internals.openBrowser(url)
+      }
     }
     // This row's own activation can precede a sibling failure. The app owns
     // readiness by waiting for its Loader tree, or prints at once in a

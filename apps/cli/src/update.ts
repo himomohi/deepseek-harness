@@ -11,7 +11,7 @@ import { createInterface } from 'node:readline/promises'
 import { stdin as stdinStream, stdout as stdoutStream } from 'node:process'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { pickUpstreamBranch, verifyCustomFeatures } from './custom-features.ts'
+import { FORK_FEATURES, pickUpstreamBranch, verifyCustomFeatures } from './custom-features.ts'
 import {
   formatUpdateFailure,
   formatUpdatePreview,
@@ -376,5 +376,5 @@ export async function runUpdate(options: UpdateOptions = {}): Promise<void> {
     })
   }
   console.log('통과')
-  console.log(`완료. ${upstreamBranch} 머지됨. locale-ko · OpenCodex 검사 통과`)
+  console.log(`완료. ${upstreamBranch} 머지됨. ${FORK_FEATURES.map(feature => feature.id).join(' · ')} 검사 통과`)
 }

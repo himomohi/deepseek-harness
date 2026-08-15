@@ -12,7 +12,12 @@ import Loader from '@deepseek-ai/cordis-plugin-loader'
 import Include from '@deepseek-ai/cordis-plugin-include'
 import { internals, provideCmdline } from '@deepseek-ai/dsh-cmdline'
 import { afterEach, describe, expect, it } from 'vitest'
-import { apply, WEB_STARTUP_SERVICE, type WebStartupValues } from '../src/startup.ts'
+import {
+  apply,
+  shouldOpenBrowser,
+  WEB_STARTUP_SERVICE,
+  type WebStartupValues,
+} from '../src/startup.ts'
 
 /** What one fixture boot observed. */
 interface Observed {
@@ -58,6 +63,7 @@ export const apply = ctx => globalThis.__webStartupApply(ctx)
     "    host: !!js ctx.webStartup.host ?? '127.0.0.1'",
     '    port: !!js ctx.webStartup.port ?? 3080',
     '    trustedHosts: !!js ctx.webStartup.trustedHosts',
+    '    openBrowser: !!js ctx.webStartup.openBrowser',
     '- id: provider',
     `  name: ${pathToFileURL(join(dir, 'provider.mjs')).href}`,
     '',
@@ -97,6 +103,7 @@ describe('web command-line provider', () => {
       host: '127.0.0.1',
       port: 8080,
       trustedHosts: ['lab.internal', 'lab-2.internal', '10.0.0.9'],
+      openBrowser: false,
     })
     expect(observed.readerConfig).toEqual(values)
     expect(observed.exits).toEqual([])
@@ -104,11 +111,12 @@ describe('web command-line provider', () => {
 
   it('leaves deployment values to each consumer when flags omit them', async () => {
     const { values, observed } = await bootProvider([])
-    expect(values).toEqual({ trustedHosts: [] })
+    expect(values).toEqual({ trustedHosts: [], openBrowser: false })
     expect(observed.readerConfig).toEqual({
       host: '127.0.0.1',
       port: 3080,
       trustedHosts: [],
+      openBrowser: false,
     })
   })
 
@@ -116,9 +124,17 @@ describe('web command-line provider', () => {
     const { values, observed } = await bootProvider(['--help'])
     expect(observed.out).toContain('dsh --profile web')
     expect(observed.out).toContain('--trusted-host')
+    expect(observed.out).toContain('--no-open')
     expect(values).toBeUndefined()
     expect(observed.readerConfig).toBeUndefined()
     expect(observed.exits).toEqual([0])
+  })
+
+  it('opens only for an interactive invocation that did not opt out', () => {
+    expect(shouldOpenBrowser(undefined, true)).toBe(true)
+    expect(shouldOpenBrowser(true, true)).toBe(true)
+    expect(shouldOpenBrowser(false, true)).toBe(false)
+    expect(shouldOpenBrowser(undefined, false)).toBe(false)
   })
 
   it('rejects a non-numeric port before the consumer activates', async () => {

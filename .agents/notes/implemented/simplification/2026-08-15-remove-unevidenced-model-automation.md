@@ -8,7 +8,7 @@ English | [中文](2026-08-15-remove-unevidenced-model-automation.zh.md)
 
 The fork added three model-path changes without the evidence or lifecycle contracts they required. The agent loop converted every text-only `max-tokens` finish into another paid request with no attempt bound. DeepSeek serialization replayed `reasoning_content` on ordinary assistant turns even though the provider documents passback only for tool-call turns and ignores the field otherwise. The Vision Fallback package advertised automatic image understanding, but no request path called its message transformer: the mere presence of the service bypassed image admission while the text adapter still rejected the image, and its process-wide description cache had no limit.
 
-Those changes made the UI claim continuity, cache improvement, and vision support that the assembled application could not prove. The vision path also violated the model-visible logging rule: a generated description would need a durable event and deterministic request reconstruction before it could replace image content. Separately, the fork made a bare `dsh`, an unknown positional, and an empty `--profile` silently boot the Web profile. That contradicted the CLI tests and source-launch diagnostic, and a typo could start a long-running server instead of failing.
+Those changes made the UI claim continuity, cache improvement, and vision support that the assembled application could not prove. The vision path also violated the model-visible logging rule: a generated description would need a durable event and deterministic request reconstruction before it could replace image content.
 
 ## Decision
 
@@ -17,10 +17,6 @@ Those changes made the UI claim continuity, cache improvement, and vision suppor
 DeepSeek and OpenCodex serialize `reasoning_content` only when the same assistant turn carries tool calls. Ordinary and reasoning-only assistant turns keep their visible text but do not resend ignored reasoning.
 
 The Vision Fallback package, bundle row, Models card, language copy, cache, and image-admission bypasses are removed. Text-only models refuse image prompts and `read_image` calls before provider I/O. OpenCodex declares text-only input even for model ids commonly associated with vision because this adapter has no attachment-byte wire implementation.
-
-The default Web server prints its URL and no longer launches a detached browser process. Process launch is an explicit caller or deployment concern.
-
-The root command again requires `--profile <name>`. `dsh web` remains the short, explicit Web alias; help and version still work without a profile.
 
 ## Alternatives considered
 
@@ -32,10 +28,12 @@ The root command again requires `--profile <name>`. `dsh web` remains the short,
 
 **Resend plain-turn reasoning for presumed cache hits.** Rejected because the provider documents it as ignored, cache reuse is best-effort, and no provider-side A/B measurement demonstrated a benefit that justified extra input tokens or compatibility risk.
 
-**Keep bare `dsh` as a Web shortcut and update the tests.** Rejected because `dsh web` already provides the shortcut without making an empty profile, unknown positional, or omitted deployment choice look valid.
-
 ## Consequences
 
 The fork gives up automatic long-output continuation and automatic image descriptions until those capabilities have explicit budgets, durable events, provider-wire support, runnable snapshots, and real provider evidence. Users see a truthful terminal or modality error instead of a silent extra request or a false acceptance.
 
-The model path now matches official passback guidance, has no process-wide vision cache, does not spawn unmanaged desktop processes, and does not silently choose a long-running profile. The existing cursor-backed streaming queues remain unchanged; their measured local backlog gains do not depend on any removed automation.
+The model path now matches official passback guidance and has no process-wide vision cache. The existing cursor-backed streaming queues remain unchanged; their measured local backlog gains do not depend on any removed automation.
+
+## Related decisions
+
+[Restore the default Web launch](../bug-fix/2026-08-15-restore-default-web-launch.md) owns the root profile default and browser handoff.

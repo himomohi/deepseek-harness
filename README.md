@@ -22,7 +22,7 @@ Install `Node.js`, then run:
 npx @deepseek-ai/dsh web
 ```
 
-The command starts the Web UI, served at `http://127.0.0.1:3080` by default. Open that URL in a browser; the server does not launch an external process automatically. See the [Web UI guide](docs/user/guide/index.md).
+The command starts the Web UI at `http://127.0.0.1:3080` by default. An interactive terminal opens that URL in the default browser; pass `--no-open` to keep the server terminal-only. See the [Web UI guide](docs/user/guide/index.md).
 
 ### Run from source
 
@@ -33,17 +33,18 @@ git clone https://github.com/himomohi/deepseek-harness.git
 cd deepseek-harness
 pnpm install
 pnpm run build
-pnpm dsh web
+pnpm dsh
 ```
 
-Running `pnpm dsh` without an explicit profile selects the Web profile.
+Running `pnpm dsh` without an explicit profile selects the Web profile; `pnpm dsh web` is the explicit equivalent.
 
 ## Fork features
 
 - **Korean language pack**: `@deepseek-ai/dsh-client-locale-ko` supplies the Web UI’s Korean dictionaries as a normal client plugin.
 - **OpenCodex provider**: `@deepseek-ai/dsh-llm-opencodex` connects to an OpenAI-compatible OpenCodex proxy and can replace its advisory model catalog from `GET /models`.
+- **One-command Web startup**: bare `dsh` selects the Web profile, prints its canonical URL, and opens it from an interactive terminal unless `--no-open` is present.
 - **Linear streaming queues**: the Host API Proxy, browser WebSocket client, and TypeScript SDK drain accumulated frames through cursor-backed FIFO queues while preserving order.
-- **Upstream updates**: `dsh update` previews official commits, asks before merging, expands a shallow clone when necessary, rebuilds, and verifies the Korean and OpenCodex package markers.
+- **Upstream updates**: `dsh update` previews official commits, asks before merging, expands a shallow clone when necessary, rebuilds, and verifies every maintained fork marker.
 - **Remote safety**: `trustedHosts` protects against DNS rebinding; it is not authentication. Settings, credentials, native dialogs, and Host-side model discovery therefore remain loopback-only.
 
 OpenCodex currently uses the shared text-only chat-completions wire adapter. Image input stays capability-gated instead of being silently converted or accepted without pixels reaching a vision model.

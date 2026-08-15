@@ -4,6 +4,17 @@ All notable changes and release notes for DeepSeek Harness (`dsh`) are documente
 
 ---
 
+## [0.1.0-rc.18] - 2026-08-15
+
+### Fork startup regression repair
+
+* Restore bare `dsh` as the default Web-profile launcher while continuing to reject an unknown first positional command and an empty `--profile`.
+* Open the canonical URL only from an interactive terminal after the Loader tree settles. `--no-open` opts out, piped runs remain terminal-only, and browser handoff failures leave the server running with a manual URL.
+* Teach `dsh stop` to recognize Web servers started through bare source and built CLI entries.
+* Expand `dsh update` verification to the maintained Korean, OpenCodex, default-Web, browser-launch, update, stop, phone-layout, and linear-streaming markers.
+
+---
+
 ## [0.1.0-rc.17] - 2026-08-15
 
 ### Security, updateability, and provider correctness

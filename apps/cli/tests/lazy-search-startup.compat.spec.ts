@@ -56,7 +56,6 @@ function runBuiltWeb(cwd: string): Promise<{ stdout: string; stderr: string; cod
     delete env.NODE_NO_WARNINGS
     const child = spawn(process.execPath, [
       builtBin,
-      'web',
       '--host',
       '127.0.0.1',
       '--port',
@@ -99,7 +98,7 @@ function runBuiltWeb(cwd: string): Promise<{ stdout: string; stderr: string; cod
 }
 
 describe.skipIf(!requireBuiltArtifacts)('built CLI lazy-search startup', () => {
-  it('boots and disposes the shipped composition with full-text search off by default', async () => {
+  it('boots the default Web profile without an explicit profile and disposes it', async () => {
     expect(existsSync(builtBin), `missing built CLI ${resolve(builtBin)}; run pnpm build`).toBe(true)
     expect(existsSync(webDist), `missing Web dist ${resolve(webDist)}; run pnpm run build:web`).toBe(true)
     const baseRows = (yaml.load(await readFile(baseConfigPath, 'utf8'), { schema: configSchema }) as PatchEntry[])

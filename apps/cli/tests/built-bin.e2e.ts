@@ -310,19 +310,25 @@ function startStartupProfile(fixture: StartupFixture, args: readonly string[]) {
 }
 
 describe.skipIf(!existsSync(dshBin))('dsh BUILT bin (node lib/bin.js, no tsx)', () => {
-  it('requires --profile and rejects removed commands', async () => {
-    const bare = await runBuiltBin()
-    expect(bare.code).toBe(1)
-    expect(bare.stdout).toBe('')
-    expect(bare.stderr).toContain('--profile <name> is required')
-    const help = await runBuiltBin(['--help'])
-    expect(help.code).toBe(0)
-    expect(help.stdout).toContain('dsh --profile web')
-    expect(help.stdout).toContain('dsh plugin --profile')
-    expect(help.stdout).not.toMatch(/^\s+(?:tui|meta|upgrade)\b/mu)
-    for (const removed of [['tui'], ['--config', 'x.yml'], ['-p', 'task'], ['run', 'task']]) {
-      const result = await runBuiltBin(removed)
-      expect(result.code).toBe(1)
+  it('defaults launcher-only operations to Web and rejects removed commands', async () => {
+    const home = mkdtempSync(join(tmpdir(), 'dsh-built-default-web-'))
+    try {
+      const env = { DSH_HOME: home }
+      const bareDump = await runBuiltBin(['--dump-default-config'], env)
+      expect(bareDump.code).toBe(0)
+      expect(bareDump.stderr).toBe('')
+      expect(bareDump.stdout).toContain('@deepseek-ai/dsh-web-app')
+      const help = await runBuiltBin(['--help'], env)
+      expect(help.code).toBe(0)
+      expect(help.stdout).toContain('dsh --profile web')
+      expect(help.stdout).toContain('dsh plugin --profile')
+      expect(help.stdout).not.toMatch(/^\s+(?:tui|meta|upgrade)\b/mu)
+      for (const removed of [['tui'], ['--config', 'x.yml'], ['-p', 'task'], ['run', 'task']]) {
+        const result = await runBuiltBin(removed, env)
+        expect(result.code).toBe(1)
+      }
+    } finally {
+      rmSync(home, { recursive: true, force: true })
     }
   }, 30_000)
 

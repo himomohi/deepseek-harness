@@ -122,7 +122,8 @@
     # Web glue owned by this bundle: resolves the built frontend dist (an
     # assembly fact of dsh-web-app, never user config), mounts the
     # frontend-static fallback owner, registers the web-surface prompt
-    # section and the bash runtime variable, and prints the URL line. The
+    # section and the bash runtime variable, prints the URL line, and opens it
+    # for interactive invocations unless `--no-open` was supplied. The
     # webStartup provider supplies invocation-only values; after the server
     # binds, this row samples LAN trust once and provides `webRuntime`. A
     # complete agent-preset persona suppresses the prompt section for that
@@ -132,6 +133,7 @@
       inject: [webStartup]
       config:
         printUrl: true
+        openBrowser: !!js ctx.webStartup.openBrowser
         surfaceContext: true
         trustedHosts: !!js ctx.webStartup.trustedHosts
 

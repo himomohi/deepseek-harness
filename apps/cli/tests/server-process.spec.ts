@@ -8,6 +8,12 @@ import {
 
 describe('isDshServerCommand', () => {
   it('matches dsh web and the bin entry with web', () => {
+    expect(isDshServerCommand('dsh')).toBe(true)
+    expect(isDshServerCommand('node --import tsx/esm /repo/apps/cli/src/bin.ts')).toBe(true)
+    expect(isDshServerCommand('node /repo/apps/cli/lib/bin.js')).toBe(true)
+    expect(isDshServerCommand('node /global/@deepseek-ai/dsh/lib/bin.js')).toBe(true)
+    expect(isDshServerCommand('dsh --port 3080 --no-open')).toBe(true)
+    expect(isDshServerCommand('node /global/@deepseek-ai/dsh/lib/bin.js --no-open')).toBe(true)
     expect(isDshServerCommand('node /Users/a/Dev/deepseek-harness/apps/cli/lib/bin.js web --host 127.0.0.1')).toBe(true)
     expect(isDshServerCommand('node --import tsx/esm apps/cli/src/bin.ts web')).toBe(true)
     expect(isDshServerCommand('dsh web --port 3080')).toBe(true)
@@ -20,7 +26,9 @@ describe('isDshServerCommand', () => {
     expect(isDshServerCommand('dsh update --yes')).toBe(false)
     expect(isDshServerCommand('dsh plugin --profile web add x')).toBe(false)
     expect(isDshServerCommand('dsh --profile web --dump-config')).toBe(false)
+    expect(isDshServerCommand('dsh --help')).toBe(false)
     expect(isDshServerCommand('node node_modules/vitest/vitest.mjs run apps/cli/tests')).toBe(false)
+    expect(isDshServerCommand('node /another/project/lib/bin.js')).toBe(false)
     expect(isDshServerCommand('node idle-game/vite')).toBe(false)
   })
 })

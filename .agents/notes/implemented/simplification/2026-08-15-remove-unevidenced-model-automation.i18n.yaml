@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/simplification/2026-08-15-remove-unevidenced-model-automation.md
-2026-08-15-remove-unevidenced-model-automation.md: 2795e7b2c44ba516eaab23871cf546920b562fbe
-2026-08-15-remove-unevidenced-model-automation.zh.md: d2d344928cd9e8472cb01a5bb65b4d9f6ea5c870
+2026-08-15-remove-unevidenced-model-automation.md: f104ca1da0d0e8c3d266ffe80c73c2a6a97bf648
+2026-08-15-remove-unevidenced-model-automation.zh.md: 3ec7c01f68630e6ea6bfc19d82a27070ec709864

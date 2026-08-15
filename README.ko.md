@@ -22,7 +22,7 @@ DeepSeek Harness는 현재 _개발자 프리뷰_ 단계이며 빠르게 변경�
 npx @deepseek-ai/dsh web
 ```
 
-명령은 기본적으로 `http://127.0.0.1:3080`에서 Web UI를 제공합니다. 서버는 외부 프로세스를 자동 실행하지 않으므로 브라우저에서 이 주소를 여세요. 자세한 내용은 [Web UI 가이드](docs/user/guide/index.md)를 참고하세요.
+명령은 기본적으로 `http://127.0.0.1:3080`에서 Web UI를 제공합니다. 대화형 터미널에서는 기본 브라우저로 이 주소를 열며, `--no-open`을 전달하면 서버만 실행합니다. 자세한 내용은 [Web UI 가이드](docs/user/guide/index.md)를 참고하세요.
 
 ### 소스에서 실행
 
@@ -33,17 +33,18 @@ git clone https://github.com/himomohi/deepseek-harness.git
 cd deepseek-harness
 pnpm install
 pnpm run build
-pnpm dsh web
+pnpm dsh
 ```
 
-명시적인 profile 없이 `pnpm dsh`를 실행하면 Web profile을 선택합니다.
+명시적인 profile 없이 `pnpm dsh`를 실행하면 Web profile을 선택하며, `pnpm dsh web`은 같은 동작을 명시적으로 요청합니다.
 
 ## 포크 기능
 
 - **한국어 언어팩**: `@deepseek-ai/dsh-client-locale-ko`가 일반 클라이언트 플러그인으로 Web UI 한국어 사전을 제공합니다.
 - **OpenCodex 제공자**: `@deepseek-ai/dsh-llm-opencodex`가 OpenAI 호환 OpenCodex 프록시에 연결하고 `GET /models` 결과로 안내용 모델 카탈로그를 교체할 수 있습니다.
+- **한 번에 Web 시작**: `dsh`만 실행해도 Web profile을 선택하고 URL을 출력하며, 대화형 터미널에서는 `--no-open`이 없을 때 기본 브라우저를 엽니다.
 - **선형 스트리밍 큐**: Host API Proxy, 브라우저 WebSocket 클라이언트, TypeScript SDK가 커서 기반 FIFO로 누적 프레임을 순서대로 배출합니다.
-- **업스트림 업데이트**: `dsh update`가 공식 커밋을 미리 보여 주고 확인 후 병합하며, 필요하면 shallow clone을 확장한 뒤 다시 빌드하고 한국어·OpenCodex 패키지 마커를 검사합니다.
+- **업스트림 업데이트**: `dsh update`가 공식 커밋을 미리 보여 주고 확인 후 병합하며, 필요하면 shallow clone을 확장한 뒤 다시 빌드하고 유지 중인 모든 포크 마커를 검사합니다.
 - **원격 안전성**: `trustedHosts`는 DNS 재바인딩 방어 수단이지 인증이 아닙니다. 설정, 자격증명, 네이티브 대화상자, Host 측 모델 탐색은 loopback에서만 허용합니다.
 
 OpenCodex는 현재 공용 텍스트 전용 chat-completions wire 어댑터를 사용합니다. 이미지 픽셀이 실제 비전 모델에 전달되지 않는 상태에서 입력을 조용히 변환하거나 허용하지 않고, 모델 기능 검사에서 명확히 거부합니다.

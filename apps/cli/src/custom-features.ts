@@ -44,11 +44,96 @@ export const FORK_FEATURES: readonly ForkFeature[] = [
   {
     id: 'llm-opencodex',
     kind: 'package',
-    paths: ['packages/llm/llm-opencodex/package.json'],
+    paths: [
+      'packages/llm/llm-opencodex/package.json',
+      'packages/client/ui-settings-plugins/src/client/OpenCodexCard.tsx',
+    ],
     contains: [
       {
         path: 'packages/bundle/base/cordis.patch.yml',
         needle: '@deepseek-ai/dsh-llm-opencodex',
+      },
+    ],
+  },
+  {
+    id: 'default-web-launch',
+    kind: 'core-patch',
+    contains: [
+      {
+        path: 'apps/cli/src/args.ts',
+        needle: "const profile = options.profile ?? 'web'",
+      },
+    ],
+  },
+  {
+    id: 'browser-auto-open',
+    kind: 'core-patch',
+    contains: [
+      {
+        path: 'packages/bundle/web-app/cordis.patch.yml',
+        needle: 'openBrowser: !!js ctx.webStartup.openBrowser',
+      },
+      {
+        path: 'packages/bundle/web-app/src/index.ts',
+        needle: 'internals.openBrowser(url)',
+      },
+    ],
+  },
+  {
+    id: 'update-command',
+    kind: 'core-patch',
+    paths: ['apps/cli/src/update.ts'],
+    contains: [
+      {
+        path: 'apps/cli/src/args.ts',
+        needle: "program.command('update')",
+      },
+    ],
+  },
+  {
+    id: 'stop-command',
+    kind: 'core-patch',
+    paths: ['apps/cli/src/stop.ts'],
+    contains: [
+      {
+        path: 'apps/cli/src/args.ts',
+        needle: "program.command('stop')",
+      },
+    ],
+  },
+  {
+    id: 'phone-layout',
+    kind: 'core-patch',
+    contains: [
+      {
+        path: 'packages/client/ui-settings-general/src/client/SettingsRoot.module.css',
+        needle: '@media (max-width: 720px)',
+      },
+      {
+        path: 'packages/client/ui-settings-plugins/src/client/PluginsSettingsSection.module.css',
+        needle: '@media (max-width: 720px)',
+      },
+      {
+        path: 'packages/client/ui-conversation/src/client/skeleton/ConversationRoot.module.css',
+        needle: '@media (max-width: 720px)',
+      },
+    ],
+  },
+  {
+    id: 'linear-streaming-queues',
+    kind: 'core-patch',
+    contains: [
+      {
+        path: 'packages/host/apiproxy/src/api-proxy.ts',
+        needle: 'private readIndex = 0',
+      },
+      {
+        path: 'packages/client/connection/src/client/web-api-client.ts',
+        needle: 'let readIndex = 0',
+      },
+      {
+        path: 'packages/sdk/client/src/client.ts',
+        needle: 'queueReadIndex',
       },
     ],
   },

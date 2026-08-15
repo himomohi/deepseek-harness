@@ -17,6 +17,17 @@ export function isDshServerCommand(command: string): boolean {
   if (/\bdsh(?:\.cmd)?\s+update\b/i.test(compact)) return false
   if (/\bdsh(?:\.cmd)?\s+plugin\b/i.test(compact)) return false
   if (/[\\/]vitest[\\/]|\bvitest\s+run\b/.test(compact)) return false
+  if (/--dump(?:-default)?-config\b|(?:^|\s)(?:-h|--help|-V|--version)(?:\s|$)/.test(compact)) return false
+  if (/(?:^|\s)dsh(?:\.cmd)?(?:["']?)$/i.test(compact)) return true
+  if (/[\\/]apps[\\/]cli[\\/](?:src[\\/]bin\.ts|lib[\\/]bin\.js)(?:["']?)$/i.test(compact)) return true
+  if (/[\\/]@deepseek-ai[\\/]dsh[\\/]lib[\\/]bin\.js(?:["']?)$/i.test(compact)) return true
+  if (/\bdsh(?:\.cmd)?\s+--(?:host|port|trusted-host|no-open)\b/i.test(compact)) return true
+  if (/[\\/]apps[\\/]cli[\\/](?:src[\\/]bin\.ts|lib[\\/]bin\.js)\s+--(?:host|port|trusted-host|no-open)\b/i.test(compact)) {
+    return true
+  }
+  if (/[\\/]@deepseek-ai[\\/]dsh[\\/]lib[\\/]bin\.js\s+--(?:host|port|trusted-host|no-open)\b/i.test(compact)) {
+    return true
+  }
   if (/\bdsh(?:\.cmd)?\s+web\b/i.test(compact)) return true
   if (/[\\/](?:bin\.js|bin\.ts)\s+web\b/.test(compact)) return true
   if (/\bdsh(?:\.cmd)?\s+--profile\s+web\b/i.test(compact) && !/--dump(?:-default)?-config\b/.test(compact)) {
