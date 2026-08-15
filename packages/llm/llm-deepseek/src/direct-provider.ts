@@ -28,7 +28,6 @@ import { MAX_TIMER_DELAY_MS } from '@deepseek-ai/dsh-timeout'
 import { getOrCreateAnonymousUserId, type AnonymousUserId } from '@deepseek-ai/dsh-anonymous-user-id'
 import {
   DEFAULT_CONTEXT_WINDOW,
-  DEFAULT_MAX_TOKENS,
   DEFAULT_STREAM_IDLE_TIMEOUT_MS,
   DeepSeekAdapter,
   type DeepSeekCatalogModel,
@@ -45,7 +44,7 @@ export interface DirectProviderConfig<Model extends DeepSeekCatalogModel = DeepS
   thinking?: 'enabled' | 'disabled'
   /** Default reasoning effort. */
   reasoningEffort?: 'off' | 'high' | 'max'
-  /** Default output-token cap. */
+  /** Optional route-wide output-token cap. */
   maxTokens?: number
   /** Default combined request and response context capacity. */
   defaultContextWindow?: number
@@ -67,6 +66,8 @@ export interface DirectProviderDefaults<Model extends DeepSeekCatalogModel> {
   baseUrlEnv: string
   /** Endpoint used when config and environment omit one. */
   publicBaseUrl: string
+  /** Output-token cap used when config omits one; omission preserves provider-owned behavior. */
+  defaultMaxTokens?: number
   /** Advisory catalog used when config omits one. */
   defaultModels: readonly Model[]
 }
@@ -153,6 +154,7 @@ export function resolveDirectProviderOptions<Model extends DeepSeekCatalogModel>
       ...model.maxTokens === undefined ? {} : { maxTokens: model.maxTokens },
     }
   })
+  const maxTokens = config.maxTokens ?? defaults.defaultMaxTokens
   return {
     apiKeyEnv: credentialRef(config.apiKeyEnv ?? defaults.defaultApiKeyEnv),
     baseURL: config.baseURL
@@ -162,7 +164,7 @@ export function resolveDirectProviderOptions<Model extends DeepSeekCatalogModel>
       thinking: config.thinking,
       reasoningEffort: config.reasoningEffort,
     },
-    maxTokens: config.maxTokens ?? DEFAULT_MAX_TOKENS,
+    ...maxTokens === undefined ? {} : { maxTokens },
     defaultContextWindow: config.defaultContextWindow ?? DEFAULT_CONTEXT_WINDOW,
     models,
     streamIdleTimeoutMs,

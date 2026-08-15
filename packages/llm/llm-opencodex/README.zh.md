@@ -16,23 +16,24 @@ DeepSeek Harness 的 OpenCodex 代理提供方。该插件在 `@deepseek-ai/dsh-
     baseURL: http://127.0.0.1:10100/v1
     thinking: enabled
     reasoningEffort: high
-    maxTokens: 256000
     defaultContextWindow: 1000000
     streamIdleTimeoutMs: 300000
     models:
-      - id: gpt-5.6-sol
-        name: GPT-5.6 Sol
+      - id: zai/glm-5.3
+        name: Z-AI GLM 5.3
         contextWindow: 1000000
-        maxTokens: 64000
+        maxTokens: 131072
 ```
 
 所有字段均可省略。仅当 `baseURL` 缺失时，`OPENCODEX_BASE_URL` 才提供端点。显式 `models` 数组会替换内置建议列表；未列出的模型 id 仍会原样发送给代理。
+
+OpenCodex 不设置路由级 `maxTokens` 默认值。显式请求或 `AgentOptions.maxTokens` 值优先，其次是精确匹配的 `models[].maxTokens`，最后才是显式配置的路由级 `maxTokens`。当这些值都不存在时，适配器会省略 `max_tokens`，让所选代理模型保留自身的输出策略。这样既不会把一个代理模型的限制强加给其他模型，也不会在代理只发布模型 id 时猜测上限。
 
 `llm-opencodex` 设置 namespace 可在不重启的情况下更新端点、凭据引用、目录、思考默认值、Token 上限、空闲超时和重试策略。每次操作捕获一份已校验快照，因此进行中的流保持其起始端点与凭据，下一次操作才观察已接受的新设置。
 
 ## 模型发现
 
-Models 页面可以查询 `${baseURL}/models`。解析器接受 OpenAI `{ "data": [...] }` 信封或顶层数组，跳过没有非空 `id` 的条目，并且只保留代理实际报告的容量。缺失字段不会被补成猜测的上下文或输出上限。
+Models 页面可以查询 `${baseURL}/models`。解析器接受 OpenAI `{ "data": [...] }` 信封或顶层数组，跳过没有非空 `id` 的条目，并且只在代理实际报告 `max_output_tokens` 或 `max_tokens` 时保留该值。因此，同步后的模型条目会使用该精确输出上限。缺失字段不会被补成猜测的上下文或输出上限。
 
 发现调用可以携带草稿凭据，或解析已存储引用。由于该调用会让 Host 请求一个已配置 URL，且可能携带凭据，`llm.discoverModels` 与设置、凭据 RPC 一样保持仅限回环地址；`trustedHosts` 并不会认证远程调用方。
 
@@ -68,7 +69,7 @@ Assistant 的 `reasoning_content` 仅在工具调用轮次回传，符合 DeepSe
 
 #### Token 影响
 
-生成 Token 遵循已解析推理强度和 `maxTokens`。`max-tokens` 结束保持终止状态，不会变成自动后续请求。
+生成 Token 遵循已解析推理强度，以及上文所述第一个适用的输出预算。未解析到输出预算时，wire 请求会省略 `max_tokens`。`max-tokens` 结束保持终止状态，不会变成自动后续请求。
 
 #### KV Cache 影响
 
@@ -78,5 +79,5 @@ Loop 保留的块会追加到下一次请求，同时保留较早前缀。已丢
 
 - 共享直接适配器目前只支持文本 chat-completions 内容；OpenAI 兼容图片 part 需要独立的附件字节 wire 实现。
 - 设置中的 `models` 列表作为一个字段整体替换组合列表，不会按 id 合并条目。
-- 各代理的 `GET /models` 可用性和元数据不同，缺失容量可能需要用户手动输入。
+- 各代理的 `GET /models` 可用性和元数据不同，因此用户可能需要手动输入已知的模型专属输出上限；适配器不会根据上下文窗口推断该值。
 - 传输仍由原始 `fetch` 负责；共享代理和拦截配置暂缓。

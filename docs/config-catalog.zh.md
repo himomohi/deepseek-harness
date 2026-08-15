@@ -884,7 +884,7 @@ export interface DeepSeekCatalogModel {
   description?: string
   /** Known combined request/response context capacity; omitted when deployment metadata is unavailable. */
   contextWindow?: number
-  /** Per-request output cap for this model; omission falls back to the profile's {@link DeepSeekConnectionOptions.maxTokens}. */
+  /** Per-request output cap for this model; omission falls back to the route's optional {@link DeepSeekConnectionOptions.maxTokens}. */
   maxTokens?: number
 }
 ```
@@ -910,7 +910,7 @@ export interface Config {
   thinking?: 'enabled' | 'disabled'
   /** Default reasoning effort; omission uses the adapter default. */
   reasoningEffort?: 'off' | 'high' | 'max'
-  /** Default per-request output cap. */
+  /** Optional route-wide per-request output cap; omission preserves proxy-owned behavior for uncatalogued models. */
   maxTokens?: number
   /** Context capacity used when a model entry omits one. */
   defaultContextWindow?: number
@@ -939,7 +939,7 @@ export interface OpenCodexCatalogModel {
 
 依赖：[`RetryPolicyConfig`](../packages/llm/llm/src/index.ts)
 
-来源：[`packages/llm/llm-opencodex/src/index.ts:99`](../packages/llm/llm-opencodex/src/index.ts)
+来源：[`packages/llm/llm-opencodex/src/index.ts:97`](../packages/llm/llm-opencodex/src/index.ts)
 
 <a id="deepseek-aidsh-llm-pi-ai"></a>
 

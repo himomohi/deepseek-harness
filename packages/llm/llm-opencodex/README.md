@@ -16,23 +16,24 @@ The default endpoint is `http://127.0.0.1:10100/v1`. A local proxy may run witho
     baseURL: http://127.0.0.1:10100/v1
     thinking: enabled
     reasoningEffort: high
-    maxTokens: 256000
     defaultContextWindow: 1000000
     streamIdleTimeoutMs: 300000
     models:
-      - id: gpt-5.6-sol
-        name: GPT-5.6 Sol
+      - id: zai/glm-5.3
+        name: Z-AI GLM 5.3
         contextWindow: 1000000
-        maxTokens: 64000
+        maxTokens: 131072
 ```
 
 All fields are optional. `OPENCODEX_BASE_URL` supplies the endpoint only when `baseURL` is absent. An explicit `models` array replaces the built-in advisory list; unlisted model ids still pass through to the proxy.
+
+OpenCodex has no route-wide `maxTokens` default. An explicit request or `AgentOptions.maxTokens` value wins, followed by an exact matching `models[].maxTokens`, then an explicitly configured route-wide `maxTokens`. When none is available, the adapter omits `max_tokens` so the selected proxy model keeps its own output policy. This prevents one proxy model's limit from being imposed on unrelated models; it also avoids guessing a cap when the proxy publishes only a model id.
 
 The `llm-opencodex` settings namespace updates the endpoint, credential reference, catalog, thinking defaults, token caps, idle timeout, and retry policy without restarting. Each operation captures one validated snapshot, so an in-flight stream keeps the endpoint and credential it started with while the next operation observes accepted settings.
 
 ## Model discovery
 
-The Models page can query `${baseURL}/models`. The parser accepts either an OpenAI `{ "data": [...] }` envelope or a top-level array, skips rows without a non-empty `id`, and preserves only capacities the proxy actually reports. It does not invent context or output limits for missing fields.
+The Models page can query `${baseURL}/models`. The parser accepts either an OpenAI `{ "data": [...] }` envelope or a top-level array, skips rows without a non-empty `id`, and preserves `max_output_tokens` or `max_tokens` only when the proxy actually reports one. A synchronized model entry therefore uses that exact output cap. The parser does not invent context or output limits for missing fields.
 
 The discovery call can carry a draft credential or resolve the stored reference. Because it makes the Host fetch a configured URL and can carry a credential, `llm.discoverModels` remains loopback-only together with settings and credential RPCs; `trustedHosts` does not authenticate a remote caller.
 
@@ -68,7 +69,7 @@ Reasoning, text, tool calls, usage, and finish state are translated into harness
 
 #### Token effect
 
-Generated tokens follow the resolved reasoning effort and `maxTokens`. A `max-tokens` finish remains terminal and is not turned into an automatic follow-up request.
+Generated tokens follow the resolved reasoning effort and the first applicable output budget described above. When no output budget is resolved, the wire request omits `max_tokens`. A `max-tokens` finish remains terminal and is not turned into an automatic follow-up request.
 
 #### KV Cache effect
 
@@ -78,5 +79,5 @@ Blocks retained by the loop append to the next request while preserving the earl
 
 - The shared direct adapter currently supports text-only chat-completions content; OpenAI-compatible image parts require a separate attachment-byte wire implementation.
 - A settings `models` list replaces the composition list as one field; entries are not merged by id.
-- `GET /models` availability and metadata vary by proxy, so users may need to enter missing capacities manually.
+- `GET /models` availability and metadata vary by proxy, so users may need to enter a known model-specific output cap manually; the adapter will not infer one from the context window.
 - Raw `fetch` owns transport; shared proxy and interception configuration remains deferred.

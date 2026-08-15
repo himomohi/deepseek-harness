@@ -142,6 +142,7 @@ export function resolveAdapterOptions(config: Config, environment?: LaunchEnviro
     defaultApiKeyEnv: DEFAULT_API_KEY_ENV,
     baseUrlEnv: BASE_URL_ENV,
     publicBaseUrl: PUBLIC_BASE_URL,
+    defaultMaxTokens: DEFAULT_MAX_TOKENS,
     defaultModels: DEFAULT_MODELS,
   })
 }

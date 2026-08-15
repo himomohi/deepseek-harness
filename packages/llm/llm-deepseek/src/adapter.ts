@@ -36,7 +36,7 @@ export interface DeepSeekCatalogModel {
   description?: string
   /** Known combined request/response context capacity; omitted when deployment metadata is unavailable. */
   contextWindow?: number
-  /** Per-request output cap for this model; omission falls back to the profile's {@link DeepSeekConnectionOptions.maxTokens}. */
+  /** Per-request output cap for this model; omission falls back to the route's optional {@link DeepSeekConnectionOptions.maxTokens}. */
   maxTokens?: number
 }
 
@@ -58,8 +58,8 @@ export interface DeepSeekConnectionOptions {
   apiKeyEnv: CredentialRef
   /** Request defaults applied to every call (thinking mode, effort). */
   defaults: RequestDefaults
-  /** Default per-request output cap; explicit request values win. */
-  maxTokens: number
+  /** Optional route-wide per-request output cap; explicit model and request values win. */
+  maxTokens?: number
   /** Positive context capacity used when the selected model has no exact value. */
   defaultContextWindow: number
   /** Advisory models exposed to discovery consumers; requests remain unrestricted. */
@@ -183,6 +183,7 @@ export class DeepSeekAdapter extends LlmAdapter {
     const configured = connection.models.find(entry => entry.id === model)
     const contextWindow = configured?.contextWindow
       ?? connection.defaultContextWindow
+    const defaultMaxTokens = configured?.maxTokens ?? connection.maxTokens
     return Promise.resolve({
       // The chat-completions wire route is text-only regardless of catalog
       // membership, so the uncatalogued fallback declares the same negative
@@ -192,7 +193,7 @@ export class DeepSeekAdapter extends LlmAdapter {
         ? { provider, id: model, name: model, inputModalities: ['text' as const] }
         : modelInfo(provider, configured),
       context: { contextWindow },
-      defaultMaxTokens: configured?.maxTokens ?? connection.maxTokens,
+      ...defaultMaxTokens === undefined ? {} : { defaultMaxTokens },
       ...connection.defaults.thinking === 'disabled'
         ? {
           reasoning: {

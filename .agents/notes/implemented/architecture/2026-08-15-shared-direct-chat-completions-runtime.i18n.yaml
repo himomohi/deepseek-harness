@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-08-15-shared-direct-chat-completions-runtime.md
-2026-08-15-shared-direct-chat-completions-runtime.md: cd8623e098740427323a867abff4d9ad33f9a815
-2026-08-15-shared-direct-chat-completions-runtime.zh.md: 94ae971e1446b4ba6c444542b850da5feedd7660
+2026-08-15-shared-direct-chat-completions-runtime.md: 000c92a65ea5d44f20763ff83a6cbdb83a9ab8b6
+2026-08-15-shared-direct-chat-completions-runtime.zh.md: fbdd86023716bd2748da2d4052cfd59bd6df16f1

@@ -1,0 +1,23 @@
+- id: base
+  name: '@deepseek-ai/cordis-plugin-include'
+  config:
+    path: ../../cordis.yml
+    patches:
+      - id: agent-spine
+        config:
+          agents:
+            - id: main
+              provider: opencodex
+              model: zai/glm-5.3
+              cwd: !!js process.cwd()
+          workspaceContext: false
+          persona: 'Keyless OpenCodex uncatalogued-model defaults snapshot.'
+      - id: persistence
+        config:
+          root: './.sessions'
+- id: llm-opencodex
+  name: '@deepseek-ai/dsh-llm-opencodex'
+  config:
+    baseURL: !!js process.env.DSH_SNAPSHOT_BASE_URL
+    thinking: disabled
+    streamIdleTimeoutMs: 150

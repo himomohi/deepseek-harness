@@ -54,6 +54,9 @@ const dshBinScript = fileURLToPath(new URL('../../../apps/cli/src/bin.ts', impor
 const tsconfigPath = fileURLToPath(new URL('../../../tsconfig.json', import.meta.url))
 const reasoningConfigPath = fileURLToPath(new URL('./fixtures/cli.cordis.yml', import.meta.url))
 const deepseekDefaultsConfigPath = fileURLToPath(new URL('./fixtures/deepseek-defaults.cordis.yml', import.meta.url))
+const opencodexUncataloguedDefaultsConfigPath = fileURLToPath(
+  new URL('./fixtures/opencodex-uncatalogued-defaults.cordis.yml', import.meta.url),
+)
 const headlessOverlayPath = fileURLToPath(new URL('./fixtures/headless-profile.cordis.yml', import.meta.url))
 const headlessSessionExpected = join(snapshotsDir, 'headless-profile', 'session.expected.jsonl')
 const headlessFailureExpected = join(snapshotsDir, 'headless-profile', 'stderr.expected.txt')
@@ -69,14 +72,14 @@ interface PersistedLog {
   readonly header: JsonObject
 }
 
-interface DeepSeekDefaultsServer {
+interface ChatCompletionsDefaultsServer {
   readonly url: string
   readonly requests: JsonObject[]
   close(): Promise<void>
 }
 
-/** Serve one deterministic DeepSeek-compatible response while retaining its request body. */
-async function deepseekDefaultsServer(): Promise<DeepSeekDefaultsServer> {
+/** Serve one deterministic direct chat-completions response while retaining its request body. */
+async function chatCompletionsDefaultsServer(): Promise<ChatCompletionsDefaultsServer> {
   const requests: JsonObject[] = []
   const server = createServer((request: IncomingMessage, response: ServerResponse) => {
     let body = ''
@@ -104,7 +107,9 @@ async function deepseekDefaultsServer(): Promise<DeepSeekDefaultsServer> {
   })
   await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve))
   const address = server.address()
-  if (address === null || typeof address === 'string') throw new Error('DeepSeek defaults snapshot server has no port')
+  if (address === null || typeof address === 'string') {
+    throw new Error('chat-completions defaults snapshot server has no port')
+  }
   return {
     url: `http://127.0.0.1:${address.port}`,
     requests,
@@ -516,7 +521,7 @@ describe('headless stream-json snapshots', () => {
   }, LOADER_SMOKE_TEST_TIMEOUT_MS)
 
   it('keeps provider comments alive and sends DeepSeek defaults through the one-shot app', async () => {
-    const server = await deepseekDefaultsServer()
+    const server = await chatCompletionsDefaultsServer()
     try {
       const result = await runLoaderSmoke({
         label: 'DeepSeek adapter defaults headless stream-json snapshot',
@@ -560,6 +565,53 @@ describe('headless stream-json snapshots', () => {
       `)
       expect(header?.adapterDefaults).toEqual({
         maxTokens: true,
+        reasoningEffort: true,
+      })
+    } finally {
+      await server.close()
+    }
+  }, LOADER_SMOKE_TEST_TIMEOUT_MS)
+
+  it('leaves an uncatalogued OpenCodex model output cap to the proxy', async () => {
+    const server = await chatCompletionsDefaultsServer()
+    try {
+      const result = await runLoaderSmoke({
+        label: 'OpenCodex uncatalogued-model defaults headless stream-json snapshot',
+        tempDirPrefix: 'headless-snapshot-opencodex-defaults-',
+        binScript,
+        libBinScript: binScript,
+        configPath: opencodexUncataloguedDefaultsConfigPath,
+        binArgs: [
+          opencodexUncataloguedDefaultsConfigPath,
+          'return the deterministic response',
+        ],
+        tsconfigPath,
+        env: {
+          DSH_SNAPSHOT_BASE_URL: server.url,
+          NODE_OPTIONS: [process.env.NODE_OPTIONS, '--disable-warning=ExperimentalWarning'].filter(Boolean).join(' '),
+        },
+      })
+
+      expect(result.stderr).toBe('')
+      expect(server.requests, result.stdout).toHaveLength(1)
+      expect(server.requests[0]).not.toHaveProperty('max_tokens')
+      const header = (parseJsonl(result.stdout)
+        .map(record => record.event)
+        .find((event): event is JsonObject => (
+          event !== null
+          && typeof event === 'object'
+          && !Array.isArray(event)
+          && 'type' in event
+          && event.type === 'request/header'
+        ))?.data as JsonObject | undefined)?.header as JsonObject | undefined
+      expect(header?.config).toMatchInlineSnapshot(`
+        {
+          "model": "zai/glm-5.3",
+          "provider": "opencodex",
+          "reasoningEffort": "off",
+        }
+      `)
+      expect(header?.adapterDefaults).toEqual({
         reasoningEffort: true,
       })
     } finally {
