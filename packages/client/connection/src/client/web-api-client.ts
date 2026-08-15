@@ -41,11 +41,24 @@ export class WebApiClient extends AbstractApiClient {
     url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:'
     const socket = new WebSocket(url)
     const inbox: SocketItem<F>[] = []
+    let readIndex = 0
     let wake: (() => void) | undefined
     const enqueue = (item: SocketItem<F>): void => {
       inbox.push(item)
       wake?.()
       wake = undefined
+    }
+    const take = (): SocketItem<F> => {
+      const item = inbox[readIndex] as SocketItem<F>
+      readIndex += 1
+      if (readIndex === inbox.length) {
+        inbox.length = 0
+        readIndex = 0
+      } else if (readIndex >= 1_024 && readIndex * 2 >= inbox.length) {
+        inbox.splice(0, readIndex)
+        readIndex = 0
+      }
+      return item
     }
     const handleOpen = (): void => { onOpen?.() }
     const handleMessage = (event: MessageEvent): void => {
@@ -66,6 +79,7 @@ export class WebApiClient extends AbstractApiClient {
     const handleAbort = (): void => {
       if (socket.readyState === WebSocket.CONNECTING || socket.readyState === WebSocket.OPEN) socket.close()
     }
+    const aborted = (): boolean => signal.aborted
     socket.addEventListener('open', handleOpen)
     socket.addEventListener('message', handleMessage)
     socket.addEventListener('close', handleClose, { once: true })
@@ -73,8 +87,10 @@ export class WebApiClient extends AbstractApiClient {
     if (signal.aborted) handleAbort()
     try {
       while (true) {
-        while (inbox.length > 0) {
-          const item = inbox.shift() as SocketItem<F>
+        if (aborted()) return
+        while (readIndex < inbox.length) {
+          if (aborted()) return
+          const item = take()
           if (item.kind === 'end') return
           yield item.envelope
         }
@@ -85,6 +101,9 @@ export class WebApiClient extends AbstractApiClient {
       socket.removeEventListener('open', handleOpen)
       socket.removeEventListener('message', handleMessage)
       socket.removeEventListener('close', handleClose)
+      inbox.length = 0
+      readIndex = 0
+      wake = undefined
       handleAbort()
     }
   }

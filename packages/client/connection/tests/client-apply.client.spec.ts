@@ -253,6 +253,71 @@ describe('connection client apply', () => {
     fetch.mockRestore()
   })
 
+  it('drains a 20,000-frame WebSocket burst in wire order', async () => {
+    ;(globalThis as Win).location = {
+      hostname: 'localhost', search: '', origin: 'http://localhost:3080',
+    }
+    ;(globalThis as WebSocketGlobal).WebSocket = FakeWebSocket as unknown as typeof WebSocket
+    const client = (await mount()).api
+    const abort = new AbortController()
+    const iterator = client.events.mux({}, abort.signal)[Symbol.asyncIterator]()
+    const first = iterator.next()
+    await vi.waitFor(() => { expect(sockets).toHaveLength(1) })
+    sockets[0]!.receive(JSON.stringify({
+      type: 'server-request',
+      rpcId: 'burst-baseline',
+      method: 'session/subscribed',
+      payload: { type: 'session/subscribed', sessionId: 'burst', lastSeq: -1 },
+    }))
+    await first
+
+    const total = 20_000
+    for (let index = 0; index < total; index += 1) {
+      sockets[0]!.receive(JSON.stringify({
+        type: 'server-request',
+        rpcId: `burst-${String(index)}`,
+        method: 'session/subscribed',
+        payload: { type: 'session/subscribed', sessionId: 'burst', lastSeq: index },
+      }))
+    }
+    const sequence: number[] = []
+    for (let index = 0; index < total; index += 1) {
+      const next = await iterator.next()
+      if (next.done || next.value.payload.type !== 'session/subscribed') {
+        throw new Error(`WebSocket stream ended before frame ${String(index)}`)
+      }
+      sequence.push(next.value.payload.lastSeq)
+    }
+    expect(sequence).toEqual(Array.from({ length: total }, (_value, index) => index))
+
+    sockets[0]!.close()
+    expect((await iterator.next()).done).toBe(true)
+  })
+
+  it('drops remaining received WebSocket frames when the connection aborts', async () => {
+    ;(globalThis as Win).location = {
+      hostname: 'localhost', search: '', origin: 'http://localhost:3080',
+    }
+    ;(globalThis as WebSocketGlobal).WebSocket = FakeWebSocket as unknown as typeof WebSocket
+    const client = (await mount()).api
+    const abort = new AbortController()
+    const iterator = client.events.mux({}, abort.signal)[Symbol.asyncIterator]()
+    const pending = iterator.next()
+    await vi.waitFor(() => { expect(sockets).toHaveLength(1) })
+    for (let index = 0; index < 100; index += 1) {
+      sockets[0]!.receive(JSON.stringify({
+        type: 'server-request',
+        rpcId: `abort-${String(index)}`,
+        method: 'session/subscribed',
+        payload: { type: 'session/subscribed', sessionId: 'abort', lastSeq: index },
+      }))
+    }
+
+    expect((await pending).done).toBe(false)
+    abort.abort()
+    expect((await iterator.next()).done).toBe(true)
+  })
+
   it('maps an HTTPS page origin to a secure WebSocket URL', async () => {
     ;(globalThis as Win).location = {
       hostname: 'harness.example', search: '', origin: 'https://harness.example',

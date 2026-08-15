@@ -410,9 +410,14 @@ function presetFailure(request: RpcRequest<unknown>, error: unknown): RpcRespons
   return undefined
 }
 
-/** Simple async queue: core callbacks push, the AsyncIterable pulls; abort/return cleans up. */
+/**
+ * Async FIFO whose cursor-backed reads keep accumulated-frame drain linear.
+ * Core callbacks push, the AsyncIterable pulls, and abort/return drops the
+ * remaining backlog before cleanup.
+ */
 class FrameQueue<F> {
   private buffer: F[] = []
+  private readIndex = 0
   private waiter: (() => void) | undefined
   private done = false
 
@@ -427,17 +432,40 @@ class FrameQueue<F> {
     this.waiter?.()
   }
 
+  /** Remove the next buffered item; callers prove that one exists. */
+  private take(): F {
+    const item = this.buffer[this.readIndex] as F
+    this.readIndex += 1
+    if (this.readIndex === this.buffer.length) {
+      this.buffer.length = 0
+      this.readIndex = 0
+    } else if (this.readIndex >= 1_024 && this.readIndex * 2 >= this.buffer.length) {
+      this.buffer.splice(0, this.readIndex)
+      this.readIndex = 0
+    }
+    return item
+  }
+
   async *iterate(signal: AbortSignal, cleanup: () => void): AsyncGenerator<F> {
     const onAbort = (): void => { this.end() }
+    const aborted = (): boolean => signal.aborted
     signal.addEventListener('abort', onAbort, { once: true })
     try {
       while (true) {
-        while (this.buffer.length > 0) yield this.buffer.shift() as F
-        if (this.done || signal.aborted) return
+        if (aborted()) return
+        while (this.readIndex < this.buffer.length) {
+          if (aborted()) return
+          yield this.take()
+        }
+        if (this.done || aborted()) return
         await new Promise<void>((resolve) => { this.waiter = resolve })
         this.waiter = undefined
       }
     } finally {
+      this.done = true
+      this.buffer.length = 0
+      this.readIndex = 0
+      this.waiter = undefined
       signal.removeEventListener('abort', onAbort)
       cleanup()
     }

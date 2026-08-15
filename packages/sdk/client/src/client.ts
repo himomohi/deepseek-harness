@@ -66,7 +66,9 @@ export class SdkProtocolError extends Error {
 
 interface SubscriptionState {
   readonly queue: HarnessNotification[]
+  queueReadIndex: number
   readonly waiters: { resolve: (item: HarnessNotification) => void; reject: (error: Error) => void }[]
+  waiterReadIndex: number
   readonly filter: NotificationFilter | undefined
   failure: Error | undefined
 }
@@ -105,7 +107,7 @@ class NotificationSubscriptionImpl implements NotificationSubscription {
    * immediately (the queue is dropped).
    */
   next(): Promise<HarnessNotification> {
-    const queued = this.state.queue.shift()
+    const queued = this.takeQueued()
     if (queued !== undefined) return Promise.resolve(queued)
     if (this.state.failure !== undefined) return Promise.reject(this.state.failure)
     return new Promise((resolve, reject) => {
@@ -118,7 +120,7 @@ class NotificationSubscriptionImpl implements NotificationSubscription {
    * @returns the next queued notification, or `undefined` when none is queued.
    */
   tryNext(): HarnessNotification | undefined {
-    return this.state.queue.shift()
+    return this.takeQueued()
   }
 
   /** Detach from the client; queued items drop and pending waiters reject. */
@@ -127,7 +129,23 @@ class NotificationSubscriptionImpl implements NotificationSubscription {
     // The drop is part of this method's contract; a runtime-death fail() keeps
     // the queue so already-delivered notifications remain drainable.
     this.state.queue.length = 0
+    this.state.queueReadIndex = 0
     this.fail(new TransportClosedError('notification subscription closed'))
+  }
+
+  /** Remove one queued notification in amortized constant time. */
+  private takeQueued(): HarnessNotification | undefined {
+    if (this.state.queueReadIndex >= this.state.queue.length) return undefined
+    const queued = this.state.queue[this.state.queueReadIndex] as HarnessNotification
+    this.state.queueReadIndex += 1
+    if (this.state.queueReadIndex === this.state.queue.length) {
+      this.state.queue.length = 0
+      this.state.queueReadIndex = 0
+    } else if (this.state.queueReadIndex >= 1_024 && this.state.queueReadIndex * 2 >= this.state.queue.length) {
+      this.state.queue.splice(0, this.state.queueReadIndex)
+      this.state.queueReadIndex = 0
+    }
+    return queued
   }
 
   /**
@@ -137,7 +155,10 @@ class NotificationSubscriptionImpl implements NotificationSubscription {
    */
   fail(error: Error): void {
     this.state.failure ??= error
-    for (const waiter of this.state.waiters.splice(0)) waiter.reject(this.state.failure)
+    const pending = this.state.waiters.splice(this.state.waiterReadIndex)
+    this.state.waiters.length = 0
+    this.state.waiterReadIndex = 0
+    for (const waiter of pending) waiter.reject(this.state.failure)
   }
 
   /**
@@ -157,9 +178,25 @@ class NotificationSubscriptionImpl implements NotificationSubscription {
       return
     }
     if (!matches) return
-    const waiter = this.state.waiters.shift()
+    const waiter = this.takeWaiter()
     if (waiter !== undefined) waiter.resolve(notification)
     else this.state.queue.push(notification)
+  }
+
+  /** Remove one pending consumer in amortized constant time. */
+  private takeWaiter(): SubscriptionState['waiters'][number] | undefined {
+    if (this.state.waiterReadIndex >= this.state.waiters.length) return undefined
+    const waiter = this.state.waiters[this.state.waiterReadIndex] as SubscriptionState['waiters'][number]
+    this.state.waiterReadIndex += 1
+    if (this.state.waiterReadIndex === this.state.waiters.length) {
+      this.state.waiters.length = 0
+      this.state.waiterReadIndex = 0
+    } else if (this.state.waiterReadIndex >= 1_024
+      && this.state.waiterReadIndex * 2 >= this.state.waiters.length) {
+      this.state.waiters.splice(0, this.state.waiterReadIndex)
+      this.state.waiterReadIndex = 0
+    }
+    return waiter
   }
 
   /**
@@ -341,7 +378,14 @@ export class HarnessClient {
    */
   subscribe(filter?: NotificationFilter): NotificationSubscription {
     const id = String(this.subscriptionSerial++)
-    const state: SubscriptionState = { queue: [], waiters: [], filter, failure: undefined }
+    const state: SubscriptionState = {
+      queue: [],
+      queueReadIndex: 0,
+      waiters: [],
+      waiterReadIndex: 0,
+      filter,
+      failure: undefined,
+    }
     const subscription = new NotificationSubscriptionImpl(state, () => { this.subscriptions.delete(id) })
     if (this.closeTask !== undefined || this.exitCode !== undefined || this.spawnError !== undefined) {
       subscription.fail(this.closedError('DeepSeek Harness runtime closed'))

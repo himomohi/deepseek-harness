@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/bug-fix/2026-08-15-linear-stream-backlog-drain.md
+2026-08-15-linear-stream-backlog-drain.md: 79dee27eebdcd936ce4fa041552e848cebe00eca
+2026-08-15-linear-stream-backlog-drain.zh.md: 0f9ed85c8451bd666aee5f863847513d4ea8efbc

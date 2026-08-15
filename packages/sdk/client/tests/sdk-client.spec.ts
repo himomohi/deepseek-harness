@@ -384,6 +384,46 @@ describe('HarnessClient', () => {
     await client.close()
   })
 
+  it('drains a 20,000-notification burst in wire order', () => {
+    const client = new HarnessClient(fakeLaunch())
+    const subscription = client.subscribe()
+    const inject = (notification: HarnessNotification): void => {
+      (client as unknown as { dispatchNotification(n: HarnessNotification): void }).dispatchNotification(notification)
+    }
+    const total = 20_000
+    for (let index = 0; index < total; index += 1) {
+      inject({ method: 'session.status', params: { sessionId: 'burst', status: 'running', index } })
+    }
+
+    const sequence: number[] = []
+    for (let index = 0; index < total; index += 1) {
+      const notification = subscription.tryNext()
+      const value = notification?.params.index
+      if (typeof value !== 'number') throw new Error(`notification ${String(index)} has no numeric index`)
+      sequence.push(value)
+    }
+    expect(sequence).toEqual(Array.from({ length: total }, (_value, index) => index))
+    expect(subscription.tryNext()).toBeUndefined()
+    subscription.close()
+  })
+
+  it('settles 20,000 pending next calls in wire order', async () => {
+    const client = new HarnessClient(fakeLaunch())
+    const subscription = client.subscribe()
+    const inject = (notification: HarnessNotification): void => {
+      (client as unknown as { dispatchNotification(n: HarnessNotification): void }).dispatchNotification(notification)
+    }
+    const total = 20_000
+    const pending = Array.from({ length: total }, () => subscription.next())
+    for (let index = 0; index < total; index += 1) {
+      inject({ method: 'session.status', params: { sessionId: 'pending', status: 'running', index } })
+    }
+
+    const sequence = (await Promise.all(pending)).map(notification => notification.params.index)
+    expect(sequence).toEqual(Array.from({ length: total }, (_value, index) => index))
+    subscription.close()
+  })
+
   it('contains a throwing filter to its own subscription', async () => {
     const client = new HarnessClient(fakeLaunch())
     cleanups.push(() => client.close())

@@ -49,6 +49,15 @@ All notable changes and release notes for DeepSeek Harness (`dsh`) are documente
 
 ---
 
+## [0.1.0-rc.16] - 2026-08-15
+
+### ⚡ Streaming backlog drains linearly
+* Host API Proxy, browser WebSocket, and TypeScript SDK subscription queues use cursor-backed FIFO reads instead of repeated `Array.shift()`.
+* Slow consumers preserve every accepted frame in wire order, while connection abort discards undelivered frames from the disconnected generation.
+* Local 50,000-item probes reduced backlog drain from 1,077.72 ms to 10.68 ms on the host, 1,510.54 ms to 9.14 ms in the browser, 200.08 ms to 1.31 ms for unread SDK notifications, and 1,403.13 ms to 13.54 ms for pending SDK callers.
+
+---
+
 ---
 
 ---
