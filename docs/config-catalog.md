@@ -889,7 +889,55 @@ export interface DeepSeekCatalogModel {
 
 Depends on: [`RetryPolicyConfig`](../packages/llm/llm/src/index.ts)
 
-Source: [`packages/llm/llm-deepseek/src/index.ts:62`](../packages/llm/llm-deepseek/src/index.ts)
+Source: [`packages/llm/llm-deepseek/src/index.ts:72`](../packages/llm/llm-deepseek/src/index.ts)
+
+<a id="deepseek-aidsh-llm-opencodex"></a>
+
+## `@deepseek-ai/dsh-llm-opencodex`
+
+Requires: `llm`
+
+```ts config-catalog
+/** OpenCodex proxy plugin and live-settings fields. */
+export interface Config {
+  /** Credential reference; defaults to `OPENCODEX_API_KEY`. */
+  apiKeyEnv?: string
+  /** Proxy endpoint; defaults to the local OpenCodex service. */
+  baseURL?: string
+  /** Deployment thinking policy. */
+  thinking?: 'enabled' | 'disabled'
+  /** Default reasoning effort; omission uses the adapter default. */
+  reasoningEffort?: 'off' | 'high' | 'max'
+  /** Default per-request output cap. */
+  maxTokens?: number
+  /** Context capacity used when a model entry omits one. */
+  defaultContextWindow?: number
+  /** Advisory models shown before live discovery replaces the catalog. */
+  models?: OpenCodexCatalogModel[]
+  /** Maximum provider idle time while a stream read is pending. */
+  streamIdleTimeoutMs?: number
+  /** Provider-owned model-request retry policy. */
+  retryPolicy?: RetryPolicyConfig
+}
+
+/** One model advertised by the OpenCodex proxy adapter. */
+export interface OpenCodexCatalogModel {
+  /** Model id accepted by the proxy. */
+  id: string
+  /** Selector label; defaults to {@link id}. */
+  name?: string
+  /** Optional selector detail. */
+  description?: string
+  /** Known combined request and response context capacity. */
+  contextWindow?: number
+  /** Known output-token cap. */
+  maxTokens?: number
+}
+```
+
+Depends on: [`RetryPolicyConfig`](../packages/llm/llm/src/index.ts)
+
+Source: [`packages/llm/llm-opencodex/src/index.ts:99`](../packages/llm/llm-opencodex/src/index.ts)
 
 <a id="deepseek-aidsh-llm-pi-ai"></a>
 

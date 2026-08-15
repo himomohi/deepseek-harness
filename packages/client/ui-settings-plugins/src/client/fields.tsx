@@ -121,3 +121,33 @@ export function SecretField(props: Pick<FieldProps, 'id' | 'label' | 'hint' | 't
     </div>
   )
 }
+
+/**
+ * Bind a provider card's credential state and localized set/unset copy to the
+ * shared write-only field.
+ * @param props - credential state, labels, and staged edit callback.
+ * @returns the provider credential control.
+ */
+export function ProviderSecretField(props: Pick<FieldProps, 'id' | 'label' | 'hint' | 'text' | 'onEdit'> & {
+  /** Whether the Host reports a configured credential. */
+  configured: boolean
+  /** Whether the Host accepts a managed credential write. */
+  writable: boolean
+  /** Copy shown when a credential is configured. */
+  configuredLabel: string
+  /** Copy shown when no credential is configured. */
+  unconfiguredLabel: string
+}) {
+  return (
+    <SecretField
+      id={props.id}
+      label={props.label}
+      hint={props.hint}
+      disabled={!props.writable}
+      text={props.text}
+      configured={props.configured}
+      stateLabel={props.configured ? props.configuredLabel : props.unconfiguredLabel}
+      onEdit={props.onEdit}
+    />
+  )
+}

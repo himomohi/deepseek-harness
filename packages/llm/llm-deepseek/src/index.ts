@@ -13,20 +13,21 @@
 
 import type { Context } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
-import { assertUsableApiKey, LlmError, resolveRetryPolicy, RetryPolicySchema } from '@deepseek-ai/dsh-llm'
+import { RetryPolicySchema } from '@deepseek-ai/dsh-llm'
 import type { RetryPolicyConfig } from '@deepseek-ai/dsh-llm'
-import { credentialRef } from '@deepseek-ai/dsh-credentials'
-import { launchEnvironmentOf, type LaunchEnvironmentSnapshot } from '@deepseek-ai/dsh-launch-environment'
-import { deepEqualJson, installSettingsSection, settingsNamespace } from '@deepseek-ai/dsh-settings'
+import type { LaunchEnvironmentSnapshot } from '@deepseek-ai/dsh-launch-environment'
+import { settingsNamespace } from '@deepseek-ai/dsh-settings'
 import { MAX_TIMER_DELAY_MS } from '@deepseek-ai/dsh-timeout'
-import { getOrCreateAnonymousUserId, type AnonymousUserId } from '@deepseek-ai/dsh-anonymous-user-id'
 import {
   DEFAULT_CONTEXT_WINDOW,
   DEFAULT_MAX_TOKENS,
   DEFAULT_STREAM_IDLE_TIMEOUT_MS,
-  DeepSeekAdapter,
 } from './adapter.ts'
 import type { DeepSeekCatalogModel, DeepSeekConnectionOptions } from './adapter.ts'
+import {
+  installDirectProvider,
+  resolveDirectProviderOptions,
+} from './direct-provider.ts'
 
 export {
   DEFAULT_CONTEXT_WINDOW,
@@ -35,6 +36,15 @@ export {
   DeepSeekAdapter,
 } from './adapter.ts'
 export type { DeepSeekAdapterOptions, DeepSeekCatalogModel, DeepSeekConnectionOptions } from './adapter.ts'
+export {
+  installDirectProvider,
+  resolveDirectProviderOptions,
+} from './direct-provider.ts'
+export type {
+  DirectProviderConfig,
+  DirectProviderDefaults,
+  DirectProviderRegistration,
+} from './direct-provider.ts'
 export type { RequestDefaults } from './serialize.ts'
 export type * from './types.ts'
 
@@ -114,38 +124,6 @@ const BASE_URL_ENV = 'DEEPSEEK_BASE_URL'
  */
 export type ResolvedDeepSeekOptions = DeepSeekConnectionOptions
 
-/** Resolve, validate, and detach the advisory model catalog. */
-function resolveModels(models: readonly DeepSeekCatalogModel[] | undefined): DeepSeekCatalogModel[] {
-  const seen = new Set<string>()
-  return (models ?? DEFAULT_MODELS).map((model) => {
-    if (model.id.length === 0) throw new Error('llm-deepseek: catalog model ids must be non-empty')
-    if (model.name !== undefined && model.name.length === 0) {
-      throw new Error(`llm-deepseek: catalog model "${model.id}" has an empty name`)
-    }
-    if (model.contextWindow !== undefined
-      && (!Number.isInteger(model.contextWindow) || model.contextWindow <= 0)) {
-      throw new Error(
-        `llm-deepseek: catalog model "${model.id}" contextWindow must be a positive integer`,
-      )
-    }
-    if (model.maxTokens !== undefined
-      && (!Number.isInteger(model.maxTokens) || model.maxTokens <= 0)) {
-      throw new Error(
-        `llm-deepseek: catalog model "${model.id}" maxTokens must be a positive integer`,
-      )
-    }
-    if (seen.has(model.id)) throw new Error(`llm-deepseek: duplicate catalog model "${model.id}"`)
-    seen.add(model.id)
-    return {
-      id: model.id,
-      ...model.name === undefined ? {} : { name: model.name },
-      ...model.description === undefined ? {} : { description: model.description },
-      ...model.contextWindow === undefined ? {} : { contextWindow: model.contextWindow },
-      ...model.maxTokens === undefined ? {} : { maxTokens: model.maxTokens },
-    }
-  })
-}
-
 /**
  * The one explicit resolve step from raw config to validated connection
  * facts. Programmatic construction may bypass Schemastery normalization, so
@@ -159,118 +137,22 @@ function resolveModels(models: readonly DeepSeekCatalogModel[] | undefined): Dee
  * @returns validated connection facts plus the credential reference.
  */
 export function resolveAdapterOptions(config: Config, environment?: LaunchEnvironmentSnapshot): ResolvedDeepSeekOptions {
-  if (config.thinking === 'disabled'
-    && config.reasoningEffort !== undefined
-    && config.reasoningEffort !== 'off') {
-    throw new Error('llm-deepseek: only reasoningEffort "off" can be configured when thinking is disabled')
-  }
-  if (config.defaultContextWindow !== undefined
-    && (!Number.isInteger(config.defaultContextWindow) || config.defaultContextWindow <= 0)) {
-    throw new Error('llm-deepseek: defaultContextWindow must be a positive integer')
-  }
-  if (config.maxTokens !== undefined
-    && (!Number.isSafeInteger(config.maxTokens) || config.maxTokens <= 0)) {
-    throw new Error('llm-deepseek: maxTokens must be a positive safe integer')
-  }
-  const streamIdleTimeoutMs = config.streamIdleTimeoutMs ?? DEFAULT_STREAM_IDLE_TIMEOUT_MS
-  if (!Number.isFinite(streamIdleTimeoutMs)
-    || streamIdleTimeoutMs <= 0
-    || streamIdleTimeoutMs > MAX_TIMER_DELAY_MS) {
-    throw new Error(
-      `llm-deepseek: streamIdleTimeoutMs must be a positive finite number no greater than ${MAX_TIMER_DELAY_MS}`,
-    )
-  }
-  return {
-    apiKeyEnv: credentialRef(config.apiKeyEnv ?? DEFAULT_API_KEY_ENV),
-    baseURL: config.baseURL
-      ?? environment?.get(BASE_URL_ENV)?.value
-      ?? PUBLIC_BASE_URL,
-    defaults: {
-      thinking: config.thinking,
-      reasoningEffort: config.reasoningEffort,
-    },
-    maxTokens: config.maxTokens ?? DEFAULT_MAX_TOKENS,
-    defaultContextWindow: config.defaultContextWindow ?? DEFAULT_CONTEXT_WINDOW,
-    models: resolveModels(config.models),
-    streamIdleTimeoutMs,
-    retryPolicy: resolveRetryPolicy(config.retryPolicy, 'llm-deepseek: retryPolicy'),
-  }
+  return resolveDirectProviderOptions(config, environment, {
+    packageName: 'llm-deepseek',
+    defaultApiKeyEnv: DEFAULT_API_KEY_ENV,
+    baseUrlEnv: BASE_URL_ENV,
+    publicBaseUrl: PUBLIC_BASE_URL,
+    defaultModels: DEFAULT_MODELS,
+  })
 }
 
 export function apply(ctx: Context, config: Config): void {
-  let current: () => Config = () => config
-  let lastRaw: Config | undefined
-  let lastGood: ResolvedDeepSeekOptions | undefined
-  const options = (): ResolvedDeepSeekOptions => {
-    const raw = current()
-    if (raw === lastRaw && lastGood !== undefined) return lastGood
-    try {
-      const next = resolveAdapterOptions(raw, launchEnvironmentOf(ctx))
-      lastRaw = raw
-      lastGood = next
-      return next
-    } catch (error) {
-      // Static composition resolves before anything registers, so this branch
-      // only sees a live settings snapshot failing a beyond-schema bound:
-      // keep serving the last good facts and say so once per bad snapshot.
-      if (lastGood === undefined) throw error
-      lastRaw = raw
-      ctx.logger.error('llm-deepseek: keeping the last good configuration after an invalid settings section')
-      ctx.logger.error(error)
-      return lastGood
-    }
-  }
-  options()
-
-  const resolveApiKey = async (connection: ResolvedDeepSeekOptions): Promise<string> => {
-    // Every credential fact comes from the caller's snapshot, so a rejected
-    // settings generation cannot leak its key onto the previous endpoint.
-    const ref = connection.apiKeyEnv
-    const credentials = ctx.get('credentials')
-    if (credentials !== undefined) {
-      const hit = await credentials.resolve(ref)
-      if (hit !== undefined) return assertUsableApiKey(hit.value, 'llm-deepseek', ref)
-    } else {
-      // Without the seam there is no managed store to rank against, so the
-      // environment is the whole credential plane.
-      const ambient = launchEnvironmentOf(ctx).get(ref)
-      if (ambient !== undefined && ambient.value.length > 0) {
-        return assertUsableApiKey(ambient.value, 'llm-deepseek', ref)
-      }
-    }
-    throw new LlmError(
-      `llm-deepseek: no API key for provider route "${PROVIDER}"; store ${ref} through the credentials`
-      + ` service (the web Models page writes it), or export ${ref} in the launching environment`,
-      'MISSING_CREDENTIAL',
-    )
-  }
-
-  let userId: AnonymousUserId | undefined
-  const resolveUserId = (): AnonymousUserId => userId ??= getOrCreateAnonymousUserId()
-  const adapter = new DeepSeekAdapter({ options, resolveApiKey, resolveUserId })
-  ctx.llm.registerConfigurableProviders([
-    { provider: PROVIDER, displayName: 'DeepSeek', settingsNs: NS, settingsPath: [] },
-  ])
-  // Route effects bind to this apply fiber via the stable `ctx` reference,
-  // even when a swap runs inside the scoped settings callback below.
-  const registration = ctx.llm.registerAdapter([PROVIDER], adapter)
-  let registeredPolicy = options().retryPolicy
-  const ensureRegistrationFacts = (): void => {
-    const policy = options().retryPolicy
-    if (deepEqualJson(policy, registeredPolicy)) return
-    // The registry captures the retry policy at registration, so it is the one
-    // fact per-request resolution cannot refresh. `replace` re-reads it in one
-    // synchronous registry section: disposing and re-registering instead would
-    // publish an empty route set between the two, and an observer that reacted
-    // to it would see this provider disappear and come back.
-    registration.replace([PROVIDER])
-    registeredPolicy = policy
-  }
-
-  installSettingsSection(ctx, NS, Config, config, {
-    setSource: (source) => {
-      current = source
-    },
-    onChange: ensureRegistrationFacts,
+  installDirectProvider(ctx, config, {
+    packageName: 'llm-deepseek',
+    settingsNs: NS,
+    schema: Config,
+    provider: PROVIDER,
+    displayName: 'DeepSeek',
+    resolveOptions: resolveAdapterOptions,
   })
 }

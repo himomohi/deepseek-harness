@@ -1,76 +1,32 @@
-<div align="center">
+# DeepSeek Harness
 
-# ⚡ DeepSeek Harness (`dsh`)
+English | [中文](README.zh.md) | [한국어](README.ko.md)
 
-**High-Performance Plugin-Based AI Agent Harness with OpenCodex & Multi-Model Support**
+DeepSeek Harness (`dsh`) is an open-source agent harness developed by [DeepSeek AI](https://deepseek.com).
 
-[![Release](https://img.shields.io/badge/release-v0.1.0--rc.6-blue?style=for-the-badge&logo=github)](CHANGELOG.md)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Node.js](https://img.shields.io/badge/Node.js-^22.19%20||%20>=24-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
-[![OpenCodex Ready](https://img.shields.io/badge/OpenCodex-29%20Models-8A2BE2?style=for-the-badge)](packages/llm/llm-opencodex)
-[![Cache Hit](https://img.shields.io/badge/KV%20Cache%20Hit-90%25+-FF6B6B?style=for-the-badge)](#benchmark)
+It uses an architecture where **everything is a plugin**, and is powered by [Cordis](https://github.com/cordiverse/cordis), whose design is described in [_A Programming Paradigm for Spatiotemporal Composability_](https://github.com/cordiverse/paper).
 
-English | [中文](README.zh.md) | [한국어](README.ko.md) | [Changelog](CHANGELOG.md) | [Resume](WORK_RESUME.md)
+This fork adds a Korean Web UI language pack, an OpenCodex proxy provider, mobile-width layout fixes, an interactive upstream updater, and cursor-backed transport queues for large streaming backlogs. It does not claim provider cache-hit or first-token gains without provider-side measurements.
 
-</div>
+## Developer preview
 
----
+DeepSeek Harness is currently in _developer preview_ and is iterating rapidly. **THERE WILL BE COMPATIBILITY-BREAKING CHANGES.**
 
-## 🌟 Overview
+## Run
 
-**DeepSeek Harness (`dsh`)** is an open-source AI agent harness framework originating from [DeepSeek AI](https://deepseek.com).
+### Run from `npm`
 
-Built on the **"Everything is a Plugin"** philosophy and powered by the [Cordis](https://github.com/cordiverse/cordis) microkernel, this fork delivers a battle-tested production environment featuring **full Korean localization**, **seamless OpenCodex (`ocx`) 29-model proxy support**, **auto-continue output generation**, and **high-efficiency Prefix KV Cache optimizations**.
-
----
-
-## ✨ Key Features
-
-| Feature | Description |
-| :--- | :--- |
-| 👁️ **Automatic Vision Fallback** | Routes image attachments on text-only models (`deepseek-chat`, etc.) through multimodal models for OCR & visual reasoning |
-| ⚡ **Ultra-High KV Cache Hit Rate** | Preserves `reasoning_content` across multi-turn sessions for **90%+ Cache Hit Rates** and **70~80% lower TTFT latency** |
-| 🔄 **Auto-Continue on Token Limit** | Automatically resumes generation when reaching `max-tokens` to prevent truncated outputs or incomplete code |
-| 🌐 **Seamless OpenCodex (`ocx`) Support** | Auto-detects local `ocx` proxy with instant green readiness, dynamic discovery, and **29 top-tier models** built-in |
-| 🚀 **Zero-Setup Auto Launch** | Running `dsh` detects system locale and automatically pops open the default browser at `http://127.0.0.1:3080` |
-| 🔄 **`dsh update` Upstream Sync** | Merges official `upstream`, rebuilds, then **checks** fork features. Independent plugins usually survive; core-file patches can conflict and must be verified. |
-| 🌍 **Multi-Language Localization** | Comprehensive Korean (`ko`), English (`en`), and Chinese (`zh`) UI and plugin support |
-| 🧩 **Cordis Microkernel Architecture** | Sandboxes, filesystems, shells, tools, and LLM adapters all operate as hot-reloadable plugins |
-
----
-<a id="benchmark"></a>
-
-## 📊 Performance & Cache Optimization (Benchmark)
-
-Incorporating prefix retention techniques from `earendil-works/pi`, this fork prevents **Prefix Cache Invalidation** across multi-turn agent runs:
-
-```mermaid
-graph LR
-    A[User Prompt Turn] --> B[Fixed System & Tools Prefix]
-    B --> C[Preserve Reasoning Tokens]
-    C --> D[Server KV Cache 100% Prefix Match]
-    D --> E[⚡ 90%+ Cache Hit / 0.3s TTFT]
-```
-
-* **Time-to-First-Token (TTFT)**: 3~8s ➔ **0.3~0.8s** (~75% reduction)
-* **Input Token Cost**: Up to **80~90% savings** via Cache Hit pricing
-* **Output Reliability**: Flawless generation of large files and multi-step refactorings
-
----
-
-## 💻 Quick Start
-
-### 1. Run with Global CLI
+Install `Node.js`, then run:
 
 ```sh
-dsh
-dsh web
+npx @deepseek-ai/dsh web
 ```
 
-> The web UI is served at `http://127.0.0.1:3080` by default.
+The command starts the Web UI, served at `http://127.0.0.1:3080` by default. Open that URL in a browser; the server does not launch an external process automatically. See the [Web UI guide](docs/user/guide/index.md).
 
-### 2. Build and Run from Source
+### Run from source
+
+To run this fork from a repository checkout:
 
 ```sh
 git clone https://github.com/himomohi/deepseek-harness.git
@@ -80,68 +36,46 @@ pnpm run build
 pnpm dsh web
 ```
 
-### 3. Upstream Sync (`dsh update`)
+Running `pnpm dsh` without an explicit profile selects the Web profile.
+
+## Fork features
+
+- **Korean language pack**: `@deepseek-ai/dsh-client-locale-ko` supplies the Web UI’s Korean dictionaries as a normal client plugin.
+- **OpenCodex provider**: `@deepseek-ai/dsh-llm-opencodex` connects to an OpenAI-compatible OpenCodex proxy and can replace its advisory model catalog from `GET /models`.
+- **Linear streaming queues**: the Host API Proxy, browser WebSocket client, and TypeScript SDK drain accumulated frames through cursor-backed FIFO queues while preserving order.
+- **Upstream updates**: `dsh update` previews official commits, asks before merging, expands a shallow clone when necessary, rebuilds, and verifies the Korean and OpenCodex package markers.
+- **Remote safety**: `trustedHosts` protects against DNS rebinding; it is not authentication. Settings, credentials, native dialogs, and Host-side model discovery therefore remain loopback-only.
+
+OpenCodex currently uses the shared text-only chat-completions wire adapter. Image input stays capability-gated instead of being silently converted or accepted without pixels reaching a vision model.
+
+## Update this fork
 
 ```sh
-dsh update
 dsh update --dry-run
+dsh update
 dsh update --yes
 ```
 
-Prints a short official-vs-fork preview and asks before merging. git/pnpm noise stays hidden. Failures print an **AI에게 요청:** block you can paste to an agent.
+The updater fetches the official repository, restores hidden Git parents when the checkout is shallow, merges the official default branch, installs dependencies, builds, and checks fork-owned package markers. A merge conflict or failed marker check stops with a copyable repair prompt; it never reports success after a partial update.
 
-```sh
-dsh stop
-```
+## Community and support
 
-Stop every live dsh web server on this machine from any directory.
+- Feel free to submit feedback or bug reports through [GitHub Discussions](https://github.com/deepseek-ai/deepseek-harness/discussions).
+- Add the [`dsh-plugin`](https://github.com/topics/dsh-plugin) topic to your plugin repository for discoverability.
+- Join the <a href="https://discord.gg/Ycq5dCaS4">DeepSeek Harness Discord community</a>.
 
-This is a **git merge of `deepseek-ai/deepseek-harness`**, then `pnpm install` + `pnpm run build`, then a file/marker check for:
+## Contributing
 
-- packages: `locale-ko`, `llm-opencodex`, `vision-fallback`
-- core patches: auto-continue, `reasoning_content` preserve
+See [CONTRIBUTING.md](CONTRIBUTING.md).
 
-It does **not** magically keep every core-file edit. Merge conflicts abort. A clean merge that overwrote a fork marker also fails the check.
+## Development
 
----
+Start with the [development guide](docs/development.md) and [architecture documentation](docs/architecture.md).
 
-## 🌐 OpenCodex (`ocx`) Local Proxy Setup
+For agents, follow [AGENTS.md](AGENTS.md).
 
-1. Start your `ocx` proxy in terminal (`http://127.0.0.1:10100/v1`).
-2. Run `dsh` and navigate to **Settings ➔ Plugins** tab in your browser. Verify the **OpenCodex Proxy** card displays a green indicator.
-3. Select any model from the dropdown (`gpt-5.6-codex`, `claude-3-7-sonnet`, `deepseek-v4`, `grok-4.6`, etc.) and start chatting.
+## License
 
----
+[MIT](LICENSE)
 
-## 🧩 Package Architecture
-
-```
-packages/
-  ├── core/            # Agent loop, session, system prompt, tool spine
-  ├── llm/
-  │    ├── llm-opencodex/   # 🌟 OpenCodex adapter & 29-model discovery
-  │    ├── llm-deepseek/    # Official DeepSeek adapter (KV Cache optimized)
-  │    ├── llm-pi-ai/       # pi-ai multi-provider adapter (Cache Retention)
-  ├── client/
-  │    ├── locale-ko/       # 🇰🇷 Web client Korean language pack
-  │    ├── ui-*/            # Web UI component plugins
-  ├── bundle/          # installable dsh --profile patch layers
-  └── shell/fs/lsp/    # Sandboxes, shells, filesystems, language server plugins
-```
-
----
-
-## 📚 Documentation & Links
-
-* **📝 [Changelog & Release Notes (CHANGELOG.md)](CHANGELOG.md)**
-* **📋 [Session Continuity & Resume Guide (WORK_RESUME.md)](WORK_RESUME.md)**
-* **📖 [Development Guide (docs/development.md)](docs/development.md)**
-* **🏛️ [Architecture Documentation (docs/architecture.md)](docs/architecture.md)**
-* **🤖 [Agent Rules (AGENTS.md)](AGENTS.md)**
-
----
-
-## 📄 License
-
-This project is licensed under the [MIT License](LICENSE).
-Third-party notices and licenses are listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+Third-party dependencies and their licenses are disclosed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

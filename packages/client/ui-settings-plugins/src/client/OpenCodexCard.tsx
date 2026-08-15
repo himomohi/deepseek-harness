@@ -3,7 +3,7 @@
  */
 
 import type { InjectFace, PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
-import { SecretField, ValueField } from './fields.tsx'
+import { ProviderSecretField, ValueField } from './fields.tsx'
 import { PluginCard } from './PluginCard.tsx'
 import type { OpenCodexCardFace } from './opencodex-card-controller.ts'
 import type {} from './slot-contract.ts'
@@ -26,16 +26,18 @@ export function OpenCodexCard(props: OpenCodexCardProps) {
       onSave={props.save}
       onDiscard={props.discard}
     >
-      <SecretField
+      <ProviderSecretField
         id="plugin-config-opencodex-key"
         label={t('openCodexApiKey')}
         hint={t('openCodexApiKeyHint')}
-        disabled={!state.apiKeyWritable}
+        writable={state.apiKeyWritable}
         text={state.apiKey.text}
         configured={state.apiKeyConfigured}
-        stateLabel={state.apiKeyConfigured ? t('openCodexApiKeySet') : t('openCodexApiKeyUnset')}
+        configuredLabel={t('openCodexApiKeySet')}
+        unconfiguredLabel={t('openCodexApiKeyUnset')}
         onEdit={(text) => { props.edit('apiKey', text) }}
       />
+      {/* jscpd:ignore-start -- each provider binds the same shared endpoint control */}
       <ValueField
         id="plugin-config-opencodex-endpoint"
         label={t('openCodexBaseUrl')}
@@ -48,6 +50,7 @@ export function OpenCodexCard(props: OpenCodexCardProps) {
         onEdit={(text) => { props.edit('baseURL', text) }}
         onReset={() => { props.resetField('baseURL') }}
       />
+      {/* jscpd:ignore-end */}
     </PluginCard>
   )
 }

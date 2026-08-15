@@ -40,7 +40,7 @@ describe('verifyCustomFeatures', () => {
   it('fails a package when its directory is gone', () => {
     const report = verifyCustomFeatures(
       path => path !== 'packages/client/locale-ko/package.json',
-      () => '@deepseek-ai/dsh-client-locale-ko\n@deepseek-ai/dsh-llm-opencodex\n@deepseek-ai/dsh-vision-fallback\nAuto-continue when hitting token limit\nPreserve reasoning_content whenever reasoning is present',
+      () => '@deepseek-ai/dsh-client-locale-ko\n@deepseek-ai/dsh-llm-opencodex',
     )
     const locale = report.checks.find(check => check.id === 'locale-ko')
     expect(report.ok).toBe(false)
@@ -48,21 +48,16 @@ describe('verifyCustomFeatures', () => {
     expect(locale?.missing.some(item => item.includes('locale-ko/package.json'))).toBe(true)
   })
 
-  it('fails a core patch when the distinctive marker was overwritten', () => {
+  it('fails a package when its composition marker was overwritten', () => {
     const report = verifyCustomFeatures(
       () => true,
-      path => path.includes('agent.ts')
-        ? 'no auto continue here'
-        : [
-          '@deepseek-ai/dsh-client-locale-ko',
-          '@deepseek-ai/dsh-llm-opencodex',
-          '@deepseek-ai/dsh-vision-fallback',
-          'Preserve reasoning_content whenever reasoning is present',
-        ].join('\n'),
+      path => path.includes('base/cordis.patch.yml')
+        ? 'no OpenCodex marker here'
+        : '@deepseek-ai/dsh-client-locale-ko',
     )
-    const autoContinue = report.checks.find(check => check.id === 'auto-continue')
+    const openCodex = report.checks.find(check => check.id === 'llm-opencodex')
     expect(report.ok).toBe(false)
-    expect(autoContinue?.ok).toBe(false)
-    expect(autoContinue?.missing[0]).toMatch(/missing marker/)
+    expect(openCodex?.ok).toBe(false)
+    expect(openCodex?.missing[0]).toMatch(/missing marker/)
   })
 })

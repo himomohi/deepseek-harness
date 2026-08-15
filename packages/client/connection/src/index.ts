@@ -107,7 +107,15 @@ const PRIVILEGED_METHODS = new Set([
   'agentPreset.remove',
   'host.pickDirectory',
   'host.openPath',
+  'settings.describe',
   'settings.openDocument',
+  'settings.update',
+  'settings.replace',
+  'settings.mutate',
+  'credentials.describe',
+  'credentials.set',
+  'credentials.unset',
+  'llm.discoverModels',
 ])
 
 /**

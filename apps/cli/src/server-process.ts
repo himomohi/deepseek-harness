@@ -64,7 +64,7 @@ function splitCsv(line: string): string[] {
   let current = ''
   let quoted = false
   for (let index = 0; index < line.length; index += 1) {
-    const char = line[index]
+    const char = line.charAt(index)
     if (char === '"') {
       if (quoted && line[index + 1] === '"') {
         current += '"'

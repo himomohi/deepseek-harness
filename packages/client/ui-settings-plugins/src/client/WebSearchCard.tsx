@@ -5,7 +5,7 @@
  */
 
 import type { InjectFace, PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
-import { SecretField, ValueField } from './fields.tsx'
+import { ProviderSecretField, ValueField } from './fields.tsx'
 import { PluginCard } from './PluginCard.tsx'
 import type { WebSearchCardFace } from './web-search-card-controller.ts'
 import type {} from './slot-contract.ts'
@@ -34,7 +34,7 @@ export function WebSearchCard(props: WebSearchCardProps) {
       onSave={props.save}
       onDiscard={props.discard}
     >
-      <SecretField
+      <ProviderSecretField
         id="plugin-config-web-search-key"
         label={t('webSearchApiKey')}
         hint={t('webSearchApiKeyHint')}
@@ -42,10 +42,11 @@ export function WebSearchCard(props: WebSearchCardProps) {
         // itself is read-only; they are separate stores with separate refusals.
         // Its own writability is what disables this control — a key sourced
         // from the process environment cannot be written from here.
-        disabled={!state.apiKeyWritable}
+        writable={state.apiKeyWritable}
         text={state.apiKey.text}
         configured={state.apiKeyConfigured}
-        stateLabel={state.apiKeyConfigured ? t('webSearchApiKeySet') : t('webSearchApiKeyUnset')}
+        configuredLabel={t('webSearchApiKeySet')}
+        unconfiguredLabel={t('webSearchApiKeyUnset')}
         onEdit={(text) => { props.edit('apiKey', text) }}
       />
       <ValueField

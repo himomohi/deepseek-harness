@@ -71,10 +71,7 @@ export async function assertImageCapableRoute(ctx: Context, exec: ToolExecution,
   }
   const active = await llm.resolveModelInfo(provider, model, exec.signal)
   if (active.inputModalities === undefined || !active.inputModalities.includes('image')) {
-    const visionFallback = ctx.get('visionFallback')
-    if (visionFallback === undefined) {
-      throw new Error(`cannot read "${requestedPath}" as an image: model "${model}" does not declare image input; switch to an image-capable model to read images`)
-    }
+    throw new Error(`cannot read "${requestedPath}" as an image: model "${model}" does not declare image input; switch to an image-capable model to read images`)
   }
 }
 

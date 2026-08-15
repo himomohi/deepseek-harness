@@ -29,7 +29,7 @@ describe('serializeMessages', () => {
     expect(wire).toEqual([{ role: 'system', content: 'be brief' }])
   })
 
-  it('maps plain assistant text with reasoning_content preserved for KV cache', () => {
+  it('maps plain assistant text without reasoning_content', () => {
     const wire = serializeMessages([
       createMessage({
         role: 'assistant',
@@ -40,8 +40,8 @@ describe('serializeMessages', () => {
         source: { kind: 'plugin', plugin: 'test' },
       }),
     ])
-    // Plain turn: reasoning is preserved to maintain exact KV cache prefix match
-    expect(wire).toEqual([{ role: 'assistant', content: 'answer', reasoning_content: 'thinking…' }])
+    // Tool-call-free turn: reasoning is dropped (ignored by the API anyway).
+    expect(wire).toEqual([{ role: 'assistant', content: 'answer' }])
   })
 
   it('passes reasoning_content back on tool-call turns (official passback rule)', () => {
@@ -282,15 +282,16 @@ describe('review fixes: assistant content shapes', () => {
     expect(wire).toEqual([{ role: 'assistant', content: '' }])
   })
 
-  it('serializes a reasoning-ONLY assistant message as "" content with reasoning_content preserved', () => {
+  it('serializes a reasoning-ONLY assistant message as "" content with the reasoning dropped', () => {
     // The model can answer entirely in the reasoning channel (a v4-flash
-    // greeting did, live). Content must still be SET as "" (not null),
-    // and reasoning_content is preserved for KV cache prefix integrity.
+    // greeting did, live). The passback rule keeps reasoning_content off
+    // plain turns, and content must still be SET — a null here poisoned the
+    // session log and bricked every later turn of that session.
     const wire = serializeMessages([createMessage({
       role: 'assistant', content: [{ type: 'reasoning', text: '你好！有什么我可以帮你的吗？' }],
       source: { kind: 'plugin', plugin: 'test' },
     })])
-    expect(wire).toEqual([{ role: 'assistant', content: '', reasoning_content: '你好！有什么我可以帮你的吗？' }])
+    expect(wire).toEqual([{ role: 'assistant', content: '' }])
   })
 
   it('serializes tool-call turns with empty string content, not null', () => {

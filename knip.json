@@ -8,10 +8,12 @@
     "icacls",
     "musl-gcc",
     "python3",
+    "ps",
     "sandbox-exec",
     "tar",
     "taskkill",
-    "where.exe"
+    "where.exe",
+    "wmic"
   ],
   "ignoreWorkspaces": [
     "vendor/*",

@@ -72,6 +72,8 @@ export interface DeepSeekConnectionOptions {
 
 /** Constructor options for {@link DeepSeekAdapter}: the operation-local resolution hooks the plugin owns. */
 export interface DeepSeekAdapterOptions {
+  /** Provider label used in picker metadata and transport diagnostics. */
+  providerName?: string
   /** Current validated connection facts; called once per operation. */
   options: () => DeepSeekConnectionOptions
   /**
@@ -161,7 +163,7 @@ export class DeepSeekAdapter extends LlmAdapter {
   }
 
   override providerInfo(provider: string): LlmProviderInfo {
-    return { id: provider, name: 'DeepSeek' }
+    return { id: provider, name: this.config.providerName ?? 'DeepSeek' }
   }
 
   override providerRetryPolicy(_provider: string): ResolvedRetryPolicy {
@@ -246,18 +248,22 @@ export class DeepSeekAdapter extends LlmAdapter {
     } catch (error: unknown) {
       if (timeoutOf(watchdog.signal, STREAM_IDLE_TIMEOUT_CODE) !== undefined) {
         throw new LlmError(
-          `DeepSeek stream idle timeout after ${connection.streamIdleTimeoutMs}ms`,
+          `${this.config.providerName ?? 'DeepSeek'} stream idle timeout after ${connection.streamIdleTimeoutMs}ms`,
           'TIMEOUT',
           { cause: error },
         )
       }
       if (options.signal?.aborted) {
-        throw new LlmError('DeepSeek request aborted by caller', 'ABORTED', { cause: error })
+        throw new LlmError(`${this.config.providerName ?? 'DeepSeek'} request aborted by caller`, 'ABORTED', { cause: error })
       }
       if (error instanceof LlmError) throw error
-      throw new LlmError(`DeepSeek API stream from ${connection.baseURL} failed`, 'TRANSPORT', { cause: error })
+      throw new LlmError(
+        `${this.config.providerName ?? 'DeepSeek'} API stream from ${connection.baseURL} failed`,
+        'TRANSPORT',
+        { cause: error },
+      )
     } finally {
-      consumer.abort('DeepSeek stream consumer stopped')
+      consumer.abort(`${this.config.providerName ?? 'DeepSeek'} stream consumer stopped`)
       if (!exhausted && iterator.return !== undefined) {
         try {
           await iterator.return()
@@ -312,14 +318,14 @@ export class DeepSeekAdapter extends LlmAdapter {
       // lives on `cause`. Wrapping with the endpoint and chaining the cause
       // lets `errorChain` render the full diagnosis at every reporting boundary.
       throw new LlmError(
-        `DeepSeek API request to ${connection.baseURL} failed`,
+        `${this.config.providerName ?? 'DeepSeek'} API request to ${connection.baseURL} failed`,
         'TRANSPORT',
         { cause: error },
       )
     }
 
     if (!response.ok) {
-      let message = `DeepSeek API error (HTTP ${response.status})`
+      let message = `${this.config.providerName ?? 'DeepSeek'} API error (HTTP ${response.status})`
       let providerError: WireError['error']
       try {
         const parsed = await response.json() as WireError
@@ -338,7 +344,7 @@ export class DeepSeekAdapter extends LlmAdapter {
       })
     }
     if (!response.body) {
-      throw new LlmError('DeepSeek API returned no response body', 'EMPTY_RESPONSE')
+      throw new LlmError(`${this.config.providerName ?? 'DeepSeek'} API returned no response body`, 'EMPTY_RESPONSE')
     }
 
     yield* translate(parseSse(response.body, onComment))

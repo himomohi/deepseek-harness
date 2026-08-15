@@ -1205,9 +1205,6 @@ importers:
       '@deepseek-ai/dsh-user-questions':
         specifier: workspace:^
         version: link:../../interaction/user-questions
-      '@deepseek-ai/dsh-vision-fallback':
-        specifier: workspace:^
-        version: link:../../llm/vision-fallback
       '@deepseek-ai/dsh-web':
         specifier: workspace:^
         version: link:../../web/web
@@ -5272,9 +5269,6 @@ importers:
       '@deepseek-ai/schemastery':
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery
-      eventsource-parser:
-        specifier: ^3.1.0
-        version: 3.1.0
     devDependencies:
       '@deepseek-ai/cordis':
         specifier: workspace:^
@@ -5294,6 +5288,9 @@ importers:
       '@deepseek-ai/dsh-llm':
         specifier: workspace:^
         version: link:../llm
+      '@deepseek-ai/dsh-llm-deepseek':
+        specifier: workspace:^
+        version: link:../llm-deepseek
       '@deepseek-ai/dsh-settings':
         specifier: workspace:^
         version: link:../../settings/settings
@@ -5423,25 +5420,6 @@ importers:
       '@deepseek-ai/dsh-session-projection':
         specifier: workspace:^
         version: link:../../session/session-projection
-
-  packages/llm/vision-fallback:
-    dependencies:
-      '@deepseek-ai/schemastery':
-        specifier: link:../../../vendor/schemastery
-        version: link:../../../vendor/schemastery
-    devDependencies:
-      '@deepseek-ai/cordis':
-        specifier: workspace:^
-        version: link:../../../vendor/cordis
-      '@deepseek-ai/dsh-attachment':
-        specifier: workspace:^
-        version: link:../../attachment/attachment
-      '@deepseek-ai/dsh-invariants':
-        specifier: workspace:^
-        version: link:../../runtime-diagnostics/invariants
-      '@deepseek-ai/dsh-llm':
-        specifier: workspace:^
-        version: link:../llm
 
   packages/lsp/lsp:
     devDependencies:

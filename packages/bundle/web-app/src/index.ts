@@ -10,11 +10,9 @@
  * @module @deepseek-ai/dsh-web-app
  */
 
-import { spawn } from 'node:child_process'
 import { createRequire } from 'node:module'
 import { networkInterfaces } from 'node:os'
 import { fileURLToPath } from 'node:url'
-
 import type { Context } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import { addHarnessSourceSection } from '@deepseek-ai/dsh-app-boot'
@@ -167,47 +165,8 @@ export function apply(ctx: Context, config: Config): void {
       // Reuse the exact LAN snapshot provided to the /api trust fence.
       const lanCandidate = runtime.lanAddresses[0]
       const port = ctx.webServer.port
-      const url = localWebUrl(ctx)
-      // Robust locale detection across macOS, Linux, and Windows
-      let locale = 'en'
-      try {
-        if (process.platform === 'darwin') {
-          // macOS AppleLanguages check or LANG fallback
-          locale = process.env['LANG'] || process.env['LC_ALL'] || Intl.DateTimeFormat().resolvedOptions().locale || 'en'
-        } else {
-          locale = Intl.DateTimeFormat().resolvedOptions().locale || process.env['LANG'] || process.env['LC_ALL'] || 'en'
-        }
-      } catch {
-        locale = process.env['LANG'] || 'en'
-      }
-
-      const isKo = locale.toLowerCase().startsWith('ko')
-      const isZh = locale.toLowerCase().startsWith('zh')
-
-      const openMsg = isKo
-        ? `[웹 GUI] 기본 브라우저를 실행하여 웹 서비스를 엽니다... (${url})`
-        : isZh
-          ? `[Web GUI] 正在打开默认浏览器访问 Web 服务... (${url})`
-          : `[Web GUI] Opening default browser to access Web interface... (${url})`
-
-      console.log(`\n🚀 ${openMsg}`)
-      console.log(`🔗 dsh web: ${url}${lanCandidate === undefined ? '' : ` (LAN: http://${lanCandidate}:${String(port)})`}\n`)
-
-      // Automatically open browser on startup (Windows, macOS, Linux)
-      try {
-        if (process.platform === 'win32') {
-          spawn('cmd', ['/c', 'start', '', url], { detached: true, stdio: 'ignore' }).unref()
-        } else if (process.platform === 'darwin') {
-          spawn('open', [url], { detached: true, stdio: 'ignore' }).unref()
-        } else {
-          spawn('xdg-open', [url], { detached: true, stdio: 'ignore' }).unref()
-        }
-      } catch {
-        // non-blocking
-      }
-
+      console.log(`dsh web: ${localWebUrl(ctx)}${lanCandidate === undefined ? '' : ` (LAN: http://${lanCandidate}:${String(port)})`}`)
     }
-
     // This row's own activation can precede a sibling failure. The app owns
     // readiness by waiting for its Loader tree, or prints at once in a
     // hand-built context without Loader.

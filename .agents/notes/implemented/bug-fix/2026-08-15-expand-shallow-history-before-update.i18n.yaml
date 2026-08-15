@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/bug-fix/2026-08-15-expand-shallow-history-before-update.md
+2026-08-15-expand-shallow-history-before-update.md: 8683b36e8d0cc97d6ff33c8475db76ed1d05ad5e
+2026-08-15-expand-shallow-history-before-update.zh.md: 9395052b8adf94203455b93f7e7a1fd5a25ca6d4

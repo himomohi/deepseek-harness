@@ -93,9 +93,10 @@ function serializeAssistant(message: Message): WireMessage {
     // the message sits durably in the session log, a null here bricks every
     // later turn of that session.
     content: text,
-    // Preserve reasoning_content whenever reasoning is present to maintain
-    // exact KV cache prefix match across multi-turn requests (preventing cache misses).
-    ...reasoning.length > 0 ? { reasoning_content: reasoning } : {},
+    // Official passback rule (guides/thinking_mode.mdx): reasoning_content
+    // must return on tool-call turns; it is ignored on plain turns, so we
+    // drop it there to save tokens.
+    ...toolCalls.length > 0 && reasoning.length > 0 ? { reasoning_content: reasoning } : {},
     ...toolCalls.length > 0 ? { tool_calls: toolCalls } : {},
   }
 }

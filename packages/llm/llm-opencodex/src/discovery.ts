@@ -5,7 +5,12 @@
  * @module dsh-llm-opencodex/discovery
  */
 
-import { LlmError, type LlmDiscoveredModel, type LlmModelDiscoveryRequest } from '@deepseek-ai/dsh-llm'
+import {
+  assertUsableApiKey,
+  LlmError,
+  type LlmDiscoveredModel,
+  type LlmModelDiscoveryRequest,
+} from '@deepseek-ai/dsh-llm'
 
 interface ListingEntry {
   id?: unknown
@@ -17,31 +22,36 @@ interface ListingEntry {
   max_output_tokens?: unknown
 }
 
-function capacity(...candidates: readonly unknown[]): number | undefined {
-  for (const candidate of candidates) {
-    if (typeof candidate === 'number' && Number.isInteger(candidate) && candidate > 0) return candidate
-  }
-  return undefined
+function firstString(values: readonly unknown[]): string | undefined {
+  return values.find((value): value is string => typeof value === 'string' && value.length > 0)
 }
 
-function label(...candidates: readonly unknown[]): string | undefined {
-  for (const candidate of candidates) {
-    if (typeof candidate === 'string' && candidate.length > 0) return candidate
-  }
-  return undefined
+function firstCapacity(values: readonly unknown[]): number | undefined {
+  return values.find(
+    (value): value is number => typeof value === 'number' && Number.isInteger(value) && value > 0,
+  )
 }
 
 function listingUrl(baseURL: string): string {
   return `${baseURL.replace(/\/+$/, '')}/models`
 }
 
+/**
+ * Query the OpenCodex proxy's OpenAI-compatible model listing.
+ * @param request - draft endpoint, credential, and cancellation signal.
+ * @param apiKeyResolver - stored credential lookup used when the draft omits one.
+ * @returns valid listing rows in proxy order.
+ */
 export async function discoverModels(
   request: LlmModelDiscoveryRequest,
   apiKeyResolver: () => Promise<string | undefined>,
 ): Promise<readonly LlmDiscoveredModel[]> {
   const baseURL = request.baseURL ?? 'http://127.0.0.1:10100/v1'
   const url = listingUrl(baseURL)
-  const apiKey = request.apiKey ?? (await apiKeyResolver()) ?? 'local-opencodex'
+  const resolvedKey = request.apiKey ?? (await apiKeyResolver()) ?? 'local-opencodex'
+  const apiKey = resolvedKey.length === 0
+    ? ''
+    : assertUsableApiKey(resolvedKey, 'llm-opencodex', 'model discovery credential')
   const headers: Record<string, string> = {
     accept: 'application/json',
     ...(apiKey.length > 0 ? { authorization: `Bearer ${apiKey}` } : {}),
@@ -70,23 +80,28 @@ export async function discoverModels(
     throw new LlmError(`Failed to parse model list from ${url}`, 'DISCOVERY_FAILED', { cause: error })
   }
 
-  const entries: ListingEntry[] = Array.isArray(body)
+  const entries: ListingEntry[] | undefined = Array.isArray(body)
     ? body as ListingEntry[]
     : (typeof body === 'object' && body !== null && Array.isArray((body as { data?: unknown }).data))
       ? (body as { data: ListingEntry[] }).data
-      : []
+      : undefined
+  if (entries === undefined) {
+    throw new LlmError(`OpenCodex proxy at ${url} returned no model array`, 'DISCOVERY_FAILED')
+  }
 
-  return entries
-    .filter((entry): entry is ListingEntry & { id: string } => typeof entry.id === 'string' && entry.id.length > 0)
-    .map((entry) => {
-      const displayName = label(entry.display_name, entry.name)
-      const contextWindow = capacity(entry.context_window, entry.context_length) ?? 200_000
-      const maxTokens = capacity(entry.max_output_tokens, entry.max_tokens) ?? 8_192
-      return {
-        id: entry.id,
-        ...displayName === undefined ? {} : { name: displayName },
-        contextWindow,
-        maxTokens,
-      }
+  const models: LlmDiscoveredModel[] = []
+  for (const entry of entries) {
+    const id = firstString([entry.id])
+    if (id === undefined) continue
+    const name = firstString([entry.display_name, entry.name])
+    const contextWindow = firstCapacity([entry.context_window, entry.context_length])
+    const maxTokens = firstCapacity([entry.max_output_tokens, entry.max_tokens])
+    models.push({
+      id,
+      ...name === undefined ? {} : { name },
+      ...contextWindow === undefined ? {} : { contextWindow },
+      ...maxTokens === undefined ? {} : { maxTokens },
     })
+  }
+  return models
 }

@@ -1,76 +1,32 @@
-<div align="center">
+# DeepSeek Harness
 
-# ⚡ DeepSeek Harness (`dsh`)
+[English](README.md) | 中文 | [한국어](README.ko.md)
 
-**高性能插件化 AI Agent 框架与 OpenCodex 多模型平台**
+DeepSeek Harness（`dsh`）是由 [DeepSeek AI](https://deepseek.com) 开发的开源 agent harness（智能体框架）。
 
-[![Release](https://img.shields.io/badge/release-v0.1.0--rc.6-blue?style=for-the-badge&logo=github)](CHANGELOG.md)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Node.js](https://img.shields.io/badge/Node.js-^22.19%20||%20>=24-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
-[![OpenCodex Ready](https://img.shields.io/badge/OpenCodex-29%20Models-8A2BE2?style=for-the-badge)](packages/llm/llm-opencodex)
-[![Cache Hit](https://img.shields.io/badge/KV%20Cache%20Hit-90%25+-FF6B6B?style=for-the-badge)](#benchmark)
+它采用**一切皆插件**的架构，并由 [Cordis](https://github.com/cordiverse/cordis) 驱动，其设计参见论文 [_A Programming Paradigm for Spatiotemporal Composability_](https://github.com/cordiverse/paper)。
 
-[English](README.md) | 中文 | [한국어](README.ko.md) | [Changelog](CHANGELOG.md) | [Resume](WORK_RESUME.md)
+本分叉增加了韩语 Web UI 语言包、OpenCodex 代理提供方、窄屏布局修复、交互式上游更新器，以及面向大型流式积压的游标 FIFO 队列。未经过提供方侧测量时，本分叉不会宣称缓存命中率或首 Token 延迟有所提升。
 
-</div>
+## 开发者预览
 
----
+DeepSeek Harness 目前处于 _开发者预览_ 阶段，正在快速迭代。**未来将出现破坏兼容性的变更。**
 
-## 🌟 概述 (Overview)
+## 运行
 
-**DeepSeek Harness (`dsh`)** 是源自 [DeepSeek AI](https://deepseek.com) 的开源 AI Agent 框架。
+### 通过 `npm` 运行
 
-采用 **Everything is a Plugin** 的纯插件化架构，运行于 [Cordis](https://github.com/cordiverse/cordis) 微内核之上。本 Fork 分支集成了 **全量韩语与多语言本地化**、**OpenCodex(`ocx`) 29 款顶级模型一键代理**、**输出长度自动续写** 以及 **超高效 Prefix KV Cache 缓存优化**。
-
----
-
-## ✨ 核心特性 (Key Features)
-
-| 特性 | 说明 |
-| :--- | :--- |
-| 👁️ **自动视觉回退 (Vision Fallback)** | 使用纯文本模型（如 `deepseek-chat`）遇到图片输入时，自动调度多模态模型进行 OCR 与视觉解析并注入提示词 |
-| ⚡ **超高 KV Cache 缓存命中率** | 多轮对话中完整保留思考标记（`reasoning_content`），达成 **90%+ 缓存命中率**，首字延迟（TTFT）**降低 70~80%** |
-| 🔄 **输出 Token 上限自动续写** | 触发输出长度上限（`max-tokens`）时由 Agent Loop 自动无缝续写，彻底解决长代码生成截断问题 |
-| 🌐 **OpenCodex (`ocx`) 无缝接入** | 自动发现本地 `ocx` 代理，免配置 API Key 即刻就绪，内置 GPT-5.6、Claude 3.7、DeepSeek V4、Grok 4.6 等 **29 款模型** |
-| 🚀 **零配置启动与自动打开浏览器** | 运行 `dsh` 自动识别系统语言并在后台拉起默认浏览器（`http://127.0.0.1:3080`） |
-| 🔄 **`dsh update` 上游同步** | 合并官方 `upstream` 并重建后**检查**分叉功能。独立插件通常能留下；改过官方核心文件的补丁可能冲突。 |
-| 🌍 **全量多语言支持** | 完整支持中文（`zh`）、韩语（`ko`）与英语（`en`）界面与设置 |
-| 🧩 **Cordis 微内核架构** | 沙箱、文件系统、终端、工具与 LLM 适配器全部支持热插拔与动态重载 |
-
----
-<a id="benchmark"></a>
-
-## 📊 性能与缓存优化 (Benchmark)
-
-融合 `earendil-works/pi` 的前缀保留机制，从根本上杜绝了多轮对话中的 **前缀缓存失效 (Prefix Invalidation)**：
-
-```mermaid
-graph LR
-    A[User Prompt Turn] --> B[Fixed System & Tools Prefix]
-    B --> C[Preserve Reasoning Tokens]
-    C --> D[Server KV Cache 100% Prefix Match]
-    D --> E[⚡ 90%+ Cache Hit / 0.3s TTFT]
-```
-
-* **首字生成延迟 (TTFT)**: 3~8 秒 ➔ **0.3~0.8 秒**（大幅缩短 ~75%）
-* **输入 Token 成本**: 享受 Cache Hit 优惠，**综合节省 80~90%**
-* **输出完整度**: 彻底杜绝复杂重构和长文件输出中断
-
----
-
-## 💻 快速开始 (Quick Start)
-
-### 1. 使用全局 CLI 启动
+安装 `Node.js`，然后运行：
 
 ```sh
-dsh
-dsh web
+npx @deepseek-ai/dsh web
 ```
 
-> Web UI 默认运行在 `http://127.0.0.1:3080`。
+该命令会启动 Web UI，默认地址为 `http://127.0.0.1:3080`。请在浏览器中打开该地址；服务器不会自动启动外部进程。详见 [Web UI 指南](docs/user/guide/index.md)。
 
-### 2. 源码构建与运行
+### 从源码运行
+
+如需从本分叉的仓库源码运行：
 
 ```sh
 git clone https://github.com/himomohi/deepseek-harness.git
@@ -80,62 +36,63 @@ pnpm run build
 pnpm dsh web
 ```
 
-### 3. 上游同步 (`dsh update`)
+运行 `pnpm dsh` 而不显式指定 profile 时，会选择 Web profile。
+
+## 分叉功能
+
+- **韩语语言包**：`@deepseek-ai/dsh-client-locale-ko` 以普通客户端插件提供 Web UI 韩语词典。
+- **OpenCodex 提供方**：`@deepseek-ai/dsh-llm-opencodex` 连接 OpenAI 兼容的 OpenCodex 代理，并可通过 `GET /models` 替换建议模型目录。
+- **线性流式队列**：Host API Proxy、浏览器 WebSocket 客户端和 TypeScript SDK 使用游标 FIFO 队列排空积压帧，同时保持顺序。
+- **上游更新**：`dsh update` 预览官方提交、在合并前确认、必要时展开浅克隆、重新构建，并检查韩语与 OpenCodex 包标记。
+- **远程安全**：`trustedHosts` 用于防御 DNS 重绑定，而不是身份认证。因此设置、凭据、原生对话框和 Host 侧模型发现仍仅限回环地址。
+
+OpenCodex 当前复用仅文本的 chat-completions 线缆适配器。图片输入继续由能力检查拒绝，而不会在图片像素未到达视觉模型时被静默转换或接受。
+
+## 更新本分叉
 
 ```sh
-dsh update
 dsh update --dry-run
+dsh update
 dsh update --yes
 ```
 
-先打印简短预览并询问后再合并。失败时输出可粘贴给 AI 的 **AI에게 요청:** 块。
+更新器会拉取官方仓库，在当前 checkout 为浅克隆时恢复隐藏的 Git 父提交，合并官方默认分支，安装依赖、构建，并检查分叉自有包标记。合并冲突或标记检查失败会输出可复制的修复提示并停止；部分更新绝不会被报告为成功。
 
-实际流程是 **合并 `deepseek-ai/deepseek-harness`**，再 `pnpm install` + `pnpm run build`，然后检查这些标记：
+## 社区与支持
 
-- 包：`locale-ko`、`llm-opencodex`、`vision-fallback`
-- 核心补丁：auto-continue、`reasoning_content` 保留
+- 欢迎通过 [GitHub Discussions](https://github.com/deepseek-ai/deepseek-harness/discussions) 提交反馈或 bug 报告。
+- 为你的插件仓库添加 [`dsh-plugin`](https://github.com/topics/dsh-plugin) 话题，便于被发现。
+- 欢迎加入 DeepSeek Harness 企微群：扫码添加企微小助手并填写入群问卷，完成后小助手会邀请你入群。
 
-它不会神奇地保住所有核心文件改动。合并冲突会中止；干净合并若覆盖了分叉标记，检查也会失败。
+<table>
+  <thead>
+    <tr>
+      <th align="center">企微小助手</th>
+      <th align="center">入群问卷</th>
+      <th align="center">微信公众号</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td align="center"><img src="assets/community-wecom-assistant.png" alt="DeepSeek Harness 企微小助手二维码" width="180" height="180"></td>
+      <td align="center"><a href="https://trtgsjkv6r.feishu.cn/share/base/form/shrcnIt5twSVdLGD52KJBckGCgg"><img src="assets/community-wecom-survey.png" alt="DeepSeek Harness 入群问卷二维码" width="180" height="180"></a></td>
+      <td align="center"><img src="assets/community-wechat-official-account.png" alt="DeepSeek Harness 团队微信公众号二维码" width="180" height="180"></td>
+    </tr>
+  </tbody>
+</table>
 
----
+## 参与贡献
 
-## 🌐 OpenCodex (`ocx`) 本地代理接入
+参见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
-1. 在终端启动 `ocx` 代理（`http://127.0.0.1:10100/v1`）。
-2. 运行 `dsh`，在浏览器 **设置 ➔ 插件** 中确认 **OpenCodex Proxy** 显示绿色正常就绪状态。
-3. 在模型下拉菜单中选择所需模型（如 `gpt-5.6-codex`、`claude-3-7-sonnet`、`deepseek-v4`、`grok-4.6` 等 29 种）即可开始使用。
+## 开发
 
----
+请先阅读[开发指南](docs/development.md)与[架构文档](docs/architecture.md)。
 
-## 🧩 模块架构 (Package Layout)
+面向 agent：请遵循 [AGENTS.md](AGENTS.md)。
 
-```
-packages/
-  ├── core/            # Agent loop, session, system prompt, tool spine
-  ├── llm/
-  │    ├── llm-opencodex/   # 🌟 OpenCodex adapter & 29-model discovery
-  │    ├── llm-deepseek/    # Official DeepSeek adapter (KV Cache optimized)
-  │    ├── llm-pi-ai/       # pi-ai multi-provider adapter (Cache Retention)
-  ├── client/
-  │    ├── locale-ko/       # 🇰🇷 Web client Korean language pack
-  │    ├── ui-*/            # Web UI component plugins
-  ├── bundle/          # installable dsh --profile patch layers
-  └── shell/fs/lsp/    # Sandboxes, shells, filesystems, language server plugins
-```
+## 许可证
 
----
+[MIT](LICENSE)
 
-## 📚 文档与链接
-
-* **📝 [更新日志与发布说明 (CHANGELOG.md)](CHANGELOG.md)**
-* **📋 [会话与工作继续指南 (WORK_RESUME.md)](WORK_RESUME.md)**
-* **📖 [开发指南 (docs/development.md)](docs/development.md)**
-* **🏛️ [架构文档 (docs/architecture.md)](docs/architecture.md)**
-* **🤖 [Agent 开发规范 (AGENTS.md)](AGENTS.md)**
-
----
-
-## 📄 开源协议 (License)
-
-本项目基于 [MIT 协议](LICENSE) 开源。
-第三方依赖及其许可证说明详见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+第三方依赖及其许可证见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。

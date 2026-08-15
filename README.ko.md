@@ -1,76 +1,32 @@
-<div align="center">
+# DeepSeek Harness
 
-# ⚡ DeepSeek Harness (`dsh`)
+[English](README.md) | [中文](README.zh.md) | 한국어
 
-**고성능 플러그인 기반 AI 에이전트 하네스 & OpenCodex 멀티 모델 플랫폼**
+DeepSeek Harness(`dsh`)는 [DeepSeek AI](https://deepseek.com)가 개발한 오픈소스 에이전트 하네스입니다.
 
-[![Release](https://img.shields.io/badge/release-v0.1.0--rc.6-blue?style=for-the-badge&logo=github)](CHANGELOG.md)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Node.js](https://img.shields.io/badge/Node.js-^22.19%20||%20>=24-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
-[![OpenCodex Ready](https://img.shields.io/badge/OpenCodex-29%20Models-8A2BE2?style=for-the-badge)](packages/llm/llm-opencodex)
-[![Cache Hit](https://img.shields.io/badge/KV%20Cache%20Hit-90%25+-FF6B6B?style=for-the-badge)](#benchmark)
+**모든 것이 플러그인**인 아키텍처를 사용하며, [_A Programming Paradigm for Spatiotemporal Composability_](https://github.com/cordiverse/paper)에 설계가 설명된 [Cordis](https://github.com/cordiverse/cordis)를 기반으로 합니다.
 
-[English](README.md) | [中文](README.zh.md) | 한국어 | [Changelog](CHANGELOG.md) | [Resume](WORK_RESUME.md)
+이 포크는 한국어 Web UI 언어팩, OpenCodex 프록시 제공자, 모바일 폭 레이아웃 수정, 대화형 업스트림 업데이트, 대규모 스트리밍 backlog용 커서 FIFO 큐를 추가합니다. 제공자 측 측정 없이 캐시 적중률이나 첫 토큰 지연 개선을 주장하지 않습니다.
 
-</div>
+## 개발자 프리뷰
 
----
+DeepSeek Harness는 현재 _개발자 프리뷰_ 단계이며 빠르게 변경되고 있습니다. **호환성을 깨는 변경이 발생할 수 있습니다.**
 
-## 🌟 개요 (Overview)
+## 실행
 
-**DeepSeek Harness (`dsh`)**는 [DeepSeek AI](https://deepseek.com)에서 시작된 차세대 오픈소스 AI 에이전트 런타임 프레임워크입니다.
+### `npm`에서 실행
 
-모든 기능이 독립 모듈로 동작하는 **Everything is a Plugin** 아키텍처를 채택하고 있으며, [Cordis](https://github.com/cordiverse/cordis) 마이크로커널 위에서 구동됩니다. 이 포크 저장소는 **전체 한국어 로컬라이제이션**, **OpenCodex(`ocx`) 29개 모델 원클릭 연동**, **출력 한도 자동 이어쓰기**, 그리고 **초고효율 Prefix KV 캐싱 최적화**가 완벽하게 통합된 실무 최적화 버전입니다.
-
----
-
-## ✨ 핵심 기능 (Key Features)
-
-| 기능 | 설명 |
-| :--- | :--- |
-| 👁️ **자동 비전 폴백 (Vision Fallback)** | 텍스트 전용 모델(`deepseek-chat` 등) 사용 중에도 이미지 입력 시 GPT-5.6/Claude 3.7 등 비전 모델로 자동 우회·시각 분석 및 OCR 변환 |
-| ⚡ **초고속 KV 캐시 최적화** | 멀티턴 대화 시 추론 토큰(`reasoning_content`)을 보존하여 **90%+ 캐시 적중률** 및 첫 토큰 응답 속도 **70~80% 단축** |
-| 🔄 **출력 토큰 자동 이어쓰기** | 모델 출력이 토큰 한도(`max-tokens`)에 도달해도 끊김 없이 끝까지 완성하는 `auto-continue` 내장 |
-| 🌐 **OpenCodex (`ocx`) 완벽 연동** | 로컬 `ocx` 프록시 자동 감지 및 GPT-5.6, Claude 3.7, DeepSeek V4, Grok 4.6 등 **29종 최신 모델** 기본 제공 |
-| 🚀 **원터치 브라우저 자동 실행** | 터미널에서 `dsh`만 입력하면 시스템 언어 감지 및 기본 브라우저(`http://127.0.0.1:3080`) 자동 오픈 |
-| 🔄 **`dsh update` 업스트림 동기화** | 공식 `upstream`을 머지·빌드한 뒤 포크 기능을 **검사**한다. 독립 플러그인은 대체로 남고, 공식 코어 패치는 충돌할 수 있다. |
-| 🇰🇷 **전체 한국어 로컬라이제이션** | 대화창, 설정, 모델 관리, 플러그인 등 웹 UI 전체 영역에 걸친 완성도 높은 한국어(`ko`) 지원 |
-| 🧩 **Cordis 마이크로커널 아키텍처** | 샌드박스, 파일시스템, 셸, 도구, LLM 어댑터가 모두 핫 리로딩 가능한 플러그인으로 동작 |
-
----
-<a id="benchmark"></a>
-
-## 📊 성능 & 캐시 최적화 (Benchmark)
-
-`earendil-works/pi`에서 검증된 프롬프트 캐시 보존 기법을 적용하여 다중 턴 실행 시 **프리픽스 캐시 무효화(Prefix Cache Invalidation)**를 완벽하게 방지합니다:
-
-```mermaid
-graph LR
-    A[User Prompt Turn] --> B[Fixed System & Tools Prefix]
-    B --> C[Preserve Reasoning Tokens]
-    C --> D[Server KV Cache 100% Prefix Match]
-    D --> E[⚡ 90%+ Cache Hit / 0.3s TTFT]
-```
-
-* **첫 토큰 생성 지연(TTFT)**: 3~8초 ➔ **0.3~0.8초** (약 ~75% 획기적 단축)
-* **입력 토큰 비용 절감**: Cache Hit 할인 적용으로 **최대 80~90% 비용 절약**
-* **출력 무결성 보장**: 대규모 파일 생성 및 코드 리팩토링 중단 현상 원천 차단
-
----
-
-## 💻 빠른 시작 (Quick Start)
-
-### 1. 전역 CLI로 즉시 실행
+`Node.js`를 설치한 뒤 실행합니다.
 
 ```sh
-dsh
-dsh web
+npx @deepseek-ai/dsh web
 ```
 
-> 웹 UI는 기본적으로 `http://127.0.0.1:3080` 포트로 서빙됩니다.
+명령은 기본적으로 `http://127.0.0.1:3080`에서 Web UI를 제공합니다. 서버는 외부 프로세스를 자동 실행하지 않으므로 브라우저에서 이 주소를 여세요. 자세한 내용은 [Web UI 가이드](docs/user/guide/index.md)를 참고하세요.
 
-### 2. 소스코드 빌드 및 개발 실행
+### 소스에서 실행
+
+이 포크를 저장소 checkout에서 실행하려면 다음 명령을 사용합니다.
 
 ```sh
 git clone https://github.com/himomohi/deepseek-harness.git
@@ -80,68 +36,46 @@ pnpm run build
 pnpm dsh web
 ```
 
-### 3. 업스트림 동기화 (`dsh update`)
+명시적인 profile 없이 `pnpm dsh`를 실행하면 Web profile을 선택합니다.
+
+## 포크 기능
+
+- **한국어 언어팩**: `@deepseek-ai/dsh-client-locale-ko`가 일반 클라이언트 플러그인으로 Web UI 한국어 사전을 제공합니다.
+- **OpenCodex 제공자**: `@deepseek-ai/dsh-llm-opencodex`가 OpenAI 호환 OpenCodex 프록시에 연결하고 `GET /models` 결과로 안내용 모델 카탈로그를 교체할 수 있습니다.
+- **선형 스트리밍 큐**: Host API Proxy, 브라우저 WebSocket 클라이언트, TypeScript SDK가 커서 기반 FIFO로 누적 프레임을 순서대로 배출합니다.
+- **업스트림 업데이트**: `dsh update`가 공식 커밋을 미리 보여 주고 확인 후 병합하며, 필요하면 shallow clone을 확장한 뒤 다시 빌드하고 한국어·OpenCodex 패키지 마커를 검사합니다.
+- **원격 안전성**: `trustedHosts`는 DNS 재바인딩 방어 수단이지 인증이 아닙니다. 설정, 자격증명, 네이티브 대화상자, Host 측 모델 탐색은 loopback에서만 허용합니다.
+
+OpenCodex는 현재 공용 텍스트 전용 chat-completions wire 어댑터를 사용합니다. 이미지 픽셀이 실제 비전 모델에 전달되지 않는 상태에서 입력을 조용히 변환하거나 허용하지 않고, 모델 기능 검사에서 명확히 거부합니다.
+
+## 이 포크 업데이트
 
 ```sh
-dsh update
 dsh update --dry-run
+dsh update
 dsh update --yes
 ```
 
-미리보기로 공식/포크 SHA와 가져올 커밋만 짧게 보여 주고 `진행할까요?`를 묻는다. `pnpm`/`git` 장문은 숨긴다. 실패하면 **AI에게 요청:** 블록을 출력하니 그대로 붙여 넣으면 된다.
+업데이터는 공식 저장소를 가져오고 checkout이 shallow 상태면 숨겨진 Git 부모 이력을 복구한 뒤 공식 기본 브랜치를 병합합니다. 이어서 의존성을 설치하고 빌드하며 포크 소유 패키지 마커를 검사합니다. 병합 충돌이나 마커 검사 실패는 복사 가능한 복구 프롬프트와 함께 중단되고, 부분 업데이트를 성공으로 보고하지 않습니다.
 
-```sh
-dsh stop
-```
+## 커뮤니티와 지원
 
-어느 디렉터리에서든 이 기기의 dsh 웹 서버를 찾아 중지한다.
+- 피드백과 버그는 [GitHub Discussions](https://github.com/deepseek-ai/deepseek-harness/discussions)에 남길 수 있습니다.
+- 플러그인 저장소에 [`dsh-plugin`](https://github.com/topics/dsh-plugin) 토픽을 추가하면 검색하기 쉬워집니다.
+- <a href="https://discord.gg/Ycq5dCaS4">DeepSeek Harness Discord 커뮤니티</a>에 참여할 수 있습니다.
 
-실제 동작은 **`deepseek-ai/deepseek-harness` Git 머지** → `pnpm install` + `pnpm run build` → 아래 마커 검사다.
+## 기여
 
-- 패키지: `locale-ko`, `llm-opencodex`, `vision-fallback`
-- 코어 패치: auto-continue, `reasoning_content` 보존
+[CONTRIBUTING.md](CONTRIBUTING.md)를 참고하세요.
 
-공식 코어 파일을 고친 기능까지 자동으로 지켜 주지는 않는다. 머지 충돌이면 중단하고, 충돌 없이 마커가 덮여도 검사에서 실패한다.
+## 개발
 
----
+[개발 가이드](docs/development.md)와 [아키텍처 문서](docs/architecture.md)부터 읽으세요.
 
-## 🌐 OpenCodex (`ocx`) 로컬 프록시 연동 가이드
+에이전트는 [AGENTS.md](AGENTS.md)를 따라야 합니다.
 
-1. 터미널에서 `ocx` 프록시를 실행합니다 (`http://127.0.0.1:10100/v1`).
-2. `dsh` 실행 후 브라우저 **설정 ➔ 플러그인** 탭에서 **OpenCodex Proxy**가 초록색(활성)으로 켜져 있는지 확인합니다.
-3. 모델 선택 드롭다운에서 원하는 모델(`gpt-5.6-codex`, `claude-3-7-sonnet`, `deepseek-v4`, `grok-4.6` 등 29종)을 즉시 선택하여 대화를 시작합니다.
+## 라이선스
 
----
+[MIT](LICENSE)
 
-## 🧩 패키지 아키텍처 (Package Layout)
-
-```
-packages/
-  ├── core/            # 에이전트 루프, 세션, 시스템 프롬프트, 도구 코어
-  ├── llm/
-  │    ├── llm-opencodex/   # 🌟 OpenCodex 프록시 어댑터 및 29개 모델 디스커버리
-  │    ├── llm-deepseek/    # DeepSeek 공식 API 어댑터 (KV Cache 최적화)
-  │    ├── llm-pi-ai/       # pi-ai 멀티 프로바이더 어댑터 (Cache Retention)
-  ├── client/
-  │    ├── locale-ko/       # 🇰🇷 웹 클라이언트 한국어 언어팩
-  │    ├── ui-*/            # 웹 UI 컴포넌트 플러그인
-  ├── bundle/          # installable dsh --profile 번들 계층
-  └── shell/fs/lsp/    # 샌드박스, 셸, 파일시스템, 언어서버 플러그인
-```
-
----
-
-## 📚 문서 및 관련 링크
-
-* **📝 [릴리즈 노트 및 변경 기록 (CHANGELOG.md)](CHANGELOG.md)**
-* **📋 [작업 내역 및 세션 재개 가이드 (WORK_RESUME.md)](WORK_RESUME.md)**
-* **📖 [개발 가이드 (docs/development.md)](docs/development.md)**
-* **🏛️ [아키텍처 문서 (docs/architecture.md)](docs/architecture.md)**
-* **🤖 [에이전트 개발 규칙 (AGENTS.md)](AGENTS.md)**
-
----
-
-## 📄 라이선스 (License)
-
-본 프로젝트는 [MIT 라이선스](LICENSE)를 따릅니다.
-외부 의존성 및 라이선스 고지는 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)를 참고하세요.
+외부 의존성과 라이선스는 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)에 공개되어 있습니다.

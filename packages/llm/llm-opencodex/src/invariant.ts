@@ -1,16 +1,16 @@
 /**
- * Package-owned invariant companion for `@deepseek-ai/dsh-llm-deepseek`.
- * @module @deepseek-ai/dsh-llm-deepseek/invariant
+ * Package-owned invariant companion for `@deepseek-ai/dsh-llm-opencodex`.
+ * @module @deepseek-ai/dsh-llm-opencodex/invariant
  */
 
 /* jscpd:ignore-start */
 import type { Context } from '@deepseek-ai/cordis'
 import type { InvariantInstaller } from '@deepseek-ai/dsh-invariants'
 
-const PACKAGE_NAME = '@deepseek-ai/dsh-llm-deepseek'
+const PACKAGE_NAME = '@deepseek-ai/dsh-llm-opencodex'
 
 /** Cordis companion plugin name. */
-export const name = 'llm-deepseek-invariant'
+export const name = 'llm-opencodex-invariant'
 /** Service required before the companion can reserve package ownership. */
 export const inject = ['invariants']
 

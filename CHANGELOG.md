@@ -4,6 +4,23 @@ All notable changes and release notes for DeepSeek Harness (`dsh`) are documente
 
 ---
 
+## [0.1.0-rc.17] - 2026-08-15
+
+### Security, updateability, and provider correctness
+
+* Restore loopback-only access for the complete settings and credential planes plus Host-side model discovery. `trustedHosts` remains a DNS-rebinding fence, not authentication.
+* Expand shallow Git history before `dsh update` computes or merges the official branch. The updater now restores hidden real parents without rewriting commits, then verifies only the maintained Korean and OpenCodex package features.
+* Share one direct chat-completions transport and live-settings lifecycle between DeepSeek and OpenCodex. This removes the copied adapter stack while keeping provider-specific defaults, credentials, labels, and discovery.
+* Stop replaying plain-turn `reasoning_content`; DeepSeek’s documented passback field remains only on tool-call turns.
+* Restore `max-tokens` as a terminal result instead of injecting an unbounded paid continuation loop.
+* Remove the unconnected Vision Fallback package and its false image-admission path. OpenCodex remains explicitly text-only until image bytes have a reconstructable, tested provider wire path.
+* Stop launching the default browser as an unmanaged detached process; `dsh web` prints the canonical URL and leaves opening it to the caller.
+* Require an explicit profile or the `dsh web` alias again. A bare command, typo, or empty `--profile` no longer starts a long-running Web server.
+* Keep the `cordis/*` event namespace and `cordis` UI locale/trigger identifiers out of the vendor package rescope. The hygiene gate now distinguishes these runtime identifiers from imports of `@deepseek-ai/cordis`.
+* Reduce the repository duplication gate from 20 clones to zero and repair the fork’s lint, generated documentation, and bilingual README baseline.
+
+---
+
 ## [0.1.0-rc.11] - 2026-08-15
 
 ### 🎛️ `dsh update` is short and interactive

@@ -4,7 +4,7 @@
  * @module @deepseek-ai/dsh/custom-features
  */
 
-export interface FeatureNeedle {
+interface FeatureNeedle {
   readonly path: string
   readonly needle: string
 }
@@ -16,7 +16,7 @@ export interface ForkFeature {
   readonly contains?: readonly FeatureNeedle[]
 }
 
-export interface FeatureCheck {
+interface FeatureCheck {
   readonly id: string
   readonly kind: ForkFeature['kind']
   readonly ok: boolean
@@ -49,41 +49,6 @@ export const FORK_FEATURES: readonly ForkFeature[] = [
       {
         path: 'packages/bundle/base/cordis.patch.yml',
         needle: '@deepseek-ai/dsh-llm-opencodex',
-      },
-    ],
-  },
-  {
-    id: 'vision-fallback',
-    kind: 'package',
-    paths: ['packages/llm/vision-fallback/package.json'],
-    contains: [
-      {
-        path: 'packages/bundle/base/cordis.patch.yml',
-        needle: '@deepseek-ai/dsh-vision-fallback',
-      },
-    ],
-  },
-  {
-    id: 'auto-continue',
-    kind: 'core-patch',
-    contains: [
-      {
-        path: 'packages/core/agent-loop/src/agent.ts',
-        needle: 'Auto-continue when hitting token limit',
-      },
-    ],
-  },
-  {
-    id: 'reasoning-content-preserve',
-    kind: 'core-patch',
-    contains: [
-      {
-        path: 'packages/llm/llm-deepseek/src/serialize.ts',
-        needle: 'Preserve reasoning_content whenever reasoning is present',
-      },
-      {
-        path: 'packages/llm/llm-opencodex/src/serialize.ts',
-        needle: 'Preserve reasoning_content whenever reasoning is present',
       },
     ],
   },

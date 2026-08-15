@@ -95,7 +95,12 @@ export function toolName(bin: 'git' | 'pnpm', platform: NodeJS.Platform = proces
   return platform === 'win32' ? 'pnpm.cmd' : 'pnpm'
 }
 
-function runQuiet(bin: 'git' | 'pnpm', args: readonly string[], rootDir: string): { ok: boolean; output: string } {
+interface CommandResult {
+  ok: boolean
+  output: string
+}
+
+function runQuiet(bin: 'git' | 'pnpm', args: readonly string[], rootDir: string): CommandResult {
   try {
     const output = execFileSync(toolName(bin), args, {
       cwd: rootDir,
@@ -107,11 +112,48 @@ function runQuiet(bin: 'git' | 'pnpm', args: readonly string[], rootDir: string)
     })
     return { ok: true, output }
   } catch (error) {
-    const extra = error && typeof error === 'object' && 'stdout' in error
-      ? `${String((error as { stdout?: string }).stdout ?? '')}\n${String((error as { stderr?: string }).stderr ?? '')}`
-      : error instanceof Error ? error.message : String(error)
+    const extra = error !== null && typeof error === 'object' && 'stdout' in error
+      ? `${typeof error.stdout === 'string' ? error.stdout : ''}\n`
+        + ('stderr' in error && typeof error.stderr === 'string' ? error.stderr : '')
+      : error instanceof Error
+        ? error.message
+        : String(error)
     return { ok: false, output: tail(extra) }
   }
+}
+
+/**
+ * Expand a shallow checkout through its source remote before an upstream merge.
+ *
+ * Git hides parents listed in `.git/shallow`, so a normal merge can report
+ * unrelated histories even when the boundary commit names the official
+ * repository as its real parent. Fetching the complete source history restores
+ * that ancestry without rewriting commits or branches.
+ * @param rootDir - checkout whose history may be shallow.
+ * @returns success when the checkout is already complete or was expanded.
+ */
+export function repairShallowHistory(rootDir: string): CommandResult {
+  if (!isShallow(rootDir)) return { ok: true, output: '' }
+  let remotes: string[]
+  try {
+    remotes = git(rootDir, ['remote'])
+      .split(/\r?\n/)
+      .map(remote => remote.trim())
+      .filter(Boolean)
+  } catch (error: unknown) {
+    return { ok: false, output: error instanceof Error ? error.message : String(error) }
+  }
+  const source = remotes.includes('origin')
+    ? 'origin'
+    : remotes.find(remote => remote !== 'upstream') ?? remotes[0]
+  if (source === undefined) {
+    return { ok: false, output: 'cannot expand shallow history: this checkout has no Git remote' }
+  }
+  const fetched = runQuiet('git', ['fetch', source, '--unshallow', '--tags', '--prune'], rootDir)
+  if (!fetched.ok) return fetched
+  return isShallow(rootDir)
+    ? { ok: false, output: `git fetch ${source} --unshallow completed but the checkout is still shallow` }
+    : fetched
 }
 
 function fail(failure: UpdateFailure): never {
@@ -190,7 +232,6 @@ export async function runUpdate(options: UpdateOptions = {}): Promise<void> {
   const rootDir = resolve(fileURLToPath(new URL('../../..', import.meta.url)))
   const localSha = git(rootDir, ['rev-parse', 'HEAD']).trim()
   const localVersion = readPackageVersion(rootDir)
-  const shallow = isShallow(rootDir)
 
   try {
     const remotes = git(rootDir, ['remote']).split(/\r?\n/)
@@ -204,6 +245,19 @@ export async function runUpdate(options: UpdateOptions = {}): Promise<void> {
       detail: error instanceof Error ? error.message : String(error),
     })
   }
+
+  if (isShallow(rootDir)) {
+    process.stdout.write('로컬 Git 계보 복구 중…\n')
+    const repaired = repairShallowHistory(rootDir)
+    if (!repaired.ok) {
+      fail({
+        step: 'fetch',
+        rootDir,
+        detail: repaired.output,
+      })
+    }
+  }
+  const shallow = isShallow(rootDir)
 
   process.stdout.write('공식 저장소 확인 중…\n')
   const fetched = runQuiet('git', ['fetch', 'upstream', '--tags', '--prune'], rootDir)
@@ -322,5 +376,5 @@ export async function runUpdate(options: UpdateOptions = {}): Promise<void> {
     })
   }
   console.log('통과')
-  console.log(`완료. ${upstreamBranch} 머지됨. locale-ko · OpenCodex · vision-fallback · auto-continue · reasoning`)
+  console.log(`완료. ${upstreamBranch} 머지됨. locale-ko · OpenCodex 검사 통과`)
 }
