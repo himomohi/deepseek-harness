@@ -224,3 +224,49 @@
   clip: rect(0 0 0 0);
   white-space: nowrap;
 }
+
+/* Phone / narrow: the 188px nav + leftover content column squeezes CJK
+   into a one-character strip. Stack the rail, then the page. */
+@media (max-width: 720px) {
+  .overlay {
+    align-items: stretch;
+    justify-content: stretch;
+  }
+
+  .panel {
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    border-radius: 0;
+    flex-direction: column;
+  }
+
+  .nav {
+    width: 100%;
+    padding: 16px 12px 8px;
+    gap: 10px;
+  }
+
+  .navList {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .navCell {
+    flex: 1 1 calc(50% - 4px);
+    min-width: 0;
+  }
+
+  .navLabel {
+    white-space: normal;
+  }
+
+  .content {
+    min-height: 0;
+  }
+
+  .options {
+    padding: 0 16px 24px;
+  }
+}

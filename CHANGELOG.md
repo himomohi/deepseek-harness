@@ -32,6 +32,14 @@ All notable changes and release notes for DeepSeek Harness (`dsh`) are documente
 
 ---
 
+## [0.1.0-rc.14] - 2026-08-15
+
+### 📱 Settings phone layout
+* Settings panel stacks nav above content at `max-width: 720px` so Korean copy no longer paints one character per line.
+* General rows (agent preset / language / permission / Enter) wrap the selector under the title on phones.
+
+---
+
 ---
 
 ---

@@ -49,3 +49,23 @@
 .chevron {
   flex: none;
 }
+
+@media (max-width: 720px) {
+  .row {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .rowText {
+    flex: 1 1 100%;
+    padding-right: 0;
+  }
+
+  .title {
+    overflow-wrap: anywhere;
+  }
+
+  .selector {
+    max-width: 100%;
+  }
+}

@@ -72,6 +72,12 @@
   gap: 10px;
 }
 
+@media (max-width: 720px) {
+  .rowHead {
+    flex-wrap: wrap;
+  }
+}
+
 .rowIdentity {
   display: inline-flex;
   align-items: center;
