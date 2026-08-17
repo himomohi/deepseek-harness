@@ -2,7 +2,7 @@ import { fileURLToPath } from 'node:url'
 import { readFileSync } from 'node:fs'
 import { spawnSync } from 'node:child_process'
 import { mkdir, utimes, writeFile } from 'node:fs/promises'
-import { dirname, join } from 'node:path'
+import { delimiter, dirname, join } from 'node:path'
 import { homedir } from 'node:os'
 import { expect, it } from 'vitest'
 import { defineAcpSnapshotSuite, type Scenario, type SnapshotSuiteOptions } from '@deepseek-ai/dsh-acp-snapshot'
@@ -56,6 +56,8 @@ const SUBAGENT_CONTINUABLE_INHERITANCE_CONFIG = fileURLToPath(
   new URL('../subagent-continuable-inheritance.cordis.yml', import.meta.url),
 )
 const LSP_CONFIG = fileURLToPath(new URL('./lsp.cordis.yml', import.meta.url))
+const LSP_AUTO_CONFIG = fileURLToPath(new URL('./lsp-auto.cordis.yml', import.meta.url))
+const LSP_AUTO_FIXTURES = fileURLToPath(new URL('./fixtures/lsp-auto', import.meta.url))
 const WEB_CONFIG = fileURLToPath(new URL('../web.cordis.yml', import.meta.url))
 const FS_SEARCH_CONFIG = fileURLToPath(new URL('./fs-search.cordis.yml', import.meta.url))
 const PARTIAL_LANDLOCK_CONFIG = fileURLToPath(new URL('../partial-landlock.cordis.yml', import.meta.url))
@@ -282,6 +284,19 @@ const SCENARIOS: Scenario[] = [
     toolSchemasSource: 'text-turn',
   },
   { name: 'lsp-definition', hasModelTurn: true, recorded: false, pinsHeader: true, headerClass: 'lsp', configPath: LSP_CONFIG },
+  // lsp-auto detection end to end in the class's composition: PATH carries a fake `gopls`
+  // ahead of the ambient directories, so load-time detection adopts it, the seam registers
+  // the Go routes, and the same lsp tool resolves the definition through the spawned server.
+  // The header matches the lsp class pin — lsp-auto contributes providers, not tools or
+  // prompt sections.
+  {
+    name: 'lsp-auto-detection',
+    hasModelTurn: true,
+    recorded: false,
+    headerClass: 'lsp',
+    configPath: LSP_AUTO_CONFIG,
+    env: { PATH: `${LSP_AUTO_FIXTURES}${delimiter}${process.env.PATH ?? ''}` },
+  },
   // web_fetch markdown rendering end to end: the overlay's loopback fixture
   // server supplies deterministic HTML (entities, a GFM table, nesting), the
   // REAL local fetch provider retrieves it, and the tool result pins the

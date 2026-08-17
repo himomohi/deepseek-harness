@@ -1,0 +1,19 @@
+# Exercise lsp-auto detection end to end through the shipped ACP app and Loader entry path.
+# The snapshot scenario prepends a fake `gopls` to PATH — the only catalog command this
+# composition can find — and the workspace supplies the queried Go source.
+- id: base
+  name: '@deepseek-ai/cordis-plugin-include'
+  config:
+    path: ../cordis.yml
+    patches:
+      - insert:
+          - id: lsp
+            name: '@deepseek-ai/dsh-lsp'
+          - id: lsp-auto
+            name: '@deepseek-ai/dsh-lsp-auto'
+            config:
+              deferred: false
+          - id: timeout-policy
+            name: '@deepseek-ai/dsh-tool-call-timeout-policy'
+          - id: tool-lsp
+            name: '@deepseek-ai/dsh-tool-lsp'

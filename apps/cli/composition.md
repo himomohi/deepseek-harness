@@ -80,6 +80,12 @@ flowchart LR
   cfg --> plugin_dsh_base_tool_fs
   plugin_dsh_base_tool_fs_search["tool-fs-search<br/>@deepseek-ai/dsh-tool-fs-search"]
   cfg --> plugin_dsh_base_tool_fs_search
+  plugin_dsh_base_lsp["lsp<br/>@deepseek-ai/dsh-lsp"]
+  cfg --> plugin_dsh_base_lsp
+  plugin_dsh_base_lsp_auto["lsp-auto<br/>@deepseek-ai/dsh-lsp-auto"]
+  cfg --> plugin_dsh_base_lsp_auto
+  plugin_dsh_base_tool_lsp["tool-lsp<br/>@deepseek-ai/dsh-tool-lsp"]
+  cfg --> plugin_dsh_base_tool_lsp
   plugin_dsh_base_agent_instructions["agent-instructions<br/>@deepseek-ai/dsh-agent-instructions"]
   cfg --> plugin_dsh_base_agent_instructions
   plugin_dsh_base_skill["skill<br/>@deepseek-ai/dsh-skill"]
@@ -206,6 +212,9 @@ flowchart LR
 | `fs-observation-policy` | `@deepseek-ai/dsh-fs-observation-policy` |
 | `tool-fs` | `@deepseek-ai/dsh-tool-fs` |
 | `tool-fs-search` | `@deepseek-ai/dsh-tool-fs-search` |
+| `lsp` | `@deepseek-ai/dsh-lsp` |
+| `lsp-auto` | `@deepseek-ai/dsh-lsp-auto` |
+| `tool-lsp` | `@deepseek-ai/dsh-tool-lsp` |
 | `agent-instructions` | `@deepseek-ai/dsh-agent-instructions` |
 | `skill` | `@deepseek-ai/dsh-skill` |
 | `skill-filesystem` | `@deepseek-ai/dsh-skill-filesystem` |

@@ -1212,6 +1212,32 @@ export type Config = Readonly<Record<string, never>>
 
 来源：[`packages/llm/llm-retry/src/index.ts:24`](../packages/llm/llm-retry/src/index.ts)
 
+<a id="deepseek-aidsh-lsp-auto"></a>
+
+## `@deepseek-ai/dsh-lsp-auto`
+
+需要：`subprocess`
+
+```ts config-catalog
+/** Plugin configuration. */
+export interface Config {
+  /**
+   * Extra env merged over the credential-scrubbed ambient env. Used for PATH resolution during
+   * detection, for fallback probes, and for every spawned server. Default `{}`.
+   */
+  env?: Record<string, string>
+  /**
+   * Whether languages without an installed server may fall back to npm-cache probes. A
+   * network-less or offline deployment sets `false` to keep load local. Default `true`.
+   */
+  deferred?: boolean
+  /** Bound for one fallback probe in ms. Default 30000. */
+  probeTimeoutMs?: number
+}
+```
+
+来源：[`packages/lsp/lsp-auto/src/index.ts:43`](../packages/lsp/lsp-auto/src/index.ts)
+
 <a id="deepseek-aidsh-lsp-stdio"></a>
 
 ## `@deepseek-ai/dsh-lsp-stdio`

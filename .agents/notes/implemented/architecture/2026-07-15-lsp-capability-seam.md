@@ -169,7 +169,7 @@ The provider trusts its configured server. Its filesystem visibility and process
 
 **Run concurrent queries in one instance.** If cancellation fails, terminating the shared process would kill unrelated work. Per-instance serialization limits that blast radius; instances remain parallel.
 
-**Ship presets or PATH discovery.** A catalog would make the generic host own language policy, while discovery cannot infer arguments, language ids, or initialization. Deployments configure providers explicitly; composition plugins may package presets.
+**Ship presets or PATH discovery.** A catalog would make the generic host own language policy, while discovery cannot infer arguments, language ids, or initialization. Deployments configure providers explicitly; composition plugins may package presets — realized by [`dsh-lsp-auto`](../feature/2026-08-17-lsp-auto-detection.md), a catalog front that composes this generic host with a detected server table.
 
 ## Testing
 

@@ -229,6 +229,19 @@
       config:
         sampleOverCapGlobResults: false
 
+    # Language servers: the seam, the auto-detecting provider, and the model
+    # tool. Detection is opportunistic — a machine with no installed server
+    # mounts no provider and the lsp tool reports LSP_UNAVAILABLE at first
+    # use, so a bare deployment still boots.
+    - id: lsp
+      name: '@deepseek-ai/dsh-lsp'
+
+    - id: lsp-auto
+      name: '@deepseek-ai/dsh-lsp-auto'
+
+    - id: tool-lsp
+      name: '@deepseek-ai/dsh-tool-lsp'
+
     - id: agent-instructions
       name: '@deepseek-ai/dsh-agent-instructions'
       config:
