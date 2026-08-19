@@ -4,6 +4,16 @@ All notable changes and release notes for DeepSeek Harness (`dsh`) are documente
 
 ---
 
+## [0.1.0-rc.20] - 2026-08-19
+
+### Retire the dedicated OpenCodex adapter
+
+* Remove `@deepseek-ai/dsh-llm-opencodex`, its base-bundle row, and the Plugins-settings OpenCodex card. OpenCodex itself now hosts DeepSeek Harness, so this fork no longer ships a private chat-completions adapter.
+* Connect OpenCodex through the official Models page as an `llm-pi-ai` provider named `opencodex`. Live `GET /models` sync stays on that provider id.
+* Stop treating `llm-opencodex` as a `dsh update` fork marker. Merge repair now keeps the Korean locale pack and remaining fork markers.
+
+---
+
 ## [0.1.0-rc.19] - 2026-08-16
 
 ### Web background signals and job control

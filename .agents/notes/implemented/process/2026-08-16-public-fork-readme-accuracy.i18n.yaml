@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/process/2026-08-16-public-fork-readme-accuracy.md
-2026-08-16-public-fork-readme-accuracy.md: 20cb8f3aec6e43a59c15f844038a3f03ea9c2fc1
-2026-08-16-public-fork-readme-accuracy.zh.md: ac24a0facfd3ca2581f96f427dfd803aee6ba0c1
+2026-08-16-public-fork-readme-accuracy.md: 0b541480eb7fb7855b8f187872b8f1b540e78f23
+2026-08-16-public-fork-readme-accuracy.zh.md: 5055868d3a75627592055c48f1a338bf359b79ce

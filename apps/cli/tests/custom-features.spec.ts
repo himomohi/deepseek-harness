@@ -40,7 +40,7 @@ describe('verifyCustomFeatures', () => {
   it('fails a package when its directory is gone', () => {
     const report = verifyCustomFeatures(
       path => path !== 'packages/client/locale-ko/package.json',
-      () => '@deepseek-ai/dsh-client-locale-ko\n@deepseek-ai/dsh-llm-opencodex',
+      () => '@deepseek-ai/dsh-client-locale-ko',
     )
     const locale = report.checks.find(check => check.id === 'locale-ko')
     expect(report.ok).toBe(false)
@@ -51,13 +51,13 @@ describe('verifyCustomFeatures', () => {
   it('fails a package when its composition marker was overwritten', () => {
     const report = verifyCustomFeatures(
       () => true,
-      path => path.includes('base/cordis.patch.yml')
-        ? 'no OpenCodex marker here'
+      path => path.includes('web-app/cordis.patch.yml')
+        ? 'no Korean locale marker here'
         : '@deepseek-ai/dsh-client-locale-ko',
     )
-    const openCodex = report.checks.find(check => check.id === 'llm-opencodex')
+    const locale = report.checks.find(check => check.id === 'locale-ko')
     expect(report.ok).toBe(false)
-    expect(openCodex?.ok).toBe(false)
-    expect(openCodex?.missing[0]).toMatch(/missing marker/)
+    expect(locale?.ok).toBe(false)
+    expect(locale?.missing[0]).toMatch(/missing marker/)
   })
 })

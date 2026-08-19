@@ -42,20 +42,6 @@ export const FORK_FEATURES: readonly ForkFeature[] = [
     ],
   },
   {
-    id: 'llm-opencodex',
-    kind: 'package',
-    paths: [
-      'packages/llm/llm-opencodex/package.json',
-      'packages/client/ui-settings-plugins/src/client/OpenCodexCard.tsx',
-    ],
-    contains: [
-      {
-        path: 'packages/bundle/base/cordis.patch.yml',
-        needle: '@deepseek-ai/dsh-llm-opencodex',
-      },
-    ],
-  },
-  {
     id: 'default-web-launch',
     kind: 'core-patch',
     contains: [

@@ -20,7 +20,7 @@ English | [中文](README.zh.md) | [한국어](README.ko.md)
 
 DeepSeek Harness (`dsh`) is the open-source agent harness developed by [DeepSeek AI](https://deepseek.com). It is powered by [Cordis](https://github.com/cordiverse/cordis) and follows one architectural rule: **everything is a plugin**.
 
-This repository is the [`himomohi/deepseek-harness`](https://github.com/himomohi/deepseek-harness) fork. It keeps the official plugin architecture while maintaining a Korean Web UI, OpenCodex integration, phone-width layouts, safer update and stop commands, ordered high-volume streaming, provider-aware output limits, background-job cancellation, and opt-in browser notifications.
+This repository is the [`himomohi/deepseek-harness`](https://github.com/himomohi/deepseek-harness) fork. It keeps the official plugin architecture while maintaining a Korean Web UI, phone-width layouts, safer update and stop commands, ordered high-volume streaming, provider-aware output limits, background-job cancellation, and opt-in browser notifications.
 
 > **Developer preview:** Compatibility-breaking changes are expected before the first tagged release.
 
@@ -31,14 +31,13 @@ This repository is the [`himomohi/deepseek-harness`](https://github.com/himomohi
 | Try the official upstream package | `npx @deepseek-ai/dsh web` | The package published by DeepSeek AI |
 | Run this maintained fork | Clone this repository and run `pnpm dsh` | The fork features documented below |
 
-The npm command does not install this fork. Clone `himomohi/deepseek-harness` when you need its Korean UI, OpenCodex provider, updater, mobile fixes, or transport changes.
+The npm command does not install this fork. Clone `himomohi/deepseek-harness` when you need its Korean UI, updater, mobile fixes, or transport changes.
 
 ## Why this fork
 
 | Capability | Current behavior |
 | --- | --- |
 | Korean Web UI | Korean dictionaries load through the `@deepseek-ai/dsh-client-locale-ko` client plugin. |
-| OpenCodex models | The OpenCodex provider can replace its advisory catalog with live results from `GET /models`. |
 | One-command Web lifecycle | Bare `dsh` selects the Web profile, prints the canonical URL, and opens a browser unless `--no-open` is present; `dsh stop` finds maintained launch paths. |
 | Phone-width layouts | Navigation, setup, settings, and chat remain usable at mobile viewport widths. |
 | Ordered streaming | Host API, browser WebSocket, and TypeScript SDK queues use cursor-backed FIFO draining instead of repeated array shifting. |
@@ -47,7 +46,7 @@ The npm command does not install this fork. Clone `himomohi/deepseek-harness` wh
 | Background job stop | The session-header job list can cancel a running job through the Host `job.cancel` command. |
 | Browser notifications | An opt-in General settings row notifies on questions and completed turns when the page is not focused. |
 
-OpenCodex currently uses the shared text-only chat-completions adapter. Image input stays capability-gated instead of being accepted when pixels cannot reach a vision model.
+OpenCodex connects through the official Models page as an `llm-pi-ai` provider. This fork does not ship a dedicated OpenCodex adapter.
 
 ## Run
 
@@ -95,7 +94,6 @@ Capabilities are assembled as plugins rather than added directly to the agent lo
 ## Safety and current limits
 
 - `trustedHosts` is a DNS-rebinding defense, not authentication. Settings, credentials, native dialogs, and Host-side model discovery remain loopback-only.
-- The OpenCodex wire adapter is text-only until a provider exposes and verifies image transport.
 - This README does not claim provider cache-hit, first-token, latency, or cost improvements without provider-side measurements.
 - The fork is maintained against a moving upstream developer preview, so run `dsh update --dry-run` before merging official changes.
 

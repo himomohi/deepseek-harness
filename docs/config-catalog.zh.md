@@ -893,54 +893,6 @@ export interface DeepSeekCatalogModel {
 
 来源：[`packages/llm/llm-deepseek/src/index.ts:72`](../packages/llm/llm-deepseek/src/index.ts)
 
-<a id="deepseek-aidsh-llm-opencodex"></a>
-
-## `@deepseek-ai/dsh-llm-opencodex`
-
-需要：`llm`
-
-```ts config-catalog
-/** OpenCodex proxy plugin and live-settings fields. */
-export interface Config {
-  /** Credential reference; defaults to `OPENCODEX_API_KEY`. */
-  apiKeyEnv?: string
-  /** Proxy endpoint; defaults to the local OpenCodex service. */
-  baseURL?: string
-  /** Deployment thinking policy. */
-  thinking?: 'enabled' | 'disabled'
-  /** Default reasoning effort; omission uses the adapter default. */
-  reasoningEffort?: 'off' | 'high' | 'max'
-  /** Optional route-wide per-request output cap; omission preserves proxy-owned behavior for uncatalogued models. */
-  maxTokens?: number
-  /** Context capacity used when a model entry omits one. */
-  defaultContextWindow?: number
-  /** Advisory models shown before live discovery replaces the catalog. */
-  models?: OpenCodexCatalogModel[]
-  /** Maximum provider idle time while a stream read is pending. */
-  streamIdleTimeoutMs?: number
-  /** Provider-owned model-request retry policy. */
-  retryPolicy?: RetryPolicyConfig
-}
-
-/** One model advertised by the OpenCodex proxy adapter. */
-export interface OpenCodexCatalogModel {
-  /** Model id accepted by the proxy. */
-  id: string
-  /** Selector label; defaults to {@link id}. */
-  name?: string
-  /** Optional selector detail. */
-  description?: string
-  /** Known combined request and response context capacity. */
-  contextWindow?: number
-  /** Known output-token cap. */
-  maxTokens?: number
-}
-```
-
-依赖：[`RetryPolicyConfig`](../packages/llm/llm/src/index.ts)
-
-来源：[`packages/llm/llm-opencodex/src/index.ts:97`](../packages/llm/llm-opencodex/src/index.ts)
-
 <a id="deepseek-aidsh-llm-pi-ai"></a>
 
 ## `@deepseek-ai/dsh-llm-pi-ai`
@@ -3111,6 +3063,7 @@ export interface Config {
 - `@deepseek-ai/dsh-client-modules` — 需要 `webServer` · `loader`（[`packages/client/modules/src/index.ts`](../packages/client/modules/src/index.ts)）
 - `@deepseek-ai/dsh-client-runtime`（[`packages/client/runtime/src/index.ts`](../packages/client/runtime/src/index.ts)）
 - `@deepseek-ai/dsh-client-ui-agent-preset`（[`packages/client/ui-agent-preset/src/index.ts`](../packages/client/ui-agent-preset/src/index.ts)）
+- `@deepseek-ai/dsh-client-ui-browser-notifications` — 需要 `settings`（[`packages/client/ui-browser-notifications/src/index.ts`](../packages/client/ui-browser-notifications/src/index.ts)）
 - `@deepseek-ai/dsh-client-ui-commands`（[`packages/client/ui-commands/src/index.ts`](../packages/client/ui-commands/src/index.ts)）
 - `@deepseek-ai/dsh-client-ui-conversation`（[`packages/client/ui-conversation/src/index.ts`](../packages/client/ui-conversation/src/index.ts)）
 - `@deepseek-ai/dsh-client-ui-cordis`（[`packages/extensions/ui-cordis/src/index.ts`](../packages/extensions/ui-cordis/src/index.ts)）

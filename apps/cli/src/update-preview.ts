@@ -78,7 +78,7 @@ export function formatRepairPrompt(failure: UpdateFailure): string {
     failure.detail.trim() || '(없음)',
     '',
     '요청:',
-    '- 머지 충돌이면 locale-ko와 OpenCodex를 유지한 채 해결',
+    '- 머지 충돌이면 locale-ko와 포크 마커를 유지한 채 해결',
     '- 설치/빌드 실패면 원인 고치고 재빌드',
     '- 포크 마커가 없으면 공식 덮어쓰기를 되돌리거나 다시 패치',
     '- 성공을 거짓말하지 말 것',

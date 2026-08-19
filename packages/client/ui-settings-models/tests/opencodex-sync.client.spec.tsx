@@ -19,7 +19,7 @@ describe('OpenCodex catalog sync', () => {
       <ModelListEditor
         models={[{ id: 'stale', contextWindow: 111 }]}
         onChange={onChange}
-        probe={{ settingsNs: 'llm-opencodex', provider: 'opencodex', baseURL: 'http://127.0.0.1:10100/v1' }}
+        probe={{ settingsNs: 'llm-pi-ai', provider: 'opencodex', baseURL: 'http://127.0.0.1:10100/v1' }}
         api={{ llm: { discoverModels } } as never}
         t={key => en[key]}
         disabled={false}

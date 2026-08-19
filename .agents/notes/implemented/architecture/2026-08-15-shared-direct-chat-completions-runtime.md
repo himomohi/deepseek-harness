@@ -38,6 +38,4 @@ The shared lifecycle accepts an optional provider-owned output default. The offi
 
 Transport fixes now land once for both routes, while provider-specific config and discovery remain independently documented. The source duplication gate reports zero clones after the shared runtime and shared client credential control are applied.
 
-The package dependency graph adds `llm-opencodex` → `llm-deepseek`; project references and manifests declare it explicitly. The shared location is named after its current owner, so a future third direct provider may justify extracting a neutral package rather than continuing to broaden the DeepSeek package.
-
-An OpenCodex request with no exact or explicit output cap no longer records an adapter-default `maxTokens` marker and sends no `max_tokens` field. A proxy that publishes an output cap can synchronize that value into the model entry; a proxy that omits it remains authoritative for the request default. Operators can still set a route-wide fallback, but it is an explicit deployment choice rather than a cross-provider assumption.
+The shared location is named after its current owner. A later removal retired the dedicated OpenCodex package; see [Retire the dedicated OpenCodex provider plugin](../simplification/2026-08-19-retire-dedicated-opencodex-plugin.md).

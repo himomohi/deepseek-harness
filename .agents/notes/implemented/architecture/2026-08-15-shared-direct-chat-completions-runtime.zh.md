@@ -38,6 +38,4 @@ OpenCodex 删除复制的适配器、序列化器、解析器、转换器和 wir
 
 传输修复现在只需为两条路由实现一次，而提供方专属配置与发现仍独立记录。应用共享运行时和共享客户端凭据控制后，源代码重复检查报告零个克隆。
 
-包依赖图增加 `llm-opencodex` → `llm-deepseek`；project reference 和 manifest 会显式声明它。共享位置仍以当前持有者命名，因此未来第三个直接提供方可能证明应提取中立包，而不是继续扩大 DeepSeek 包。
-
-没有精确或显式输出上限的 OpenCodex 请求不再记录适配器默认 `maxTokens` 标记，也不会发送 `max_tokens` 字段。代理发布输出上限时，可以把该值同步到模型条目；代理省略该值时，其请求默认策略保持权威。运维方仍可设置路由级后备值，但这会是显式部署选择，而不是跨提供方假设。
+共享位置仍以当前持有者命名。后续删除退役了专用 OpenCodex 包；见[退役专用 OpenCodex 提供方插件](../simplification/2026-08-19-retire-dedicated-opencodex-plugin.md)。

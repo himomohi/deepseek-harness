@@ -144,7 +144,7 @@ function capacitySpelling(value: number | undefined): string {
 }
 
 function isOpenCodexProbe(probe: ProbeTarget): boolean {
-  return probe.settingsNs === 'llm-opencodex' || probe.provider === 'opencodex'
+  return probe.provider === 'opencodex'
 }
 function adopt(candidate: DiscoveredModelView): ModelDraft {
   return {

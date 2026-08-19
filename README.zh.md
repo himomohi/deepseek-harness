@@ -20,7 +20,7 @@
 
 DeepSeek Harness（`dsh`）是由 [DeepSeek AI](https://deepseek.com) 开发的开源智能体框架。它基于 [Cordis](https://github.com/cordiverse/cordis)，并遵循一条架构原则：**一切皆插件**。
 
-此仓库是 [`himomohi/deepseek-harness`](https://github.com/himomohi/deepseek-harness) 分支。它保留官方插件架构，同时维护韩语 Web UI、OpenCodex 集成、手机宽度布局、更安全的更新和停止命令、有序的大流量串流、提供方感知的输出限制、后台任务取消，以及可选的浏览器通知。
+此仓库是 [`himomohi/deepseek-harness`](https://github.com/himomohi/deepseek-harness) 分支。它保留官方插件架构，同时维护韩语 Web UI、手机宽度布局、更安全的更新和停止命令、有序的大流量串流、提供方感知的输出限制、后台任务取消，以及可选的浏览器通知。
 
 > **开发者预览：** 在首个带标签的版本发布前，可能会出现破坏兼容性的变更。
 
@@ -31,14 +31,13 @@ DeepSeek Harness（`dsh`）是由 [DeepSeek AI](https://deepseek.com) 开发的�
 | 体验官方上游软件包 | `npx @deepseek-ai/dsh web` | DeepSeek AI 发布的软件包 |
 | 运行此维护分支 | 克隆此仓库后运行 `pnpm dsh` | 下文说明的分支功能 |
 
-npm 命令不会安装此分支。需要韩语 UI、OpenCodex 提供方、更新器、移动端修复或传输层变更时，请克隆 `himomohi/deepseek-harness`。
+npm 命令不会安装此分支。需要韩语 UI、更新器、移动端修复或传输层变更时，请克隆 `himomohi/deepseek-harness`。
 
 ## 为什么使用此分支
 
 | 能力 | 当前行为 |
 | --- | --- |
 | 韩语 Web UI | `@deepseek-ai/dsh-client-locale-ko` 客户端插件加载韩语词典。 |
-| OpenCodex 模型 | OpenCodex 提供方可使用 `GET /models` 的实时结果替换其提示性模型目录。 |
 | 单命令 Web 生命周期 | 不带参数的 `dsh` 选择 Web 配置，输出规范 URL，并在未指定 `--no-open` 时打开浏览器；`dsh stop` 可识别受维护的启动路径。 |
 | 手机宽度布局 | 导航、初始设置、设置和聊天在移动视口宽度下保持可用。 |
 | 有序串流 | Host API、浏览器 WebSocket 和 TypeScript SDK 队列使用基于游标的 FIFO 排空方式，而不是反复移动数组。 |
@@ -47,7 +46,7 @@ npm 命令不会安装此分支。需要韩语 UI、OpenCodex 提供方、更新
 | 后台任务停止 | 会话标题栏的任务列表可通过 Host 的 `job.cancel` 命令取消正在运行的任务。 |
 | 浏览器通知 | 通用设置中的可选开关会在页面未聚焦时，对提问和已完成的回复发出通知。 |
 
-OpenCodex 当前使用共享的纯文本 chat-completions 适配器。图像输入只有在能力明确启用时才可用，不会在像素无法到达视觉模型时被静默接受。
+OpenCodex 通过官方模型页作为 `llm-pi-ai` 提供方连接。此分支不附带专用 OpenCodex 适配器。
 
 ## 运行
 
@@ -95,7 +94,6 @@ Preset
 ## 安全性与当前限制
 
 - `trustedHosts` 用于防御 DNS 重绑定，并非身份验证。设置、凭据、原生对话框和 Host 侧模型发现因此仅允许环回访问。
-- 在提供方公开并验证图像传输前，OpenCodex 传输适配器保持纯文本模式。
 - 本 README 不会在缺少提供方测量的情况下宣称缓存命中率、首令牌时间、延迟或成本有所改善。
 - 此分支跟随持续变化的上游开发者预览，因此在合并官方变更前请运行 `dsh update --dry-run`。
 

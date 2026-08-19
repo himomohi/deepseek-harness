@@ -38,12 +38,4 @@ export const ko = {
   'webSearchBaseUrlHint': '제공자 기본값을 사용하려면 비워 두세요.',
   'webSearchMaxUses': '요청당 최대 검색 횟수',
   'webSearchMaxUsesHint': '한 요청이 답변해야 하기 전에 몇 번 검색할 수 있는지.',
-  'openCodexTitle': 'OpenCodex 프록시',
-  'openCodexDescription': 'ChatGPT, Claude, Grok, Kimi 등 다양한 모델을 연결하는 범용 프록시.',
-  'openCodexBaseUrl': '프록시 주소',
-  'openCodexBaseUrlHint': '로컬 OpenCodex 기본 주소는 http://127.0.0.1:10100/v1 입니다.',
-  'openCodexApiKey': 'API 키 / 인증 토큰',
-  'openCodexApiKeyHint': '자격 증명에 저장됩니다. 로컬 프록시는 비워 두셔도 됩니다.',
-  'openCodexApiKeySet': '키가 설정되었습니다.',
-  'openCodexApiKeyUnset': '키가 설정되지 않음 (로컬 프록시 직접 접근).',
 } satisfies Record<string, string>
