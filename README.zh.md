@@ -1,99 +1,119 @@
-# DeepSeek Harness
+<p align="center">
+  <img src="website/public/wordmark.svg" width="220" alt="DeepSeek Harness">
+</p>
+
+<p align="center"><strong>可组合的智能体基础设施，由实用的韩语优先分支持续维护。</strong></p>
+
+<p align="center">
+  <img alt="开发者预览" src="https://img.shields.io/badge/status-developer_preview-f59e0b">
+  <img alt="维护分支" src="https://img.shields.io/badge/fork-himomohi-0ea5e9">
+  <img alt="Node.js" src="https://img.shields.io/badge/node-%5E22.19%20%7C%7C%20%3E%3D24-339933">
+  <img alt="插件架构" src="https://img.shields.io/badge/architecture-everything_is_a_plugin-7c3aed">
+  <img alt="MIT 许可证" src="https://img.shields.io/badge/license-MIT-111827">
+</p>
+
+<p align="center">
+  <a href="README.md">English</a> · <a href="README.zh.md">中文</a> · <a href="README.ko.md">한국어</a>
+</p>
 
 [English](README.md) | 中文 | [한국어](README.ko.md)
 
-DeepSeek Harness（`dsh`）是由 [DeepSeek AI](https://deepseek.com) 开发的开源 agent harness（智能体框架）。
+DeepSeek Harness（`dsh`）是由 [DeepSeek AI](https://deepseek.com) 开发的开源智能体框架。它基于 [Cordis](https://github.com/cordiverse/cordis)，并遵循一条架构原则：**一切皆插件**。
 
-它采用**一切皆插件**的架构，并由 [Cordis](https://github.com/cordiverse/cordis) 驱动，其设计参见论文 [_A Programming Paradigm for Spatiotemporal Composability_](https://github.com/cordiverse/paper)。
+此仓库是 [`himomohi/deepseek-harness`](https://github.com/himomohi/deepseek-harness) 分支。它保留官方插件架构，同时维护韩语 Web UI、OpenCodex 集成、手机宽度布局、更安全的更新和停止命令、有序的大流量串流、提供方感知的输出限制、后台任务取消，以及可选的浏览器通知。
 
-本分叉增加了韩语 Web UI 语言包、OpenCodex 代理提供方、窄屏布局修复、交互式上游更新器，以及面向大型流式积压的游标 FIFO 队列。未经过提供方侧测量时，本分叉不会宣称缓存命中率或首 Token 延迟有所提升。
+> **开发者预览：** 在首个带标签的版本发布前，可能会出现破坏兼容性的变更。
 
-## 开发者预览
+## 选择需要的构建
 
-DeepSeek Harness 目前处于 _开发者预览_ 阶段，正在快速迭代。**未来将出现破坏兼容性的变更。**
+| 目标 | 入口 | 实际运行内容 |
+| --- | --- | --- |
+| 体验官方上游软件包 | `npx @deepseek-ai/dsh web` | DeepSeek AI 发布的软件包 |
+| 运行此维护分支 | 克隆此仓库后运行 `pnpm dsh` | 下文说明的分支功能 |
+
+npm 命令不会安装此分支。需要韩语 UI、OpenCodex 提供方、更新器、移动端修复或传输层变更时，请克隆 `himomohi/deepseek-harness`。
+
+## 为什么使用此分支
+
+| 能力 | 当前行为 |
+| --- | --- |
+| 韩语 Web UI | `@deepseek-ai/dsh-client-locale-ko` 客户端插件加载韩语词典。 |
+| OpenCodex 模型 | OpenCodex 提供方可使用 `GET /models` 的实时结果替换其提示性模型目录。 |
+| 单命令 Web 生命周期 | 不带参数的 `dsh` 选择 Web 配置，输出规范 URL，并在未指定 `--no-open` 时打开浏览器；`dsh stop` 可识别受维护的启动路径。 |
+| 手机宽度布局 | 导航、初始设置、设置和聊天在移动视口宽度下保持可用。 |
+| 有序串流 | Host API、浏览器 WebSocket 和 TypeScript SDK 队列使用基于游标的 FIFO 排空方式，而不是反复移动数组。 |
+| 提供方感知的输出限制 | 显式调用设置优先，其次是精确匹配的已发现模型限制，再次是显式配置的路由限制；否则省略 `max_tokens`。 |
+| 更安全的上游更新 | `dsh update` 预览官方提交，必要时补全浅克隆历史，在合并前确认，重新构建，并验证分支自有标记。 |
+| 后台任务停止 | 会话标题栏的任务列表可通过 Host 的 `job.cancel` 命令取消正在运行的任务。 |
+| 浏览器通知 | 通用设置中的可选开关会在页面未聚焦时，对提问和已完成的回复发出通知。 |
+
+OpenCodex 当前使用共享的纯文本 chat-completions 适配器。图像输入只有在能力明确启用时才可用，不会在像素无法到达视觉模型时被静默接受。
 
 ## 运行
 
-### 通过 `npm` 运行
+### 从源代码运行
 
-安装 `Node.js`，然后运行：
-
-```sh
-npx @deepseek-ai/dsh web
-```
-
-该命令会启动 Web UI，默认地址为 `http://127.0.0.1:3080`。交互式终端会在默认浏览器中打开该地址；传入 `--no-open` 可只保留终端中的服务器。详见 [Web UI 指南](docs/user/guide/index.md)。
-
-### 从源码运行
-
-如需从本分叉的仓库源码运行：
+前置条件：Git、`Node.js ^22.19.0 || >=24.0.0`，以及 Corepack 或 pnpm。
 
 ```sh
 git clone https://github.com/himomohi/deepseek-harness.git
 cd deepseek-harness
+corepack enable
 pnpm install
 pnpm run build
 pnpm dsh
 ```
 
-运行 `pnpm dsh` 而不显式指定 profile 时，会选择 Web profile；`pnpm dsh web` 是对应的显式写法。
+默认 Web UI 监听 `http://127.0.0.1:3080`。交互式终端会使用默认浏览器打开该地址。
 
-## 分叉功能
+## 常用命令
 
-- **韩语语言包**：`@deepseek-ai/dsh-client-locale-ko` 以普通客户端插件提供 Web UI 韩语词典。
-- **OpenCodex 提供方**：`@deepseek-ai/dsh-llm-opencodex` 连接 OpenAI 兼容的 OpenCodex 代理，并可通过 `GET /models` 替换建议模型目录。
-- **单命令 Web 启动**：直接运行 `dsh` 会选择 Web profile、打印规范 URL，并在交互式终端中打开浏览器；传入 `--no-open` 时不会打开。
-- **线性流式队列**：Host API Proxy、浏览器 WebSocket 客户端和 TypeScript SDK 使用游标 FIFO 队列排空积压帧，同时保持顺序。
-- **上游更新**：`dsh update` 预览官方提交、在合并前确认、必要时展开浅克隆、重新构建，并检查所有仍在维护的分叉标记。
-- **远程安全**：`trustedHosts` 用于防御 DNS 重绑定，而不是身份认证。因此设置、凭据、原生对话框和 Host 侧模型发现仍仅限回环地址。
+| 命令 | 用途 |
+| --- | --- |
+| `pnpm dsh` | 启动默认 Web 配置。 |
+| `pnpm dsh web --no-open` | 启动 Web UI，但不打开浏览器。 |
+| `pnpm dsh stop` | 停止受维护的 Web 启动实例。 |
+| `pnpm dsh update --dry-run` | 预览上游提交和更新工作。 |
+| `pnpm dsh update` | 交互式合并官方默认分支、重新构建并验证分支标记。 |
 
-OpenCodex 当前复用仅文本的 chat-completions 线缆适配器。图片输入继续由能力检查拒绝，而不会在图片像素未到达视觉模型时被静默转换或接受。
+发生冲突、构建失败或标记缺失时，更新器会停止并提供修复指引。它不会在更新不完整时报告成功。
 
-## 更新本分叉
+## 架构概览
 
-```sh
-dsh update --dry-run
-dsh update
-dsh update --yes
+```text
+Preset
+  |
+  +-- Service Definition
+  +-- Service Provider
+  +-- Consumer
+  |
+  +--> Cordis plugin graph --> session log --> model/tool loop
 ```
 
-更新器会拉取官方仓库，在当前 checkout 为浅克隆时恢复隐藏的 Git 父提交，合并官方默认分支，安装依赖、构建，并检查分叉自有包标记。合并冲突或标记检查失败会输出可复制的修复提示并停止；部分更新绝不会被报告为成功。
+各项能力通过插件组装，而不是直接加入智能体循环。所有模型可见输入都必须能从持久会话日志重建。详情请参阅[架构文档](docs/architecture.md)和 [Cordis 论文](https://github.com/cordiverse/paper)。
 
-## 社区与支持
+## 安全性与当前限制
 
-- 欢迎通过 [GitHub Discussions](https://github.com/deepseek-ai/deepseek-harness/discussions) 提交反馈或 bug 报告。
-- 为你的插件仓库添加 [`dsh-plugin`](https://github.com/topics/dsh-plugin) 话题，便于被发现。
-- 欢迎加入 DeepSeek Harness 企微群：扫码添加企微小助手并填写入群问卷，完成后小助手会邀请你入群。
+- `trustedHosts` 用于防御 DNS 重绑定，并非身份验证。设置、凭据、原生对话框和 Host 侧模型发现因此仅允许环回访问。
+- 在提供方公开并验证图像传输前，OpenCodex 传输适配器保持纯文本模式。
+- 本 README 不会在缺少提供方测量的情况下宣称缓存命中率、首令牌时间、延迟或成本有所改善。
+- 此分支跟随持续变化的上游开发者预览，因此在合并官方变更前请运行 `dsh update --dry-run`。
 
-<table>
-  <thead>
-    <tr>
-      <th align="center">企微小助手</th>
-      <th align="center">入群问卷</th>
-      <th align="center">微信公众号</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td align="center"><img src="assets/community-wecom-assistant.png" alt="DeepSeek Harness 企微小助手二维码" width="180" height="180"></td>
-      <td align="center"><a href="https://trtgsjkv6r.feishu.cn/share/base/form/shrcnIt5twSVdLGD52KJBckGCgg"><img src="assets/community-wecom-survey.png" alt="DeepSeek Harness 入群问卷二维码" width="180" height="180"></a></td>
-      <td align="center"><img src="assets/community-wechat-official-account.png" alt="DeepSeek Harness 团队微信公众号二维码" width="180" height="180"></td>
-    </tr>
-  </tbody>
-</table>
+## 项目导航
 
-## 参与贡献
+- [变更日志](CHANGELOG.md) — 维护分支的版本历史。
+- [Web UI 指南](docs/user/guide/index.md) — 启动和浏览器使用方法。
+- [架构](docs/architecture.md) — 插件组合和运行时所有权。
+- [开发指南](docs/development.md) — 工作区、构建和验证流程。
+- [贡献指南](CONTRIBUTING.md) — 贡献要求。
+- [智能体说明](AGENTS.md) — 编码智能体的仓库规则。
 
-参见 [CONTRIBUTING.md](CONTRIBUTING.md)。
+## 社区
 
-## 开发
-
-请先阅读[开发指南](docs/development.md)与[架构文档](docs/architecture.md)。
-
-面向 agent：请遵循 [AGENTS.md](AGENTS.md)。
+- 通过 [GitHub Discussions](https://github.com/deepseek-ai/deepseek-harness/discussions) 提交上游反馈。
+- 为插件仓库添加 [`dsh-plugin`](https://github.com/topics/dsh-plugin) 主题。
+- 加入 [DeepSeek Harness Discord 社区](https://discord.gg/Ycq5dCaS4)。
 
 ## 许可证
 
-[MIT](LICENSE)
-
-第三方依赖及其许可证见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+[MIT](LICENSE)。第三方依赖及其许可证列于 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。

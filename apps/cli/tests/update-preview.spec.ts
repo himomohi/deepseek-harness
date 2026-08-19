@@ -50,13 +50,13 @@ describe('formatRepairPrompt', () => {
   it('is a pasteable AI request with repo, step, and conflicts', () => {
     const text = formatRepairPrompt({
       step: 'merge',
-      rootDir: '/Users/appcaster/Dev/deepseek-harness',
+      rootDir: '/workspace/deepseek-harness',
       detail: 'CONFLICT (content): packages/core/agent-loop/src/agent.ts',
       conflicts: ['packages/core/agent-loop/src/agent.ts'],
     })
     expect(text).toContain('아래 `dsh update` 실패를 고치고')
     expect(text).toContain('dsh update --yes')
-    expect(text).toContain('저장소: /Users/appcaster/Dev/deepseek-harness')
+    expect(text).toContain('저장소: /workspace/deepseek-harness')
     expect(text).toContain('단계: merge')
     expect(text).toContain('- packages/core/agent-loop/src/agent.ts')
     expect(text).toContain('locale-ko')
