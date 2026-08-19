@@ -43,7 +43,7 @@ export interface DirectProviderConfig<Model extends DeepSeekCatalogModel = DeepS
   /** Deployment thinking policy. */
   thinking?: 'enabled' | 'disabled'
   /** Default reasoning effort. */
-  reasoningEffort?: 'off' | 'high' | 'max'
+  reasoningEffort?: 'off' | 'low' | 'high' | 'max'
   /** Optional route-wide output-token cap. */
   maxTokens?: number
   /** Default combined request and response context capacity. */

@@ -180,8 +180,7 @@ export function apply(ctx: ClientContext): void {
     }, WebSearchCard)
     yield ctx.slots.register({
       name: 'settings.plugin.item',
-      id: 'opencodex',
-      order: 30,
+      key: OPENCODEX_NS,
       locale: NS,
       inject: () => openCodex.inject(),
     }, OpenCodexCard)

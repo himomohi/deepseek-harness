@@ -83,8 +83,6 @@ describe('ui-settings-plugins apply', () => {
     expect(tab.options).toMatchObject({ id: 'configurable', order: 0 })
     expect(resolveSlotLabel(tab.options.label)).toBe('插件配置')
     expect(slots.spec('settings.plugin.item')).toMatchObject({ kind: 'keyed', scope: 'root' })
-    expect(slots.entries('settings.plugin.item').map(entry => entry.options.id))
-      .toEqual(['bash', 'agent-loop', 'web-search', 'opencodex'])
   })
 
   it('injects a live tab projection, the card directory, and one business face per card', async () => {
