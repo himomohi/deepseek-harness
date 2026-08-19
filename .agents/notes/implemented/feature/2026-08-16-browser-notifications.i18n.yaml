@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-08-16-browser-notifications.md
-2026-08-16-browser-notifications.md: cc1fff5703b63875d1b4388c7aeb97a28b4a3612
-2026-08-16-browser-notifications.zh.md: 795079a399b32c99449d3a07442cf02513a6a8db
+2026-08-16-browser-notifications.md: fff5a8091b2db006e4b0b614be2d5e2d1df50853
+2026-08-16-browser-notifications.zh.md: c6c177a4b53b6b9043823bcf16a59347679c875a

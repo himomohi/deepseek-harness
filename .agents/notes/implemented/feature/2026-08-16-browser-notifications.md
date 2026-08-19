@@ -16,7 +16,7 @@ The first ready session-list snapshot is a quiet baseline. After that baseline, 
 
 Notifications are suppressed while the document is visible and focused. Clicking one focuses the browser window, opens the originating session if it still exists, and closes the notification. Browser permission and operating-system display policy remain authoritative. A denied permission is shown in settings and is never requested again by background synchronization.
 
-The Web bundle includes the plugin by default. The API proxy's explicit Web settings allowlist exposes this namespace to loopback configuration clients; registration alone does not cross that security boundary. The Korean language pack owns the corresponding Korean settings and notification dictionary.
+The Web bundle includes the plugin by default. Host settings registration exposes the namespace to loopback configuration clients. The Korean language pack owns the corresponding Korean settings and notification dictionary.
 
 ## Verification
 
