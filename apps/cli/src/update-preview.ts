@@ -78,7 +78,8 @@ export function formatRepairPrompt(failure: UpdateFailure): string {
     failure.detail.trim() || '(없음)',
     '',
     '요청:',
-    '- 머지 충돌이면 locale-ko와 포크 마커를 유지한 채 해결',
+    '- 버전만 다른 package.json 은 공식 버전으로 넘기고, 포크 기능은 본문째 다시 입히려 했음',
+    '- 남은 내용 충돌은 공식 변경을 살리되 locale-ko와 포크 기능을 온전히 유지한 채 해결',
     '- 설치/빌드 실패면 원인 고치고 재빌드',
     '- 포크 마커가 없으면 공식 덮어쓰기를 되돌리거나 다시 패치',
     '- 성공을 거짓말하지 말 것',
@@ -88,7 +89,7 @@ export function formatRepairPrompt(failure: UpdateFailure): string {
 export function formatUpdateFailure(failure: UpdateFailure): string {
   const title = {
     fetch: '공식 저장소를 가져오지 못했습니다.',
-    merge: '공식 머지가 충돌했습니다. 자동으로 해결하지 않습니다.',
+    merge: '공식 머지 충돌을 자동으로 넘기지 못했습니다.',
     install: '의존성 설치가 실패했습니다.',
     build: '빌드가 실패했습니다.',
     verify: '머지는 됐지만 포크 기능 마커가 빠졌습니다.',

@@ -1,7 +1,7 @@
 /**
  * Handler for `dsh update`: shows a short official-vs-fork preview, asks
- * before merging, then rebuilds quietly. Failures print a copy-paste prompt
- * an agent can use to self-heal.
+ * before merging, continues through mechanical conflicts, then rebuilds
+ * quietly. Failures print a copy-paste prompt an agent can use to self-heal.
  * @module @deepseek-ai/dsh/update
  */
 
@@ -12,6 +12,7 @@ import { stdin as stdinStream, stdout as stdoutStream } from 'node:process'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { FORK_FEATURES, pickUpstreamBranch, verifyCustomFeatures } from './custom-features.ts'
+import { continueOfficialMerge } from './update-merge.ts'
 import {
   formatUpdateFailure,
   formatUpdatePreview,
@@ -330,20 +331,29 @@ export async function runUpdate(options: UpdateOptions = {}): Promise<void> {
 
   process.stdout.write('[1/4] 머지… ')
   const merged = runQuiet('git', ['merge', upstreamBranch, '--no-edit', '--no-stat'], rootDir)
-  if (!merged.ok) {
-    const conflicts = unmergedFiles(rootDir)
+  if (!merged.ok && !mergeInProgress(rootDir)) {
     console.log('실패')
-    if (mergeInProgress(rootDir)) {
-      fail({
-        step: 'merge',
-        rootDir,
-        detail: `${merged.output}\nResolve then git commit, or git merge --abort.`,
-        conflicts,
-      })
-    }
-    fail({ step: 'merge', rootDir, detail: merged.output, conflicts })
+    fail({
+      step: 'merge',
+      rootDir,
+      detail: merged.output,
+      conflicts: unmergedFiles(rootDir),
+    })
   }
-  console.log('완료')
+  const continued = continueOfficialMerge(rootDir)
+  if (!continued.ok) {
+    console.log('실패')
+    fail({
+      step: 'merge',
+      rootDir,
+      detail: [merged.ok ? '' : merged.output, continued.output].filter(Boolean).join('\n'),
+      conflicts: continued.remaining,
+    })
+  }
+  const extras: string[] = []
+  if (!merged.ok && continued.resolved.length > 0) extras.push(`충돌 ${String(continued.resolved.length)}개 넘김`)
+  if (continued.kept.length > 0) extras.push('포크 기능 유지')
+  console.log(extras.length > 0 ? `완료 (${extras.join(', ')})` : '완료')
 
   process.stdout.write('[2/4] 의존성… ')
   const installed = runQuiet('pnpm', ['install', '--reporter=silent'], rootDir)

@@ -42,7 +42,7 @@ The npm command does not install this fork. Clone `himomohi/deepseek-harness` wh
 | Phone-width layouts | Navigation, setup, settings, and chat remain usable at mobile viewport widths. |
 | Ordered streaming | Host API, browser WebSocket, and TypeScript SDK queues use cursor-backed FIFO draining instead of repeated array shifting. |
 | Provider-aware output limits | Explicit call settings win, then an exact discovered model limit, then an explicitly configured route limit; otherwise `max_tokens` is omitted. |
-| Safer upstream updates | `dsh update` previews official commits, restores shallow history when needed, asks before merging, rebuilds, and verifies fork-owned markers. |
+| Safer upstream updates | `dsh update` previews official commits, restores shallow history when needed, asks before merging, continues through version-only `package.json` hunks, reapplies complete fork features, rebuilds, and verifies those features. |
 | Background job stop | The session-header job list can cancel a running job through the Host `job.cancel` command. |
 | Browser notifications | An opt-in General settings row notifies on questions and completed turns when the page is not focused. |
 
@@ -73,9 +73,9 @@ The default Web UI listens on `http://127.0.0.1:3080`. An interactive terminal o
 | `pnpm dsh web --no-open` | Start the Web UI without browser handoff. |
 | `pnpm dsh stop` | Stop a maintained Web launch. |
 | `pnpm dsh update --dry-run` | Preview upstream commits and update work. |
-| `pnpm dsh update` | Interactively merge the official default branch, rebuild, and verify fork markers. |
+| `pnpm dsh update` | Interactively merge the official default branch, continue through mechanical conflicts, rebuild, and verify fork markers. |
 
-A conflict, build failure, or missing marker stops the updater with repair guidance. It does not report success after a partial update.
+Remaining content conflicts, a build failure, or a missing implementation marker stop the updater with repair guidance. It does not report success after a partial update.
 
 ## Architecture at a glance
 

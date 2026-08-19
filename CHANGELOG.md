@@ -4,6 +4,15 @@ All notable changes and release notes for DeepSeek Harness (`dsh`) are documente
 
 ---
 
+## [0.1.0-rc.21] - 2026-08-19
+
+### Official merge continues through mechanical conflicts
+
+* `dsh update` takes official text, then reapplies complete fork features (default Web launch, update/stop, locale and notification rows, browser auto-open, real phone-width CSS, cursor queues, Chinese hero title) and continues install → build → verify.
+* Version-only `package.json` hunks keep the official version. Leftover content with no fork apply still stops with the copy-paste repair prompt.
+
+---
+
 ## [0.1.0-rc.20] - 2026-08-19
 
 ### Retire the dedicated OpenCodex adapter

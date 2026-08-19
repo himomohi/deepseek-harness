@@ -60,6 +60,7 @@ describe('formatRepairPrompt', () => {
     expect(text).toContain('단계: merge')
     expect(text).toContain('- packages/core/agent-loop/src/agent.ts')
     expect(text).toContain('locale-ko')
+    expect(text).toContain('버전만 다른 package.json')
     expect(text).toContain('성공을 거짓말하지 말 것')
   })
 
@@ -72,6 +73,17 @@ describe('formatRepairPrompt', () => {
     expect(text).toContain('빌드가 실패했습니다.')
     expect(text).toContain('AI에게 요청:')
     expect(text).toContain('error TS2304')
+  })
+
+  it('says leftover merge conflicts were not mechanical', () => {
+    const text = formatUpdateFailure({
+      step: 'merge',
+      rootDir: '/tmp/dsh',
+      detail: 'CONFLICT',
+      conflicts: ['README.md'],
+    })
+    expect(text).toContain('공식 머지 충돌을 자동으로 넘기지 못했습니다.')
+    expect(text).toContain('README.md')
   })
 })
 
