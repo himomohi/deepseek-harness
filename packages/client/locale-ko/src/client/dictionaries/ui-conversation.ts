@@ -61,7 +61,7 @@ export const ko = {
   'access.confirm.acknowledge': '위험을 이해했으며 계속하겠습니다',
   'access.confirm.cancel': '취소',
   'access.confirm.enable': '전체 접근 허용',
-  'hero.headline': '미지의 세계로',
+  'hero.headline': 'DeepSeek',
   'hero.preview': '미리보기',
   'hero.chooseWorkspace': '작업 공간 선택',
   'session.hierarchy': '세션 계층',
