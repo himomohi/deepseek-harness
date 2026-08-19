@@ -14,9 +14,9 @@ Status: implemented
 
 ## 决策
 
-任务状态以**每会话一帧的整份快照**到达浏览器，在注册表每一个会改变该会话可见内容的提交点推出。客户端保持一份 last-wins 镜像，由一个 header 入口渲染。没有 RPC，没有轮询，客户端不需要任何过期状态管理。
+任务状态以**每会话一帧的整份快照**到达浏览器，在注册表每一个会改变该会话可见内容的提交点推出。客户端保持一份 last-wins 镜像，由一个 header 入口渲染。状态投递不使用轮询，也不需要客户端过期状态管理。单独的 `job.cancel` 一元命令承载用户的停止请求；下一份快照仍是可见生命周期状态的权威。
 
-本次只交付列表。每个任务的流式输出与人类发起的中断是各自独立的阶段，而通道的形状让两者都不必推翻它。
+逐任务流式输出保持独立，因为读取它会消费模型的游标。人类取消沿用既有注册表生命周期，因此不需要第二套客户端状态模型。
 
 ### 线路形状
 
@@ -89,13 +89,15 @@ abstract onJobsChanged(listener: JobsChangedListener): () => void
 
 [`@deepseek-ai/dsh-client-ui-jobs`](../../../../packages/client/ui-jobs/README.md) 在 `conversation.session.header.actions` 注册一个条目，排在 subagent 目录之后。呈现契约归它自己的 README；值得记在这里的决策是：会话没有任务时控件根本不渲染；活跃角标为零时省略，让只剩历史的会话保留一个安静的入口；终态行保持可见，因为失败任务的 `detail` 是其失败唯一可读之处。
 
-因此一个运行中的一次性后台 subagent 会同时出现在那里和 subagent 目录里。两者回答不同的问题——目录负责进入子会话的 transcript，而这个列表是中断能力唯一可能附着的句柄——在这里屏蔽 `kind: 'subagent'` 会让中断那一期恰好对这批任务没有入口。
+运行中行带有由 `job.cancel({ sessionId, jobId })` 支持的停止按钮。插件注入会话绑定回调，而不是把连接服务交给 React 组件。宿主验证目标 Session 已挂载，并在存在时用它的活体 `Agent` 调用 `ctx.jobs.kill()`；注册表的 owner 围栏允许该调用方可见的有主和无主任务，并拒绝外部 id。未知和外部 id 共用一个可安全公开的失败。按钮在等待请求前锁定，准入后持续锁定直到快照离开 `running`，命令失败时重新启用并显示行内错误。
+
+因此一个运行中的一次性后台 subagent 会同时出现在那里和 subagent 目录里。两者回答不同的问题——目录负责进入子会话的 transcript，而这个列表负责取消后台任务——在这里屏蔽 `kind: 'subagent'` 会恰好移除这批任务的停止控件。
 
 ### 刻意不做的事
 
 **没有任何 Web 路径调用 `ctx.jobs.read()`。** 它消费唯一的输出游标，浏览器读一次就悄悄拿走了模型 `job_output` 永远看不到的字节。这该是一条有测试兜底的不变量而不是一条约定，因为它的故障在调用点完全不可见。
 
-**不做中断。** 那一期欠一个 seam 目前没有回答的决策：`kill()` 会把终态投递标为已上报，所以照今天的契约写出来的人类中断，会让模型一直以为它的任务还在跑。
+**取消不会合成模型通知。** `kill()` 把记录标为已上报，因此人类停止会抑制自动完成通知。注册表仍是权威：后续 `job_list` 或显式 `job_output` 会显示 stopping 或终态记录。新增独立的人类取消模型事件属于模型可见落账决策，而不是 Web 呈现细节。
 
 **帧上不带输出水位。** 输出那一期的增量通道才是锚点字段该出现的地方；现在加就是一个没有读者的字段。
 
@@ -115,9 +117,9 @@ abstract onJobsChanged(listener: JobsChangedListener): () => void
 
 ## 测试
 
-[web e2e 场景](../../../../apps/web/tests/background-job-list.e2e.ts)是端到端的证据，且无需密钥：一次真实的 `run_in_background` bash 调用注册进 `ctx.jobs`，header 的计数与行在没有任何用户操作的情况下出现，通过注册表杀掉该任务后打开着的列表翻到生产者给出的 detail。它断言的是整条投递链路，而不是其中某一层。
+[web e2e 场景](../../../../apps/web/tests/background-job-list.e2e.ts)是端到端的证据，且无需密钥：一次真实的 `run_in_background` bash 调用注册进 `ctx.jobs`，header 的计数与行在没有任何用户操作的情况下出现，点击停止会跨过浏览器载体、调用注册表取消，并把打开着的列表翻到生产者给出的 detail。它断言的是完整投递与命令路径，而不是其中某一层。
 
-在它之下，[`jobs-local`](../../../../packages/jobs/jobs-local/tests/jobs.spec.ts) 钉住变更订阅的全部四个提交点、对抛错观察者的包容，以及显式销毁与 fiber 拆除两条路径上的注销；[`api-proxy-jobs`](../../../../packages/host/apiproxy/tests/api-proxy-jobs.spec.ts) 钉住「非空才发 baseline」、三次变更推送、被丢弃的内部字段、无主扇出、不 resume 的保证，以及没有注册表的组合；客户端各套件钉住 last-wins 折叠、缺失键表示、两处清理，以及组件的排序、时长与关闭行为。
+在它之下，[`jobs-local`](../../../../packages/jobs/jobs-local/tests/jobs.spec.ts) 钉住变更订阅的全部四个提交点、对抛错观察者的包容，以及显式销毁与 fiber 拆除两条路径上的注销；[`api-proxy-jobs`](../../../../packages/host/apiproxy/tests/api-proxy-jobs.spec.ts) 钉住「非空才发 baseline」、三次变更推送、被丢弃的内部字段、无主扇出、不 resume 的保证、没有注册表时的拒绝、已结算重试准入与外部 owner 拒绝；客户端各套件钉住 last-wins 折叠、缺失键表示、两处清理、组件排序和时长、重复点击抑制、stopping 锁定、失败恢复与关闭行为。
 
 ## 影响
 
@@ -129,7 +131,7 @@ abstract onJobsChanged(listener: JobsChangedListener): () => void
 
 **终态行会堆积。** 注册表把已结算任务留到 owner 销毁，所以一个跑了很多后台命令的长会话会积出长列表。如果真的成为抱怨，给终态尾巴加上限是呈现层改动而非协议改动。
 
-**`stopping` 今天几乎不可达。** 只有模型的 `job_kill` 会产生它，所以这个状态会被渲染但在人类中断落地之前很少见到。现在就纳入联合类型，是因为把它留在外面会让那一期变成一次线路变更。
+**人类和模型取消共用 `stopping`。** `job.cancel` 与模型的 `job_kill` 都调用 `ctx.jobs.kill()`，因此同一个注册表转换和整份快照推送驱动它们的 UI 状态。
 
 **一个运行中的 subagent 有两个入口。** 这是刻意接受的，且被限制在一次性后台委派这一种情况。如果实际用起来读着像噪声，修法是呈现层的——可以让目录行引用那个任务，而不是让任务列表隐藏这个 kind。
 

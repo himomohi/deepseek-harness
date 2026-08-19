@@ -4,6 +4,15 @@ All notable changes and release notes for DeepSeek Harness (`dsh`) are documente
 
 ---
 
+## [0.1.0-rc.19] - 2026-08-16
+
+### Web background signals and job control
+
+* Add an opt-in browser-notifications plugin. The General settings row is the only permission prompt; after a quiet first session-list snapshot, question and completion transitions notify when the page is not focused.
+* Expose `job.cancel` on the Host API and a Stop control on running header-list rows. The Host rechecks registry ownership; foreign and unknown ids share one public-safe failure.
+
+---
+
 ## [0.1.0-rc.18] - 2026-08-15
 
 ### Fork startup regression repair

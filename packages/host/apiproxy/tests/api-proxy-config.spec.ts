@@ -414,10 +414,13 @@ describe('settings domain', () => {
     ctx.settings.register(settingsNamespace('ui-theme'), z.object({
       preference: z.union(['light', 'dark', 'system']).default('system'),
     }))
+    ctx.settings.register(settingsNamespace('ui-browser-notifications'), z.object({
+      enabled: z.boolean().default(false),
+    }))
     const api = createApiProxy(ctx, DEFAULTS)
     expect(expectOk(await api.settings.describe(request({}))).namespaces.map(view => view.ns))
-      .toEqual(['ui-onboarding', 'ui-theme'])
-    const frames = await collectHost(api, ['host/remote-event'], 2, async () => {
+      .toEqual(['ui-onboarding', 'ui-theme', 'ui-browser-notifications'])
+    const frames = await collectHost(api, ['host/remote-event'], 3, async () => {
       expectOk(await api.settings.mutate(request({
         ns: 'ui-onboarding',
         ops: [{ op: 'set', path: ['welcomeNoticeVersion'], value: 'v1' }],
@@ -426,8 +429,16 @@ describe('settings domain', () => {
         ns: 'ui-theme',
         ops: [{ op: 'set', path: ['preference'], value: 'dark' }],
       })))
+      expectOk(await api.settings.mutate(request({
+        ns: 'ui-browser-notifications',
+        ops: [{ op: 'set', path: ['enabled'], value: true }],
+      })))
     })
-    expect(frames).toEqual([forwardedSettings('ui-onboarding'), forwardedSettings('ui-theme')])
+    expect(frames).toEqual([
+      forwardedSettings('ui-onboarding'),
+      forwardedSettings('ui-theme'),
+      forwardedSettings('ui-browser-notifications'),
+    ])
   })
 
   it('serves the agent-preset namespace, so a browser preset picker can persist its choice', async () => {

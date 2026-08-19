@@ -190,6 +190,79 @@ describe('session/jobs change pushes', () => {
   })
 })
 
+describe('job.cancel', () => {
+  it('cancels a visible owned job and acknowledges an already-settled retry', async () => {
+    const { ctx, session, agent } = await harness(true)
+    const task = producer()
+    const jobId = ctx.jobs.start({ ...task.spec, owner: agent })
+    const proxy = api(ctx)
+
+    const first = await proxy.jobs.cancel({
+      rpcId: RpcId('t-job-cancel'),
+      payload: { sessionId: session.id, jobId },
+    })
+    expect(first.result).toEqual({ ok: true, value: { accepted: true } })
+    expect(ctx.jobs.get(jobId, agent).status).toBe('stopping')
+
+    task.settle({ status: 'killed', detail: 'signal: SIGTERM' })
+    const retry = await proxy.jobs.cancel({
+      rpcId: RpcId('t-job-cancel-retry'),
+      payload: { sessionId: session.id, jobId },
+    })
+    expect(retry.result).toEqual({ ok: true, value: { accepted: true } })
+  })
+
+  it('does not expose a foreign job through another session', async () => {
+    const { ctx, agent } = await harness(true)
+    const foreign = ctx.sessions.create()
+    const foreignAgent = {
+      id: foreign.id,
+      session: foreign,
+      inbox: new Inbox(foreign, { inserted: () => {}, discarded: () => {}, claimed: () => {} }),
+      status: 'idle',
+      ctx,
+    } as Agent
+    ctx.agents.register(foreignAgent)
+    const jobId = ctx.jobs.start({ ...producer().spec, owner: agent })
+
+    const response = await api(ctx).jobs.cancel({
+      rpcId: RpcId('t-job-cancel-foreign'),
+      payload: { sessionId: foreign.id, jobId },
+    })
+    expect(response.result).toEqual({
+      ok: false,
+      error: {
+        code: 'internal',
+        message: 'background job is no longer available',
+        details: {},
+      },
+    })
+    expect(ctx.jobs.get(jobId, agent).status).toBe('running')
+  })
+
+  it('fails when the session or job registry is unavailable', async () => {
+    const withoutJobs = await harness(false)
+    const proxy = api(withoutJobs.ctx)
+    const unavailable = await proxy.jobs.cancel({
+      rpcId: RpcId('t-job-cancel-unavailable'),
+      payload: { sessionId: withoutJobs.session.id, jobId: 'bash-1' as never },
+    })
+    expect(unavailable.result).toMatchObject({
+      ok: false,
+      error: { code: 'internal', message: 'background jobs are unavailable' },
+    })
+
+    const missing = await proxy.jobs.cancel({
+      rpcId: RpcId('t-job-cancel-session'),
+      payload: { sessionId: SessionId('missing'), jobId: 'bash-1' as never },
+    })
+    expect(missing.result).toMatchObject({
+      ok: false,
+      error: { code: 'session-not-found' },
+    })
+  })
+})
+
 describe('session/jobs without the registry', () => {
   it('emits no frames at all, so the client renders no entry point', async () => {
     const { ctx, session } = await harness(false)

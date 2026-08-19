@@ -5,6 +5,8 @@
  */
 
 import type { JobId } from '@deepseek-ai/dsh-jobs/brand'
+import type { SessionId } from '@deepseek-ai/dsh-session/types'
+import type { RpcRequest, RpcResponse } from './rpc.ts'
 
 /**
  * One background job as the client sees it.
@@ -33,4 +35,20 @@ export interface JobView {
   startedAt: number
   /** Epoch ms when the task settled; absent while live. */
   finishedAt?: number
+}
+
+/** Acknowledgement that the Host admitted one background-job cancellation. */
+export interface JobCancelReceipt {
+  accepted: true
+}
+
+/** Background-job unary methods. */
+export interface JobsApi {
+  /**
+   * Requests cancellation through the session that can see the job. The Host
+   * rechecks registry ownership before admitting the request.
+   */
+  cancel(
+    request: RpcRequest<{ sessionId: SessionId; jobId: JobId }>,
+  ): Promise<RpcResponse<JobCancelReceipt>>
 }

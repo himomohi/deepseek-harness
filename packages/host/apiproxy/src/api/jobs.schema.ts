@@ -6,7 +6,9 @@
 import { z } from 'zod'
 import type { JobId } from '@deepseek-ai/dsh-jobs/brand'
 import type { JobView } from './jobs.ts'
+import type { RequestPayload, ResponseValue } from './rpc-map.ts'
 import type { Wire } from './rpc.schema.ts'
+import { sessionIdSchema } from './sessions.schema.ts'
 
 /** JobId: one brand cast after non-empty string validation. */
 export const taskIdSchema = z.string().min(1) as unknown as z.ZodType<JobId>
@@ -31,3 +33,14 @@ export const taskViewSchema = z.object({
   startedAt: z.number().int().nonnegative(),
   finishedAt: z.number().int().nonnegative().optional(),
 }) satisfies z.ZodType<Wire<JobView>>
+
+/** job.cancel request payload. */
+export const jobCancelRequestSchema = z.object({
+  sessionId: sessionIdSchema,
+  jobId: taskIdSchema,
+}) satisfies z.ZodType<Wire<RequestPayload<'job.cancel'>>>
+
+/** job.cancel response value. */
+export const jobCancelValueSchema = z.object({
+  accepted: z.literal(true),
+}) satisfies z.ZodType<Wire<ResponseValue<'job.cancel'>>>

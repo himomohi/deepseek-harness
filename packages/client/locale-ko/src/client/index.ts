@@ -24,6 +24,7 @@ import { ko as sidebar } from './dictionaries/ui-sidebar.ts'
 import { ko as skill } from './dictionaries/ui-skill.ts'
 import { ko as subagent } from './dictionaries/ui-subagent.ts'
 import { ko as theme } from './dictionaries/ui-theme.ts'
+import { ko as browserNotifications } from './dictionaries/ui-browser-notifications.ts'
 import { ko as trajectory } from './dictionaries/ui-trajectory.ts'
 import { ko as userQuestions } from './dictionaries/ui-user-questions.ts'
 import { ko as workflowRun } from './dictionaries/ui-workflow-run.ts'
@@ -56,6 +57,7 @@ const DICTIONARIES: readonly [namespace: string, dictionary: Record<string, stri
   ['skill', skill],
   ['subagent', subagent],
   ['settings.theme', theme],
+  ['settings.browserNotifications', browserNotifications],
   ['trajectory', trajectory],
   ['question', userQuestions],
   ['workflowRun', workflowRun],

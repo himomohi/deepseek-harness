@@ -142,7 +142,7 @@ async function detailsTrack(page: Page): Promise<number> {
 // plugin's client bundle exists and exports apply, the loader fail-louds and
 // the frame never appears.
 const UI_PLUGIN_DIRS = [
-  'connection', 'runtime', 'ui-theme', 'locale', 'ui-layout', 'ui-sidebar',
+  'connection', 'runtime', 'ui-theme', 'ui-browser-notifications', 'locale', 'ui-layout', 'ui-sidebar',
   'ui-settings', 'ui-settings-general', 'ui-settings-models', 'ui-conversation',
   'ui-model-selection', 'ui-user-questions', 'ui-trajectory', '../session-query/session-log-export',
 ]

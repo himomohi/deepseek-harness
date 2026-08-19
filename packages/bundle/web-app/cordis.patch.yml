@@ -194,6 +194,9 @@
     - id: ui-settings-general
       name: '@deepseek-ai/dsh-client-ui-settings-general'
 
+    - id: ui-browser-notifications
+      name: '@deepseek-ai/dsh-client-ui-browser-notifications'
+
     - id: ui-settings-models
       name: '@deepseek-ai/dsh-client-ui-settings-models'
 

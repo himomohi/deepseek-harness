@@ -33,7 +33,10 @@ function job(over: Partial<JobView> = {}): JobView {
   }
 }
 
-function props(jobs: readonly JobView[] | undefined): JobListActionProps {
+function props(
+  jobs: readonly JobView[] | undefined,
+  cancelJob: JobListActionProps['cancelJob'] = () => Promise.resolve(null),
+): JobListActionProps {
   const state = {
     ids: [SESSION],
     byId: {},
@@ -46,7 +49,7 @@ function props(jobs: readonly JobView[] | undefined): JobListActionProps {
   function useSessions<T>(select: (snapshot: SessionListState) => T): T {
     return select(state)
   }
-  return { sessionId: SESSION, useSessions, t } as unknown as JobListActionProps
+  return { sessionId: SESSION, useSessions, t, cancelJob } as unknown as JobListActionProps
 }
 
 /**
@@ -58,6 +61,7 @@ function rowCells(): string[][] {
   return within(screen.getByRole('list', { name: zh['list.aria'] }))
     .getAllByRole('listitem')
     .map(row => [...row.children]
+      .filter(cell => cell.tagName !== 'BUTTON' && cell.getAttribute('role') !== 'status')
       .map(cell => cell.textContent ?? '')
       .filter(text => text !== ''))
 }
@@ -131,6 +135,96 @@ describe('JobListAction rows', () => {
     fireEvent.click(screen.getByRole('button'))
     const words = rowCells().map(cells => cells[2])
     expect(new Set(words)).toEqual(new Set(['运行中', '正在停止', '已完成', '已取消', '已失败']))
+  })
+})
+
+describe('JobListAction cancellation', () => {
+  it('requests cancellation once and keeps the popover open', async () => {
+    let resolve!: (failure: string | null) => void
+    const cancelJob = vi.fn(() => new Promise<string | null>((done) => { resolve = done }))
+    const { rerender } = render(<JobListAction {...props([job()], cancelJob)} />)
+    fireEvent.click(screen.getByRole('button', { name: '1 个后台任务运行中' }))
+
+    const stop = screen.getByRole('button', { name: '停止 pnpm run build' })
+    fireEvent.click(stop)
+    fireEvent.click(stop)
+    expect(cancelJob).toHaveBeenCalledTimes(1)
+    expect(stop.textContent).toBe('正在停止')
+    expect(stop.hasAttribute('disabled')).toBe(true)
+    expect(screen.getByRole('list', { name: zh['list.aria'] })).toBeDefined()
+
+    rerender(<JobListAction {...props([job()], cancelJob)} />)
+    await act(async () => { resolve(null); await Promise.resolve() })
+    expect(stop.hasAttribute('disabled')).toBe(true)
+
+    rerender(<JobListAction {...props([job({ status: 'stopping' })], cancelJob)} />)
+    expect(screen.getByRole('button', { name: '停止 pnpm run build' }).textContent).toBe('正在停止')
+  })
+
+  it('reenables the action and shows a Host failure', async () => {
+    const cancelJob = vi.fn()
+      .mockResolvedValueOnce('background job is no longer available')
+      .mockResolvedValueOnce(null)
+    const { rerender } = render(<JobListAction {...props([job()], cancelJob)} />)
+    fireEvent.click(screen.getByRole('button', { name: '1 个后台任务运行中' }))
+    const stop = screen.getByRole('button', { name: '停止 pnpm run build' })
+
+    await act(async () => { fireEvent.click(stop); await Promise.resolve() })
+    expect(stop.hasAttribute('disabled')).toBe(false)
+    expect(screen.getByRole('status').textContent).toBe('background job is no longer available')
+
+    await act(async () => { fireEvent.click(stop); await Promise.resolve() })
+    expect(screen.queryByRole('status')).toBeNull()
+    rerender(<JobListAction {...props([
+      job({ id: 'bash-2' as JobView['id'], label: 'replacement' }),
+    ], cancelJob)} />)
+    expect(screen.queryByRole('status')).toBeNull()
+  })
+
+  it('shows Error and non-Error rejections, and ignores a late failure after unmount', async () => {
+    const cancelJob = vi.fn()
+      .mockRejectedValueOnce(new Error('network down'))
+      .mockRejectedValueOnce('raw rejection')
+    const { unmount } = render(<JobListAction {...props([job()], cancelJob)} />)
+    fireEvent.click(screen.getByRole('button', { name: '1 个后台任务运行中' }))
+    const stop = screen.getByRole('button', { name: '停止 pnpm run build' })
+
+    await act(async () => { fireEvent.click(stop); await Promise.resolve() })
+    expect(screen.getByRole('status').textContent).toBe('network down')
+    await act(async () => { fireEvent.click(stop); await Promise.resolve() })
+    expect(screen.getByRole('status').textContent).toBe('raw rejection')
+
+    let reject!: (reason: string) => void
+    cancelJob.mockImplementationOnce(() => new Promise((_resolve, fail) => { reject = fail }))
+    fireEvent.click(stop)
+    unmount()
+    await act(async () => { reject('late'); await Promise.resolve() })
+  })
+
+  it('drops a row failure when that job leaves the visible set', async () => {
+    const cancelJob = vi.fn(() => Promise.resolve('gone'))
+    const { rerender } = render(<JobListAction {...props([job()], cancelJob)} />)
+    fireEvent.click(screen.getByRole('button', { name: '1 个后台任务运行中' }))
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: '停止 pnpm run build' }))
+      await Promise.resolve()
+    })
+    expect(screen.getByRole('status').textContent).toBe('gone')
+
+    rerender(<JobListAction {...props([
+      job({ id: 'bash-2' as JobView['id'], label: 'replacement' }),
+    ], cancelJob)} />)
+    expect(screen.queryByRole('status')).toBeNull()
+  })
+
+  it('renders an already-stopping job disabled without sending another request', () => {
+    const cancelJob = vi.fn(() => Promise.resolve(null))
+    render(<JobListAction {...props([job({ status: 'stopping' })], cancelJob)} />)
+    fireEvent.click(screen.getByRole('button', { name: '1 个后台任务运行中' }))
+    const stop = screen.getByRole('button', { name: '停止 pnpm run build' })
+    expect(stop.textContent).toBe('正在停止')
+    fireEvent.click(stop)
+    expect(cancelJob).not.toHaveBeenCalled()
   })
 })
 

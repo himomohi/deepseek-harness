@@ -15,10 +15,10 @@ export const name = 'client-ui-jobs-invariant'
 export const inject = ['invariants']
 
 /**
- * No runtime invariant: this package is a read-only projection of the
- * `jobsBySession` mirror onto one header slot entry. It emits no cordis
- * events, owns no cross-plugin mutable state, and its single slot registration
- * proves disposal through the HMR-safety spec.
+ * No runtime invariant: this package projects the `jobsBySession` mirror and
+ * injects one owner-checked Host mutation into a header slot entry. It emits
+ * no cordis events, owns no cross-plugin mutable state, and its single slot
+ * registration proves disposal through the HMR-safety spec.
  */
 const install: InvariantInstaller = () => {}
 

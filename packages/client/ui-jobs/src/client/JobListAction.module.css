@@ -123,3 +123,36 @@
 .duration {
   font-variant-numeric: tabular-nums;
 }
+
+.stop {
+  flex: none;
+  min-width: 42px;
+  height: 24px;
+  padding: 0 8px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 6px;
+  background: var(--dsw-alias-fill-l1);
+  color: var(--dsw-alias-label-secondary);
+  font-size: 11px;
+  line-height: 22px;
+  cursor: pointer;
+}
+
+.stop:hover:not(:disabled),
+.stop:focus-visible {
+  border-color: var(--dsw-alias-border-l1);
+  color: var(--dsw-alias-label-primary);
+}
+
+.stop:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.error {
+  flex-basis: 100%;
+  padding-left: 18px;
+  color: var(--dsw-alias-state-error-primary);
+  font-size: 11px;
+  line-height: 16px;
+}

@@ -124,7 +124,8 @@ const DEFAULT_MAX_MESSAGES = 50
  * is deferred work.
  */
 const WEB_SETTINGS_NAMESPACES = [
-  'agent-loop', 'shell', 'locale', 'permission', 'ui-conversation', 'ui-theme', 'web-search-deepseek',
+  'agent-loop', 'shell', 'locale', 'permission', 'ui-browser-notifications',
+  'ui-conversation', 'ui-theme', 'web-search-deepseek',
 ] as const
 
 /** Provider work budget: at most 100 calls and 2,000 inspected hits. */
@@ -2658,6 +2659,37 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
         }
         agent.cancel({ kind: 'user' }, { keepInbox: true })
         return Promise.resolve(ok(request, { accepted: true as const }))
+      },
+    },
+
+    jobs: {
+      cancel(request) {
+        const { sessionId, jobId } = request.payload
+        if (ctx.sessions.get(sessionId) === undefined) {
+          return Promise.resolve(err(request, {
+            code: 'session-not-found',
+            message: `session "${sessionId}" not found (not attached)`,
+            details: { sessionId },
+          }))
+        }
+        const jobs = ctx.get('jobs')
+        if (jobs === undefined) {
+          return Promise.resolve(err(request, {
+            code: 'internal',
+            message: 'background jobs are unavailable',
+            details: {},
+          }))
+        }
+        try {
+          jobs.kill(jobId, ctx.agents.get(sessionId), 'cancelled by user')
+          return Promise.resolve(ok(request, { accepted: true as const }))
+        } catch {
+          return Promise.resolve(err(request, {
+            code: 'internal',
+            message: 'background job is no longer available',
+            details: {},
+          }))
+        }
       },
     },
 

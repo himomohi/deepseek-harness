@@ -3,7 +3,8 @@
 // real theme gesture — click 深色 and the whole cascade runs: ThemeRuntime preference -> Host settings
 // -> theme/change -> ui-layout's presenter -> body attribute -> alias token +
 // browser theme-color metadata)
-// the Language row and busy-state Enter preference (both Host-backed), plus
+// the Language row, busy-state Enter preference, and browser notifications
+// (all Host-backed), plus
 // Permission as the persisted default for subsequently created sessions.
 // Zero model calls: everything is pure client + persistence state on a blank
 // frame, so there is no fixture and a stray stream would fail loud on the
@@ -64,6 +65,7 @@ describe('web e2e: settings modal and General preferences', () => {
     await dialog.getByRole('button', { name: 'Workspace Write' }).waitFor({ timeout: 10_000 })
     await expect.poll(() => dialog.getByText('语言', { exact: true }).count(), { timeout: 5_000 }).toBe(1)
     await expect.poll(() => dialog.getByText('外观', { exact: true }).count(), { timeout: 5_000 }).toBe(1)
+    await expect.poll(() => dialog.getByText('浏览器通知', { exact: true }).count(), { timeout: 5_000 }).toBe(1)
     const openDocument = dialog.getByRole('button', { name: '打开配置文件' })
     await openDocument.waitFor({ timeout: 10_000 })
     let openRequests = 0
@@ -127,6 +129,69 @@ describe('web e2e: settings modal and General preferences', () => {
     await trigger.click()
     await page.getByRole('dialog', { name: '设置' }).getByRole('button', { name: '关闭' }).click()
     await expect.poll(() => page.getByRole('dialog', { name: '设置' }).count(), { timeout: 5_000 }).toBe(0)
+    expect(tripwire.pageErrors).toEqual([])
+  }, 60_000)
+
+  it('stores the opt-in after browser permission is accepted', async () => {
+    onTestFailed(() => saveFailureShot(page, 'web-e2e-settings-browser-notifications'))
+    expect(scaffold.ctx.settings.describe().map(row => row.ns))
+      .toContain('ui-browser-notifications')
+    const described = await page.evaluate(async () => {
+      const rpcId = crypto.randomUUID()
+      const response = await fetch('/api/settings.describe', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          type: 'client-request',
+          rpcId,
+          method: 'settings.describe',
+          payload: {},
+        }),
+      })
+      return response.json() as Promise<{
+        result: {
+          ok: boolean
+          value?: { namespaces: Array<{ ns: string }> }
+        }
+      }>
+    })
+    expect(described.result.ok).toBe(true)
+    expect(described.result.value?.namespaces.map(row => row.ns))
+      .toContain('ui-browser-notifications')
+    await page.addInitScript(() => {
+      class GrantedNotification {
+        static permission = 'granted'
+        static requestPermission(): Promise<NotificationPermission> {
+          return Promise.resolve('granted')
+        }
+
+        onclick: (() => void) | null = null
+
+        close(): void {}
+      }
+      Object.defineProperty(globalThis, 'Notification', {
+        configurable: true,
+        value: GrantedNotification,
+      })
+    })
+    await page.reload({ waitUntil: 'load' })
+    await page.waitForSelector('[class*="frame"]', { timeout: 30_000 })
+    await page.getByRole('button', { name: '设置', exact: true }).click()
+    const dialog = page.getByRole('dialog', { name: '设置' })
+    const toggle = dialog.getByRole('switch')
+    await toggle.waitFor({ timeout: 10_000 })
+    expect(await toggle.getAttribute('aria-label')).toBe('启用浏览器通知')
+    expect(await toggle.getAttribute('aria-checked')).toBe('false')
+    await toggle.click()
+    await expect.poll(() => toggle.getAttribute('aria-checked'), { timeout: 5_000 }).toBe('true')
+    await expect.poll(
+      async () => readFile(join(scaffold.harnessHome, 'settings.yaml'), 'utf8'),
+      { timeout: 5_000 },
+    ).toMatch(/ui-browser-notifications:\n\s+enabled: true/)
+    expect(await toggle.getAttribute('aria-label')).toBe('关闭浏览器通知')
+    await toggle.click()
+    await expect.poll(() => toggle.getAttribute('aria-checked'), { timeout: 5_000 }).toBe('false')
+    await page.keyboard.press('Escape')
     expect(tripwire.pageErrors).toEqual([])
   }, 60_000)
 

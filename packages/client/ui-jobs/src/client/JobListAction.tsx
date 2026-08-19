@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import type { JobView } from '@deepseek-ai/dsh-client-runtime/client'
 import { IconChevronDownOutline14, StateDot, type StateDotState } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { PropsLocale, PropsRuntime, TranslateNS } from '@deepseek-ai/dsh-client-ui-slots'
@@ -8,7 +8,17 @@ import css from './JobListAction.module.css'
 
 /** Full props for the session-header background-job action. */
 export type JobListActionProps =
-  PropsRuntime<'conversation.session.header.actions'> & PropsLocale<typeof NS>
+  PropsRuntime<'conversation.session.header.actions'> & PropsLocale<typeof NS> & JobListActionInjected
+
+/** Session-bound mutation face injected by the plugin. */
+export interface JobListActionInjected {
+  /**
+   * Requests cancellation of one visible job.
+   * @param jobId - registry identity from the current session's list.
+   * @returns null on admission; a user-visible Host failure otherwise.
+   */
+  cancelJob: (jobId: JobView['id']) => Promise<string | null>
+}
 
 /** Stable empty list so a session with no jobs keeps one array identity. */
 const NO_TASKS: readonly JobView[] = []
@@ -88,18 +98,27 @@ function ordered(jobs: readonly JobView[]): JobView[] {
  * Session-header entry point for this session's background jobs. It renders
  * nothing at all until the session has at least one job, so an ordinary
  * conversation never grows a control for a capability it is not using.
- * @param props - runtime slot currency plus the namespace translator.
+ * @param props - runtime slot currency, namespace translator, and job cancellation callback.
  * @returns the trigger and its popover list, or null when there is nothing to show.
  */
-export function JobListAction({ sessionId, useSessions, t }: JobListActionProps) {
+export function JobListAction({ sessionId, useSessions, t, cancelJob }: JobListActionProps) {
   const jobs = useSessions(state => state.jobsBySession[sessionId]) ?? NO_TASKS
   const [open, setOpen] = useState(false)
   const [now, setNow] = useState(() => Date.now())
+  const [pendingIds, setPendingIds] = useState<ReadonlySet<JobView['id']>>(() => new Set())
+  const [failures, setFailures] = useState<Readonly<Record<string, string>>>({})
+  const pendingRef = useRef(new Set<JobView['id']>())
+  const aliveRef = useRef(true)
   const rootRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
 
   const rows = useMemo(() => ordered(jobs), [jobs])
   const liveCount = useMemo(() => jobs.filter(isLive).length, [jobs])
+
+  useEffect(() => {
+    aliveRef.current = true
+    return () => { aliveRef.current = false }
+  }, [])
 
   useEffect(() => {
     if (!open) return
@@ -125,6 +144,45 @@ export function JobListAction({ sessionId, useSessions, t }: JobListActionProps)
   useEffect(() => {
     if (jobs.length === 0 && open) setOpen(false)
   }, [jobs.length, open])
+
+  useEffect(() => {
+    const runningIds = new Set(jobs.filter(job => job.status === 'running').map(job => job.id))
+    for (const id of pendingRef.current) {
+      if (!runningIds.has(id)) pendingRef.current.delete(id)
+    }
+    setPendingIds((current) => {
+      const next = new Set([...current].filter(id => runningIds.has(id)))
+      return next.size === current.size ? current : next
+    })
+    setFailures((current) => {
+      const visibleIds = new Set(jobs.map(job => job.id))
+      const next = Object.fromEntries(Object.entries(current).filter(([id]) => visibleIds.has(id as JobView['id'])))
+      return Object.keys(next).length === Object.keys(current).length ? current : next
+    })
+  }, [jobs])
+
+  const requestCancel = useCallback(async (jobId: JobView['id']): Promise<void> => {
+    pendingRef.current.add(jobId)
+    setPendingIds(current => new Set(current).add(jobId))
+    setFailures((current) => {
+      if (!(jobId in current)) return current
+      return Object.fromEntries(Object.entries(current).filter(([id]) => id !== jobId))
+    })
+    let failure: string | null
+    try {
+      failure = await cancelJob(jobId)
+    } catch (error: unknown) {
+      failure = error instanceof Error ? error.message : String(error)
+    }
+    if (!aliveRef.current || failure === null) return
+    pendingRef.current.delete(jobId)
+    setPendingIds((current) => {
+      const next = new Set(current)
+      next.delete(jobId)
+      return next
+    })
+    setFailures(current => ({ ...current, [jobId]: failure }))
+  }, [cancelJob])
 
   if (jobs.length === 0) return null
 
@@ -166,6 +224,7 @@ export function JobListAction({ sessionId, useSessions, t }: JobListActionProps)
           <ul className={css.menu} aria-label={t('list.aria')}>
             {rows.map((job) => {
               const live = isLive(job)
+              const pending = pendingIds.has(job.id)
               const elapsed = live ? now - job.startedAt : (job.finishedAt ?? job.startedAt) - job.startedAt
               const duration = formatDuration(elapsed, t)
               const status = statusLabel(job.status, t)
@@ -181,6 +240,22 @@ export function JobListAction({ sessionId, useSessions, t }: JobListActionProps)
                   >
                     {duration}
                   </span>
+                  {live
+                    ? (
+                      <button
+                        type="button"
+                        className={css.stop}
+                        aria-label={t('action.stop.aria', { label: job.label })}
+                        disabled={job.status === 'stopping' || pending}
+                        onClick={() => { void requestCancel(job.id) }}
+                      >
+                        {job.status === 'stopping' || pending ? t('action.stopping') : t('action.stop')}
+                      </button>
+                    )
+                    : null}
+                  {failures[job.id] === undefined
+                    ? null
+                    : <span className={css.error} role="status">{failures[job.id]}</span>}
                 </li>
               )
             })}

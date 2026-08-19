@@ -37,6 +37,7 @@ import { approvalRequestIdSchema, approvalResponsePayloadSchema } from '../src/a
 import { askUserQuestionAnswerSchema, questionResponsePayloadSchema } from '../src/api/questions.schema.ts'
 import { goalEditRequestSchema } from '../src/api/goals.schema.ts'
 import { subagentPromptRequestSchema } from '../src/api/subagents.schema.ts'
+import { jobCancelRequestSchema, jobCancelValueSchema } from '../src/api/jobs.schema.ts'
 
 describe('RpcId', () => {
   it('brands a raw string at zero runtime cost', () => {
@@ -286,6 +287,12 @@ describe('sessions domain schemas', () => {
     })).toThrow()
     expect(sessionCancelValueSchema.parse({ accepted: true }).accepted).toBe(true)
     expect(sessionUpdateQueueValueSchema.parse({ accepted: true }).accepted).toBe(true)
+    expect(jobCancelRequestSchema.parse({ sessionId: 's1', jobId: 'bash-1' })).toEqual({
+      sessionId: 's1',
+      jobId: 'bash-1',
+    })
+    expect(() => jobCancelRequestSchema.parse({ sessionId: 's1', jobId: '' })).toThrow()
+    expect(jobCancelValueSchema.parse({ accepted: true }).accepted).toBe(true)
     expect(contentBlockSchema.parse({ type: 'text', text: 'x', extra: 1 })).toMatchObject({ extra: 1 })
   })
 })

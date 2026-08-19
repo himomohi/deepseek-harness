@@ -7,10 +7,11 @@
 import { Context } from '@deepseek-ai/cordis'
 import { describe, expect, it } from 'vitest'
 import InvariantRegistry from '@deepseek-ai/dsh-invariants'
-import { SlotRegistry } from '@deepseek-ai/dsh-client-runtime/client'
+import { SlotRegistry, type SessionId } from '@deepseek-ai/dsh-client-runtime/client'
 import { stubSettingsScope } from '@deepseek-ai/dsh-client-test-runtime'
 import { apply as applyLocale, inject as localeInject } from '@deepseek-ai/dsh-client-locale/client'
 import { apply, inject } from '../src/client/index.ts'
+import type { JobListActionInjected } from '../src/client/JobListAction.tsx'
 import { apply as applyNode } from '../src/index.ts'
 import * as JobInvariant from '../src/invariant.ts'
 import { en, NS, zh } from '../src/client/locales.ts'
@@ -23,7 +24,10 @@ function headerEntryIds(ctx: Context): (string | undefined)[] {
 }
 
 /** Boot the browser half over a real slot tree that declares the header list. */
-async function bench(): Promise<{ ctx: Context; fiber: ReturnType<Context['plugin']> }> {
+async function bench(cancelResult: { ok: true; value: { accepted: true } } | { ok: false; error: { code: 'internal'; message: string; details: {} } } = {
+  ok: true,
+  value: { accepted: true },
+}): Promise<{ ctx: Context; fiber: ReturnType<Context['plugin']> }> {
   const ctx = new Context()
   await ctx.plugin(SlotRegistry).await()
   ctx.slots.register({
@@ -35,7 +39,7 @@ async function bench(): Promise<{ ctx: Context; fiber: ReturnType<Context['plugi
   ctx.provide('sessions', {})
   // The locale plugin binds a settings scope, which reads the connection handle
   // and the forwarded-event port.
-  ctx.provide('connection', { api: { settings: {} }, isLoopback: false } as never)
+  ctx.provide('connection', { api: { settings: {}, jobs: { cancel: () => Promise.resolve({ result: cancelResult }) } }, isLoopback: false } as never)
   ctx.provide('remote', { $on: () => () => {} } as never)
   ctx.provide('settingsScope', { bind: () => stubSettingsScope().scope } as never)
   await ctx.plugin({ inject: localeInject, apply: applyLocale }).await()
@@ -46,7 +50,7 @@ async function bench(): Promise<{ ctx: Context; fiber: ReturnType<Context['plugi
 
 describe('ui-job browser half', () => {
   it('declares the services it binds', () => {
-    expect(inject).toEqual(['sessions', 'slots', 'locale'])
+    expect(inject).toEqual(['connection', 'sessions', 'slots', 'locale'])
   })
 
   it('registers the header action, and fiber teardown removes it (HMR safety)', async () => {
@@ -66,6 +70,25 @@ describe('ui-job browser half', () => {
     // Withdrawn dictionaries leave the key unresolved rather than translated.
     await fiber.dispose()
     expect(translate('list.aria')).not.toBe(en['list.aria'])
+  })
+
+  it('injects the session-bound cancellation result', async () => {
+    const success = await bench()
+    const successEntry = success.ctx.slots.entries('conversation.session.header.actions')[0] as unknown as {
+      inject(sessionId: SessionId): JobListActionInjected
+    }
+    await expect(successEntry.inject('session' as SessionId).cancelJob('bash-1' as never))
+      .resolves.toBeNull()
+
+    const failure = await bench({
+      ok: false,
+      error: { code: 'internal', message: 'job unavailable', details: {} },
+    })
+    const failureEntry = failure.ctx.slots.entries('conversation.session.header.actions')[0] as unknown as {
+      inject(sessionId: SessionId): JobListActionInjected
+    }
+    await expect(failureEntry.inject('session' as SessionId).cancelJob('bash-1' as never))
+      .resolves.toBe('job unavailable')
   })
 
   it('keeps the English dictionary key-identical to the Chinese source of truth', () => {

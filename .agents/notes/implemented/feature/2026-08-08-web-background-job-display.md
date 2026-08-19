@@ -14,9 +14,9 @@ The session header was already the place where per-session background activity l
 
 ## Decision
 
-Task state reaches the browser as **one whole-snapshot mux frame per session**, pushed at every registry commit point that changes what that session can see. The client keeps a last-wins mirror; a header action renders it. There is no RPC, no polling, and no client-side staleness bookkeeping.
+Task state reaches the browser as **one whole-snapshot mux frame per session**, pushed at every registry commit point that changes what that session can see. The client keeps a last-wins mirror; a header action renders it. State delivery uses no polling or client-side staleness bookkeeping. A separate `job.cancel` unary command carries a user's stop request; the next snapshot remains the authority for the visible lifecycle state.
 
-This ships the list alone. Per-task streamed output and a human-initiated cancellation are separate phases, and the channel is shaped so neither has to undo it.
+Per-task streamed output remains separate because reading it would consume the model's cursor. Human cancellation uses the existing registry lifecycle and therefore needs no second client-side state model.
 
 ### Wire shape
 
@@ -89,13 +89,15 @@ Two clears keep it honest. On re-subscribe the manager drops the session's mirro
 
 [`@deepseek-ai/dsh-client-ui-jobs`](../../../../packages/client/ui-jobs/README.md) registers one entry in `conversation.session.header.actions`, ordered after the subagent catalog. Its own README owns the presentation contract; the decisions worth recording here are that the control does not render at all until the session has a task, that the live badge is omitted at zero so a history-only session keeps a quiet entry point, and that settled rows stay visible because a failed task's `detail` is the only place its failure is legible.
 
-A running one-shot background subagent therefore appears both there and in the subagent catalog. The two answer different questions — the catalog navigates into the child's transcript, this list is the only handle a cancellation can ever attach to — and suppressing `kind: 'subagent'` here would leave the cancellation phase with no entry point for exactly those tasks.
+A running row carries a Stop button backed by `job.cancel({ sessionId, jobId })`. The plugin injects a session-bound callback rather than giving the React component a connection service. The Host verifies that the addressed Session is attached and asks `ctx.jobs.kill()` with its live `Agent` when present; the registry's owner fence admits owned and unowned jobs visible to that caller and rejects foreign ids. Unknown and foreign ids share one public-safe failure. The button locks before awaiting the request, remains locked after admission until the snapshot leaves `running`, and re-enables with a row-local error when the command fails.
+
+A running one-shot background subagent therefore appears both there and in the subagent catalog. The two answer different questions — the catalog navigates into the child's transcript, while this list cancels the background job — and suppressing `kind: 'subagent'` here would remove the stop control for exactly those tasks.
 
 ### What this deliberately does not do
 
 **No web path calls `ctx.jobs.read()`.** It consumes the single output cursor, so a browser read would silently take bytes the model's `job_output` will never see. This is an invariant worth a test rather than a convention, because the failure is invisible at the call site.
 
-**No cancellation.** That phase owes a decision the seam does not currently answer: `kill()` marks terminal delivery reported, so a human interrupt written against today's contract would leave the model believing its task is still running.
+**Cancellation does not synthesize a model notice.** `kill()` marks the record reported, so a human stop suppresses the automatic completion notice. The registry remains authoritative: a later `job_list` or explicit `job_output` shows the stopping or terminal record. Adding a separate human-cancellation model event would be a model-visible logging decision, not a Web presentation detail.
 
 **No output watermark on the frame.** The output phase's delta channel is where an anchor field earns its place; one added now would have no reader.
 
@@ -115,9 +117,9 @@ A running one-shot background subagent therefore appears both there and in the s
 
 ## Testing
 
-The [web e2e scenario](../../../../apps/web/tests/background-job-list.e2e.ts) is the end-to-end proof and runs keyless: a real `run_in_background` bash call registers with `ctx.jobs`, the header count and row appear with no user interaction, and killing the task through the registry flips the open list to its producer detail. It asserts the whole delivery path rather than any single layer.
+The [web e2e scenario](../../../../apps/web/tests/background-job-list.e2e.ts) is the end-to-end proof and runs keyless: a real `run_in_background` bash call registers with `ctx.jobs`, the header count and row appear with no user interaction, and clicking Stop crosses the browser carrier, invokes the registry cancellation, and flips the open list to its producer detail. It asserts the whole delivery and command path rather than any single layer.
 
-Below it, [`jobs-local`](../../../../packages/jobs/jobs-local/tests/jobs.spec.ts) pins the change feed at all four commit points, its containment of a throwing observer, and its removal on both explicit disposal and fiber teardown; [`api-proxy-jobs`](../../../../packages/host/apiproxy/tests/api-proxy-jobs.spec.ts) pins the baseline-only-when-non-empty rule, the three change pushes, the dropped internal fields, the unowned fan-out, the no-resume guarantee, and the registry-absent composition; and the client suites pin the last-wins fold, the absent-key representation, both clears, and the component's ordering, duration, and dismissal behavior.
+Below it, [`jobs-local`](../../../../packages/jobs/jobs-local/tests/jobs.spec.ts) pins the change feed at all four commit points, its containment of a throwing observer, and its removal on both explicit disposal and fiber teardown; [`api-proxy-jobs`](../../../../packages/host/apiproxy/tests/api-proxy-jobs.spec.ts) pins the baseline-only-when-non-empty rule, the three change pushes, the dropped internal fields, the unowned fan-out, the no-resume guarantee, registry-absent rejection, accepted settled retries, and foreign-owner refusal; and the client suites pin the last-wins fold, the absent-key representation, both clears, component ordering and duration, duplicate-click suppression, the stopping lock, failure recovery, and dismissal behavior.
 
 ## Consequences
 
@@ -129,7 +131,7 @@ Below it, [`jobs-local`](../../../../packages/jobs/jobs-local/tests/jobs.spec.ts
 
 **Settled rows accumulate.** The registry retains settled tasks until owner disposal, so a long session with many background commands grows a long list. Capping the settled tail is a presentation change, not a protocol one, if it becomes a real complaint.
 
-**`stopping` is nearly unreachable today.** Only the model's `job_kill` produces it, so the state is rendered but rarely seen until human cancellation lands. It is in the union now because leaving a status out would have made that phase a wire change.
+**Human and model cancellation share `stopping`.** Both `job.cancel` and the model's `job_kill` use `ctx.jobs.kill()`, so the same registry transition and whole-snapshot push drive their UI state.
 
 **Two entry points for one running subagent.** Accepted deliberately, and bounded to one-shot background delegations. If it reads as noise in practice, the fix is presentational — the catalog row can cite the task rather than the task list hiding the kind.
 

@@ -29,6 +29,7 @@ describe('Korean language pack', () => {
     expect(locale.bind('common' as string)('cancel')).toBe('취소')
     expect(locale.bind('conversation' as string)('placeholder.default')).toBe('에이전트에게 메시지 보내기')
     expect(locale.bind('settings.models' as string)('title')).toBe('모델')
+    expect(locale.bind('settings.browserNotifications' as string)('title')).toBe('브라우저 알림')
 
     await fiber.dispose()
     expect(locale.getLocale().locales.map(item => item.id)).toEqual(['zh', 'en'])

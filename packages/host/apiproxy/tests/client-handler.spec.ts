@@ -20,6 +20,7 @@ function ok<T>(request: RpcRequest<unknown>, value: T): Promise<RpcResponse<T>> 
 function scriptedApi(overrides: {
   sessions?: Partial<ApiProxy['sessions']>
   subagents?: Partial<ApiProxy['subagents']>
+  jobs?: Partial<ApiProxy['jobs']>
   host?: Partial<ApiProxy['host']>
   skills?: Partial<ApiProxy['skills']>
   agentPresets?: Partial<ApiProxy['agentPresets']>
@@ -69,6 +70,10 @@ function scriptedApi(overrides: {
       prompt: r => ok(r, { messageId: 'message-1' as never }),
       interrupt: r => ok(r, { accepted: true as const }),
       ...overrides.subagents,
+    },
+    jobs: {
+      cancel: r => ok(r, { accepted: true as const }),
+      ...overrides.jobs,
     },
     host: {
       describe: r => ok(r, {
@@ -302,6 +307,23 @@ describe('unary round trip', () => {
     expect(incomplete.result.ok).toBe(false)
     if (!incomplete.result.ok) expect(incomplete.result.error.code).toBe('bad-request')
     expect(interrupt).toHaveBeenCalledTimes(1)
+  })
+
+  it('round-trips job.cancel and rejects an empty job id', async () => {
+    const cancel = vi.fn((r: RpcRequest<unknown>) => ok(r, { accepted: true as const }))
+    const c = client(scriptedApi({ jobs: { cancel } }))
+
+    const accepted = await c.jobs.cancel({
+      sessionId: sid('session'), jobId: 'bash-1' as never,
+    })
+    expect(accepted.result).toEqual({ ok: true, value: { accepted: true } })
+
+    const invalid = await c.jobs.cancel({
+      sessionId: sid('session'), jobId: '' as never,
+    })
+    expect(invalid.result.ok).toBe(false)
+    if (!invalid.result.ok) expect(invalid.result.error.code).toBe('bad-request')
+    expect(cancel).toHaveBeenCalledTimes(1)
   })
 
   it('rejects a method/path mismatch as bad-request', async () => {
