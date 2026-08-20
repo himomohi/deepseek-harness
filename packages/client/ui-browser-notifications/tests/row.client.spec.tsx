@@ -6,7 +6,7 @@ import {
   type SessionListState,
   type WorkspaceListState,
 } from '@deepseek-ai/dsh-client-runtime/client'
-import { bindSnapshotSelector } from '@deepseek-ai/dsh-client-web-react'
+import { bindSnapshotSelector } from '@deepseek-ai/dsh-client-test-runtime'
 import { BrowserNotificationsRow } from '../src/client/BrowserNotificationsRow.tsx'
 import type { BrowserNotificationsRowProps } from '../src/client/BrowserNotificationsRow.tsx'
 import { createBrowserNotificationRowStore } from '../src/client/settings-store.ts'

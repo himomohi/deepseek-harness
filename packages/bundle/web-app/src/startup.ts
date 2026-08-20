@@ -21,6 +21,8 @@ export const WEB_STARTUP_SERVICE = 'webStartup'
 
 /** What the web rows read from {@link WEB_STARTUP_SERVICE}. */
 export interface WebStartupValues {
+  /** Whether this invocation opens the default browser after startup. */
+  openBrowser: boolean
   /** `--host`, absent when the invocation did not name one. */
   host?: string
   /** `--port`, absent when the invocation did not name one. */
@@ -34,6 +36,7 @@ export interface WebStartupValues {
 /** The web flag family, as commander parsed it. */
 interface WebOptions {
   host?: string
+  open: boolean
   port?: string
   trustedHost?: string[]
   open?: boolean
@@ -59,12 +62,14 @@ function webCommand(): Command {
     .description('Serve the DeepSeek Harness browser UI.')
     .helpOption('-h, --help', 'show this help')
     .option('--host <host>', 'bind host')
+    .option('--no-open', 'do not open the Web UI in the default browser')
     .option('--port <port>', 'listen port; pass 0 to let the OS pick a free one')
     .option('--trusted-host <authority...>', 'extra authority the /api browser-trust fence accepts (host or host:port; repeatable)')
     .option('--no-open', 'serve without opening the default browser')
     .addHelpText('after', `
 Examples:
   dsh --profile web                          serve on the composed host and port
+  dsh --profile web --no-open                serve without opening a browser
   dsh --profile web --port 8080              serve on another port
   dsh --no-open                              serve the default Web profile without opening a browser
 `)
@@ -88,6 +93,7 @@ export function apply(ctx: Context): void {
       program.error(`error: --port must be a number, got ${JSON.stringify(options.port)}`)
     }
     ctx.provide(WEB_STARTUP_SERVICE, {
+      openBrowser: options.open,
       ...options.host !== undefined && { host: options.host },
       ...options.port !== undefined && { port: Number(options.port) },
       trustedHosts: options.trustedHost ?? [],

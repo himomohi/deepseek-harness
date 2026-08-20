@@ -24,6 +24,7 @@ import { ZH_BROWSER_LOCALE, saveFailureShot } from './support.ts'
 
 const SNAPSHOT_DIR = fileURLToPath(new URL('./snapshots/settings-chrome', import.meta.url))
 const DIALOG_EXPECTED = join(SNAPSHOT_DIR, 'dialog.expected.md')
+const DIALOG_EN_EXPECTED = join(SNAPSHOT_DIR, 'dialog-en.expected.md')
 const KOREAN_DIALOG_EXPECTED = join(SNAPSHOT_DIR, 'dialog.ko.expected.md')
 const PLUGINS_EXPECTED = join(SNAPSHOT_DIR, 'plugins.expected.md')
 const PLUGIN_ROW_SELECTOR = '[data-plugin-entry$="ui-settings"]'
@@ -567,9 +568,34 @@ describe('web e2e: settings modal and General preferences', () => {
     }
   }, 90_000)
 
+  it('opens a browser asking for no shipped language in English', async () => {
+    const fresh = await launchWebScaffold({})
+    const frPage = await browser.newPage({ viewport: { width: 1680, height: 1000 }, locale: 'fr-FR' })
+    const frTripwire = watchConsole(frPage)
+    onTestFailed(() => saveFailureShot(frPage, 'web-e2e-settings-unshipped-language'))
+    try {
+      await frPage.goto(fresh.baseUrl, { waitUntil: 'load' })
+      await frPage.waitForSelector('[class*="frame"]', { timeout: 30_000 })
+      expect(await frPage.evaluate(() => localStorage.getItem('dsh.locale'))).toBeNull()
+      await frPage.getByRole('button', { name: 'Settings', exact: true }).click()
+      const dialog = frPage.getByRole('dialog', { name: 'Settings' })
+      await dialog.waitFor({ timeout: 10_000 })
+      await dialog.getByRole('button', { name: 'English' }).waitFor({ timeout: 10_000 })
+      expect(await frPage.evaluate(() => document.documentElement.lang)).toBe('en')
+      const snapshot = await captureStableAria(frPage, '[role="dialog"]', fresh.workspaceCwd)
+      await compareOrRefreshGolden(DIALOG_EN_EXPECTED, snapshot, MODE)
+      expect(frTripwire.pageErrors).toEqual([])
+      expect(frTripwire.warnings).toEqual([])
+    } finally {
+      await frPage.close()
+      await fresh.close()
+    }
+  }, 90_000)
+
   it.skipIf(MODE === 'record')('keeps the fixture inventory closed', async () => {
     expect(tripwire.warnings).toEqual([])
     await assertFixtureInventory(SNAPSHOT_DIR, [
+      'dialog-en.expected.md',
       'dialog.expected.md',
       'dialog.ko.expected.md',
       'plugins.expected.md',

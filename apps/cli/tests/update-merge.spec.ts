@@ -289,6 +289,16 @@ describe('applyForkFeatures', () => {
     expect(next).toContain("from 'node:child_process'")
   })
 
+  it('preserves an upstream-owned browser handoff without legacy helper imports', () => {
+    const official = [
+      "import { spawn } from 'node:child_process'",
+      'const openBrowser = async (url: string): Promise<void> => { void url }',
+      'internals.openBrowser(url)',
+      '',
+    ].join('\n')
+    expect(applyForkFeatures('packages/bundle/web-app/src/index.ts', official)).toBe(official)
+  })
+
   it('is a no-op on the current fork FrameQueue', () => {
     const current = [
       'class FrameQueue<F> {',
