@@ -44,8 +44,6 @@ export interface Config {
   openBrowser: boolean
   /** Print the URL line on activation; a non-interactive layer can turn it off. */
   printUrl: boolean
-  /** Open the canonical URL after settled startup. */
-  openBrowser: boolean
   /**
    * Register the model-visible surface context (the `app:web-surface` prompt
    * section and the `DSH_WEB_URL` bash variable). A one-shot non-interactive
@@ -60,7 +58,6 @@ export interface Config {
 export const Config: z<Config> = z.object({
   openBrowser: z.boolean().default(true),
   printUrl: z.boolean().default(true),
-  openBrowser: z.boolean().default(false),
   surfaceContext: z.boolean().default(true),
   trustedHosts: z.array(String).default([]),
 })
@@ -266,10 +263,6 @@ export function apply(ctx: Context, config: Config): void {
       const port = ctx.webServer.port
       if (config.printUrl) {
         console.log(`dsh web: ${webUrl}${lanCandidate === undefined ? '' : ` (LAN: http://${lanCandidate}:${String(port)})`}`)
-        if (config.openBrowser) {
-          console.log(browserOpeningMessage(systemLocale(), url))
-          internals.openBrowser(url)
-        }
       }
       if (handoffBrowser) {
         console.log('dsh web: opening the default browser; pass --no-open to disable')

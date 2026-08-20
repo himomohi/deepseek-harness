@@ -292,8 +292,8 @@ describe('applyForkFeatures', () => {
   it('preserves an upstream-owned browser handoff without legacy helper imports', () => {
     const official = [
       "import { spawn } from 'node:child_process'",
-      'const openBrowser = async (url: string): Promise<void> => { void url }',
-      'internals.openBrowser(url)',
+      'async function openBrowser(url: string): Promise<void> { void url }',
+      'void internals.openBrowser(webUrl)',
       '',
     ].join('\n')
     expect(applyForkFeatures('packages/bundle/web-app/src/index.ts', official)).toBe(official)

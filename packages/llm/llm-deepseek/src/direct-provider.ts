@@ -14,6 +14,7 @@ import {
   LlmError,
   resolveRetryPolicy,
   type LlmDiscoveredModel,
+  type ModelModality,
   type LlmModelDiscoveryRequest,
   type RetryPolicyConfig,
 } from '@deepseek-ai/dsh-llm'
@@ -28,6 +29,7 @@ import { MAX_TIMER_DELAY_MS } from '@deepseek-ai/dsh-timeout'
 import { getOrCreateAnonymousUserId, type AnonymousUserId } from '@deepseek-ai/dsh-anonymous-user-id'
 import {
   DEFAULT_CONTEXT_WINDOW,
+  DEFAULT_MAX_REQUEST_IMAGE_BYTES,
   DEFAULT_STREAM_IDLE_TIMEOUT_MS,
   DeepSeekAdapter,
   type DeepSeekCatalogModel,
@@ -52,6 +54,8 @@ export interface DirectProviderConfig<Model extends DeepSeekCatalogModel = DeepS
   models?: Model[]
   /** Maximum provider idle interval while a stream read is pending. */
   streamIdleTimeoutMs?: number
+  /** Maximum accumulated base64 image payload per request. */
+  maxRequestImageBytes?: number
   /** Provider-owned request retry policy. */
   retryPolicy?: RetryPolicyConfig
 }
@@ -130,6 +134,11 @@ export function resolveDirectProviderOptions<Model extends DeepSeekCatalogModel>
       `${packageName}: streamIdleTimeoutMs must be a positive finite number no greater than ${MAX_TIMER_DELAY_MS}`,
     )
   }
+  const maxRequestImageBytes = config.maxRequestImageBytes ?? DEFAULT_MAX_REQUEST_IMAGE_BYTES
+  if (!Number.isSafeInteger(maxRequestImageBytes) || maxRequestImageBytes <= 0) {
+    throw new Error(`${packageName}: maxRequestImageBytes must be a positive safe integer`)
+  }
+  const modelModalities = ['text', 'image'] as const satisfies readonly ModelModality[]
   const seen = new Set<string>()
   const models = (config.models ?? defaults.defaultModels).map((model) => {
     if (model.id.length === 0) throw new Error(`${packageName}: catalog model ids must be non-empty`)
@@ -144,6 +153,16 @@ export function resolveDirectProviderOptions<Model extends DeepSeekCatalogModel>
       && (!Number.isInteger(model.maxTokens) || model.maxTokens <= 0)) {
       throw new Error(`${packageName}: catalog model "${model.id}" maxTokens must be a positive integer`)
     }
+    const inputModalities = model.inputModalities ?? ['text']
+    if (inputModalities.length === 0) {
+      throw new Error(`${packageName}: catalog model "${model.id}" inputModalities must not be empty`)
+    }
+    if (inputModalities.some(modality => !modelModalities.includes(modality))) {
+      throw new Error(`${packageName}: catalog model "${model.id}" inputModalities must contain only "text" and "image"`)
+    }
+    if (new Set(inputModalities).size !== inputModalities.length) {
+      throw new Error(`${packageName}: catalog model "${model.id}" inputModalities must not contain duplicates`)
+    }
     if (seen.has(model.id)) throw new Error(`${packageName}: duplicate catalog model "${model.id}"`)
     seen.add(model.id)
     return {
@@ -152,6 +171,7 @@ export function resolveDirectProviderOptions<Model extends DeepSeekCatalogModel>
       ...model.description === undefined ? {} : { description: model.description },
       ...model.contextWindow === undefined ? {} : { contextWindow: model.contextWindow },
       ...model.maxTokens === undefined ? {} : { maxTokens: model.maxTokens },
+      inputModalities: [...inputModalities],
     }
   })
   const maxTokens = config.maxTokens ?? defaults.defaultMaxTokens
@@ -168,6 +188,7 @@ export function resolveDirectProviderOptions<Model extends DeepSeekCatalogModel>
     defaultContextWindow: config.defaultContextWindow ?? DEFAULT_CONTEXT_WINDOW,
     models,
     streamIdleTimeoutMs,
+    maxRequestImageBytes,
     retryPolicy: resolveRetryPolicy(config.retryPolicy, `${packageName}: retryPolicy`),
   }
 }

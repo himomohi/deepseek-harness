@@ -398,7 +398,8 @@ function ensureChildProcessImports(content: string): string {
 function applyBrowserAutoOpenTs(content: string): string {
   // Upstream now owns the complete browser handoff. Preserve it verbatim;
   // injecting the older fork helper would add stale imports and duplicate behavior.
-  if (content.includes('internals.openBrowser(url)')) return content
+  if (content.includes('async function openBrowser(url: string)')
+    || content.includes('internals.openBrowser(url)')) return content
   let next = content
   if (!next.includes('openBrowser: boolean')) {
     next = next.replace(

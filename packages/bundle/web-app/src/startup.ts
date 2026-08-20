@@ -29,8 +29,6 @@ export interface WebStartupValues {
   port?: number
   /** Explicit `--trusted-host` authorities, in argument order. */
   trustedHosts: string[]
-  /** Open the canonical URL after settled startup. */
-  openBrowser: boolean
 }
 
 /** The web flag family, as commander parsed it. */
@@ -39,17 +37,6 @@ interface WebOptions {
   open: boolean
   port?: string
   trustedHost?: string[]
-  open?: boolean
-}
-
-/**
- * Decide whether one Web invocation opens a browser.
- * @param open - Commander's negated `--no-open` value.
- * @param interactive - Whether stdout belongs to an interactive terminal.
- * @returns true only for an interactive invocation that did not opt out.
- */
-export function shouldOpenBrowser(open: boolean | undefined, interactive: boolean | undefined): boolean {
-  return open !== false && interactive === true
 }
 
 /**
@@ -65,13 +52,11 @@ function webCommand(): Command {
     .option('--no-open', 'do not open the Web UI in the default browser')
     .option('--port <port>', 'listen port; pass 0 to let the OS pick a free one')
     .option('--trusted-host <authority...>', 'extra authority the /api browser-trust fence accepts (host or host:port; repeatable)')
-    .option('--no-open', 'serve without opening the default browser')
     .addHelpText('after', `
 Examples:
   dsh --profile web                          serve on the composed host and port
   dsh --profile web --no-open                serve without opening a browser
   dsh --profile web --port 8080              serve on another port
-  dsh --no-open                              serve the default Web profile without opening a browser
 `)
 }
 
@@ -97,7 +82,6 @@ export function apply(ctx: Context): void {
       ...options.host !== undefined && { host: options.host },
       ...options.port !== undefined && { port: Number(options.port) },
       trustedHosts: options.trustedHost ?? [],
-      openBrowser: shouldOpenBrowser(options.open, process.stdout.isTTY),
     } satisfies WebStartupValues)
   })
   parseCmdline(ctx, program)

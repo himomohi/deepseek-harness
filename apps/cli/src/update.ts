@@ -284,7 +284,10 @@ export async function runUpdate(options: UpdateOptions = {}): Promise<void> {
     })
   }
 
-  const preview = github
+  // A complete local checkout has the authoritative ancestry after a merge.
+  // GitHub compare describes the remote fork branch and remains stale until a
+  // push, so use it only when a shallow checkout cannot compute HEAD..upstream.
+  const preview = github && shallow
     ? previewFromGithubCompare(github.compare, { sha: localSha, version: localVersion, shallow }, {
       sha: github.officialSha || localFallback.officialSha,
       version: github.officialVersion,

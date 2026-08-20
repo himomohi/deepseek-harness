@@ -123,7 +123,7 @@ const DOCUMENT_LANGUAGE: Record<LocaleId, string> = { zh: 'zh-CN', en: 'en' }
 function syncDocumentLanguage(active: LocaleId): void {
   // Non-browser runs (node boots of the client tree) have no document.
   if (typeof document === 'undefined') return
-  document.documentElement.lang = DOCUMENT_LANGUAGE[active]
+  document.documentElement.lang = DOCUMENT_LANGUAGE[active] ?? active
 }
 
 /**

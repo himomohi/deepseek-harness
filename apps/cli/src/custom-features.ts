@@ -70,7 +70,7 @@ export const FORK_FEATURES: readonly ForkFeature[] = [
       },
       {
         path: 'packages/bundle/web-app/src/index.ts',
-        needle: 'internals.openBrowser(url)',
+        needle: 'internals.openBrowser(webUrl)',
         restorable: true,
       },
     ],
