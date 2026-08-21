@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-lsp-auto",
   "description": "Auto-detecting language-server front for the DeepSeek Harness LSP capability seam (ctx.lsp) — discovers installed servers per language at load (TypeScript/JS, Python, Go, Rust, C/C++, Lua, with npm-cache fallback probes) and registers them through dsh-lsp-stdio",
-  "version": "0.1.0-rc.6",
+  "version": "0.1.1-rc.1",
   "publishConfig": {
     "access": "public"
   },
