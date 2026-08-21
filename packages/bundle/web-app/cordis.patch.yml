@@ -140,7 +140,6 @@
       config:
         openBrowser: !!js ctx.webStartup.openBrowser
         printUrl: true
-        openBrowser: !!js ctx.webStartup.openBrowser
         surfaceContext: true
         trustedHosts: !!js ctx.webStartup.trustedHosts
 

@@ -264,6 +264,7 @@ export function installDirectProvider<Config extends DirectProviderConfig>(
     options,
     resolveApiKey: apiKey,
     resolveUserId: () => userId ??= getOrCreateAnonymousUserId(),
+    resolveAttachments: () => ctx.get('attachments'),
   })
   ctx.llm.registerConfigurableProviders([{
     provider: registration.provider,

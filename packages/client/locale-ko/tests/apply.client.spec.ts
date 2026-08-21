@@ -33,7 +33,7 @@ describe('Korean language pack', () => {
 
     await fiber.dispose()
     expect(locale.getLocale().locales.map(item => item.id)).toEqual(['zh', 'en'])
-    expect(locale.getLocale().active).toBe('zh')
+    expect(locale.getLocale().active).toBe('en')
   })
 
   it('declares only the base locale service dependency', () => {

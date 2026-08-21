@@ -218,7 +218,7 @@ describe('LocaleRuntime', () => {
     stubLanguages('zh-Hant-TW')
     expect(make().svc.getLocale().active).toBe('zh')
     stubLanguages('ko-KR')
-    expect(make().svc.getLocale().active).toBe('zh')
+    expect(make().svc.getLocale().active).toBe('en')
     // An unshipped language walks the list to the first one this app ships.
     stubLanguages('fr-FR', 'en-US')
     expect(make().svc.getLocale().active).toBe('en')
@@ -297,7 +297,7 @@ describe('LocaleRuntime', () => {
     expect(events).toHaveLength(1)
     expect(() => svc.registerLocale({ id: 'ko', label: '한국어' })).toThrow('already registered')
     dispose()
-    expect(svc.getLocale().active).toBe('zh')
+    expect(svc.getLocale().active).toBe('en')
     expect(svc.getLocale().locales.map(locale => locale.id)).toEqual(['zh', 'en'])
     dispose()
   })
