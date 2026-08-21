@@ -567,7 +567,7 @@ export interface Config {
 }
 ```
 
-Source: [`packages/credentials/credentials-local/src/index.ts:55`](../packages/credentials/credentials-local/src/index.ts)
+Source: [`packages/credentials/credentials-local/src/index.ts:64`](../packages/credentials/credentials-local/src/index.ts)
 
 <a id="deepseek-aidsh-e2b"></a>
 
@@ -863,7 +863,7 @@ export interface Config {
 }
 ```
 
-Source: [`packages/host/webserver/src/index.ts:45`](../packages/host/webserver/src/index.ts)
+Source: [`packages/host/webserver/src/index.ts:59`](../packages/host/webserver/src/index.ts)
 
 <a id="deepseek-aidsh-invariants"></a>
 
@@ -928,13 +928,13 @@ export interface Config {
   maxTokens?: number
   /** Positive context capacity used when the selected model has no exact value (default 1,000,000). */
   defaultContextWindow?: number
-  /** Advisory models shown by discovery consumers; defaults to V4 Flash and V4 Pro. */
+  /** Advisory models shown by discovery consumers; defaults to V4 Flash, V4 Pro, and V4 Flash Vision Exp. */
   models?: DeepSeekCatalogModel[]
   /** Maximum provider idle time while one stream read is outstanding (default five minutes). */
   streamIdleTimeoutMs?: number
   /** Maximum accumulated base64 image payload per request (default 20 MiB). */
   maxRequestImageBytes?: number
-  /** Provider-owned model-request retry policy; omission uses normal mode with five retries. */
+  /** Provider-owned model-request retry policy; omission uses normal defaults. */
   retryPolicy?: RetryPolicyConfig
 }
 
@@ -948,7 +948,7 @@ export interface DeepSeekCatalogModel {
   description?: string
   /** Known combined request/response context capacity; omitted when deployment metadata is unavailable. */
   contextWindow?: number
-  /** Per-request output cap for this model; omission falls back to the profile's {@link DeepSeekConnectionOptions.maxTokens}. */
+  /** Per-request output cap for this model; omission falls back to the route's optional {@link DeepSeekConnectionOptions.maxTokens}. */
   maxTokens?: number
   /** Accepted request modalities; omission is text-only. */
   inputModalities?: ModelModality[]
@@ -957,7 +957,7 @@ export interface DeepSeekCatalogModel {
 
 Depends on: [`ModelModality`](../packages/llm/llm/src/index.ts) · [`RetryPolicyConfig`](../packages/llm/llm/src/index.ts)
 
-Source: [`packages/llm/llm-deepseek/src/index.ts:66`](../packages/llm/llm-deepseek/src/index.ts)
+Source: [`packages/llm/llm-deepseek/src/index.ts:80`](../packages/llm/llm-deepseek/src/index.ts)
 
 <a id="deepseek-aidsh-llm-pi-ai"></a>
 
@@ -1275,7 +1275,7 @@ export interface ReplayModelConfig {
 
 Depends on: [`ModelModality`](../packages/llm/llm/src/index.ts) · [`RetryPolicyConfig`](../packages/llm/llm/src/index.ts)
 
-Source: [`packages/test-support/llm-replay/src/index.ts:776`](../packages/test-support/llm-replay/src/index.ts)
+Source: [`packages/test-support/llm-replay/src/index.ts:809`](../packages/test-support/llm-replay/src/index.ts)
 
 <a id="deepseek-aidsh-llm-retry"></a>
 
@@ -1289,6 +1289,32 @@ export type Config = Readonly<Record<string, never>>
 ```
 
 Source: [`packages/llm/llm-retry/src/index.ts:24`](../packages/llm/llm-retry/src/index.ts)
+
+<a id="deepseek-aidsh-lsp-auto"></a>
+
+## `@deepseek-ai/dsh-lsp-auto`
+
+Requires: `subprocess`
+
+```ts config-catalog
+/** Plugin configuration. */
+export interface Config {
+  /**
+   * Extra env merged over the credential-scrubbed ambient env. Used for PATH resolution during
+   * detection, for fallback probes, and for every spawned server. Default `{}`.
+   */
+  env?: Record<string, string>
+  /**
+   * Whether languages without an installed server may fall back to npm-cache probes. A
+   * network-less or offline deployment sets `false` to keep load local. Default `true`.
+   */
+  deferred?: boolean
+  /** Bound for one fallback probe in ms. Default 30000. */
+  probeTimeoutMs?: number
+}
+```
+
+Source: [`packages/lsp/lsp-auto/src/index.ts:43`](../packages/lsp/lsp-auto/src/index.ts)
 
 <a id="deepseek-aidsh-lsp-stdio"></a>
 
@@ -1437,8 +1463,9 @@ export interface Config {
    */
   presets?: Record<string, PresetSpec>
   /**
-   * Default for new sessions. When omitted, the preset matching the composed
-   * sandbox and approval defaults is used.
+   * Default for fresh sessions and eligible confirmed blank reuse. When
+   * omitted, the preset matching the composed sandbox and approval defaults
+   * is used.
    */
   defaultPreset?: string
 }
@@ -1458,7 +1485,7 @@ export interface PresetSpec {
 
 Depends on: [`ApprovalPolicy`](subsystems/approval.md) · [`SandboxMode`](subsystems/sandbox.md)
 
-Source: [`packages/interaction/permission-presets/src/index.ts:140`](../packages/interaction/permission-presets/src/index.ts)
+Source: [`packages/interaction/permission-presets/src/index.ts:168`](../packages/interaction/permission-presets/src/index.ts)
 
 <a id="deepseek-aidsh-persona"></a>
 
@@ -1498,7 +1525,7 @@ export interface PlanModeConfig {
 }
 ```
 
-Source: [`packages/plan/plan-mode/src/index.ts:71`](../packages/plan/plan-mode/src/index.ts)
+Source: [`packages/plan/plan-mode/src/index.ts:70`](../packages/plan/plan-mode/src/index.ts)
 
 <a id="deepseek-aidsh-pwsh-local"></a>
 
@@ -3191,12 +3218,15 @@ These load from a `cordis.yml` entry with no `config:` block; they declare no co
 - `@deepseek-ai/dsh-agent` ([`packages/core/agent/src/index.ts`](../packages/core/agent/src/index.ts))
 - `@deepseek-ai/dsh-api-gateway` — requires `typert` ([`packages/api/gateway/src/index.ts`](../packages/api/gateway/src/index.ts))
 - `@deepseek-ai/dsh-api-remotes` ([`packages/api/remotes/src/index.ts`](../packages/api/remotes/src/index.ts))
+- `@deepseek-ai/dsh-authorization` — requires `credentials` ([`packages/credentials/authorization/src/index.ts`](../packages/credentials/authorization/src/index.ts))
 - `@deepseek-ai/dsh-client-locale` ([`packages/client/locale/src/index.ts`](../packages/client/locale/src/index.ts))
+- `@deepseek-ai/dsh-client-locale-ko` ([`packages/client/locale-ko/src/index.ts`](../packages/client/locale-ko/src/index.ts))
 - `@deepseek-ai/dsh-client-modules` — requires `webServer` · `loader` ([`packages/client/modules/src/index.ts`](../packages/client/modules/src/index.ts))
 - `@deepseek-ai/dsh-client-runtime` ([`packages/client/runtime/src/index.ts`](../packages/client/runtime/src/index.ts))
 - `@deepseek-ai/dsh-client-ui-agent-preset` ([`packages/client/ui-agent-preset/src/index.ts`](../packages/client/ui-agent-preset/src/index.ts))
 - `@deepseek-ai/dsh-client-ui-attachment` ([`packages/client/ui-attachment/src/index.ts`](../packages/client/ui-attachment/src/index.ts))
 - `@deepseek-ai/dsh-client-ui-brand-official` ([`packages/client/ui-brand-official/src/index.ts`](../packages/client/ui-brand-official/src/index.ts))
+- `@deepseek-ai/dsh-client-ui-browser-notifications` — requires `settings` ([`packages/client/ui-browser-notifications/src/index.ts`](../packages/client/ui-browser-notifications/src/index.ts))
 - `@deepseek-ai/dsh-client-ui-commands` ([`packages/client/ui-commands/src/index.ts`](../packages/client/ui-commands/src/index.ts))
 - `@deepseek-ai/dsh-client-ui-conversation` ([`packages/client/ui-conversation/src/index.ts`](../packages/client/ui-conversation/src/index.ts))
 - `@deepseek-ai/dsh-client-ui-cordis` ([`packages/extensions/ui-cordis/src/index.ts`](../packages/extensions/ui-cordis/src/index.ts))

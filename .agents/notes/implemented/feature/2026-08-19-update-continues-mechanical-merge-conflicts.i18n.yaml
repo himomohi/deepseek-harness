@@ -3,4 +3,4 @@
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-08-19-update-continues-mechanical-merge-conflicts.md
 2026-08-19-update-continues-mechanical-merge-conflicts.md: ecdf055c327b4998dfe4ceaa558929f347fb6cea
-2026-08-19-update-continues-mechanical-merge-conflicts.zh.md: 2c6ac4431fa47d4f6a3d157d5cf30df8a2b68b39
+2026-08-19-update-continues-mechanical-merge-conflicts.zh.md: 2621225e088a2f771f7a84fd075148a445c52c9b

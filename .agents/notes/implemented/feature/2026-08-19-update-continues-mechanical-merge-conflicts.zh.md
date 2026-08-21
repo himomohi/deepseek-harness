@@ -36,4 +36,4 @@ CLI 单元测试覆盖仅版本冲突块、官方移位队列到游标队列的�
 
 ## Related
 
-[更新前展开浅历史](../bug-fix/2026-08-15-expand-shallow-history-before-update.md) 仍然负责让合并基重新变为真实祖先的 unshallow 获取。
+[更新前展开浅历史](../bug-fix/2026-08-15-expand-shallow-history-before-update.zh.md) 仍然负责让合并基重新变为真实祖先的 unshallow 获取。

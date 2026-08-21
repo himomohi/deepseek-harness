@@ -36,4 +36,4 @@ Vision Fallback 包、bundle 行、Models 卡片、语言文案、缓存和图�
 
 ## Related decisions
 
-[恢复默认 Web 启动](../bug-fix/2026-08-15-restore-default-web-launch.md) 负责根 profile 默认值和浏览器交接。
+[恢复默认 Web 启动](../bug-fix/2026-08-15-restore-default-web-launch.zh.md) 负责根 profile 默认值和浏览器交接。

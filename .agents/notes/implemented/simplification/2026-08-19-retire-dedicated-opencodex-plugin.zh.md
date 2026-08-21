@@ -26,6 +26,6 @@ Status: implemented
 
 ## Related decisions
 
-[共享直接 chat-completions 运行时](../architecture/2026-08-15-shared-direct-chat-completions-runtime.md) 仍拥有 DeepSeek 直接适配器。它早先否决 pi-ai OpenCodex 路径，是因为当时 OpenCodex 还没有 DSH 集成。
+[共享直接 chat-completions 运行时](../architecture/2026-08-15-shared-direct-chat-completions-runtime.zh.md) 仍拥有 DeepSeek 直接适配器。它早先否决 pi-ai OpenCodex 路径，是因为当时 OpenCodex 还没有 DSH 集成。
 
-[保持公开分支 README 为当前且可验证的说明](../process/2026-08-16-public-fork-readme-accuracy.md) 只能把 OpenCodex 列为模型页提供方，而不能列为分支自有包。
+[保持公开分支 README 为当前且可验证的说明](../process/2026-08-16-public-fork-readme-accuracy.zh.md) 只能把 OpenCodex 列为模型页提供方，而不能列为分支自有包。

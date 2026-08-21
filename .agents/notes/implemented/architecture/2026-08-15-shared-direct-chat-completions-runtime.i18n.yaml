@@ -3,4 +3,4 @@
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-08-15-shared-direct-chat-completions-runtime.md
 2026-08-15-shared-direct-chat-completions-runtime.md: b16876f37cd7e34c8789ffddb0dea3b197da0d6e
-2026-08-15-shared-direct-chat-completions-runtime.zh.md: ba39c1b442bb4bc1838ff87015c7e1b24dea7486
+2026-08-15-shared-direct-chat-completions-runtime.zh.md: 8f4a0ca910ee6b0b74c695402a16a0fd926e5489

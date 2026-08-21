@@ -2,6 +2,8 @@
   <img src="website/public/wordmark.svg" width="220" alt="DeepSeek Harness">
 </p>
 
+# DeepSeek Harness
+
 <p align="center"><strong>Composable agent infrastructure, maintained as a practical Korean-first fork.</strong></p>
 
 <p align="center">
@@ -16,7 +18,7 @@
   <a href="README.md">English</a> · <a href="README.zh.md">中文</a> · <a href="README.ko.md">한국어</a>
 </p>
 
-English | [中文](README.zh.md) | [한국어](README.ko.md)
+English | [中文](README.zh.md)
 
 DeepSeek Harness (`dsh`) is the open-source agent harness developed by [DeepSeek AI](https://deepseek.com). It is powered by [Cordis](https://github.com/cordiverse/cordis) and follows one architectural rule: **everything is a plugin**.
 

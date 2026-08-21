@@ -2,6 +2,8 @@
   <img src="website/public/wordmark.svg" width="220" alt="DeepSeek Harness">
 </p>
 
+# DeepSeek Harness
+
 <p align="center"><strong>可组合的智能体基础设施，由实用的韩语优先分支持续维护。</strong></p>
 
 <p align="center">
@@ -16,7 +18,7 @@
   <a href="README.md">English</a> · <a href="README.zh.md">中文</a> · <a href="README.ko.md">한국어</a>
 </p>
 
-[English](README.md) | 中文 | [한국어](README.ko.md)
+[English](README.md) | 中文
 
 DeepSeek Harness（`dsh`）是由 [DeepSeek AI](https://deepseek.com) 开发的开源智能体框架。它基于 [Cordis](https://github.com/cordiverse/cordis)，并遵循一条架构原则：**一切皆插件**。
 
@@ -48,7 +50,11 @@ npm 命令不会安装此分支。需要韩语 UI、更新器、移动端修复�
 
 OpenCodex 通过官方模型页作为 `llm-pi-ai` 提供方连接。此分支不附带专用 OpenCodex 适配器。
 
+<a id="run"></a>
+
 ## 运行
+
+<a id="run-from-source"></a>
 
 ### 从源代码运行
 
@@ -89,7 +95,7 @@ Preset
   +--> Cordis plugin graph --> session log --> model/tool loop
 ```
 
-各项能力通过插件组装，而不是直接加入智能体循环。所有模型可见输入都必须能从持久会话日志重建。详情请参阅[架构文档](docs/architecture.md)和 [Cordis 论文](https://github.com/cordiverse/paper)。
+各项能力通过插件组装，而不是直接加入智能体循环。所有模型可见输入都必须能从持久会话日志重建。详情请参阅[架构文档](docs/architecture.zh.md)和 [Cordis 论文](https://github.com/cordiverse/paper)。
 
 ## 安全性与当前限制
 
@@ -100,10 +106,10 @@ Preset
 ## 项目导航
 
 - [变更日志](CHANGELOG.md) — 维护分支的版本历史。
-- [Web UI 指南](docs/user/guide/index.md) — 启动和浏览器使用方法。
-- [架构](docs/architecture.md) — 插件组合和运行时所有权。
-- [开发指南](docs/development.md) — 工作区、构建和验证流程。
-- [贡献指南](CONTRIBUTING.md) — 贡献要求。
+- [Web UI 指南](docs/user/guide/index.zh.md) — 启动和浏览器使用方法。
+- [架构](docs/architecture.zh.md) — 插件组合和运行时所有权。
+- [开发指南](docs/development.zh.md) — 工作区、构建和验证流程。
+- [贡献指南](CONTRIBUTING.zh.md) — 贡献要求。
 - [智能体说明](AGENTS.md) — 编码智能体的仓库规则。
 
 ## 社区

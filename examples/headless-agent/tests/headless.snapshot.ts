@@ -5,6 +5,7 @@ import { delimiter, dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import {
   normalizeSessionLog,
+  normalizeSessionSnapshot,
   normalizeStdout,
   refreshFixtureReplacements,
   scrubRequestHeaders,
@@ -55,7 +56,6 @@ const dshBinScript = fileURLToPath(new URL('../../../apps/cli/src/bin.ts', impor
 const tsconfigPath = fileURLToPath(new URL('../../../tsconfig.json', import.meta.url))
 const reasoningConfigPath = fileURLToPath(new URL('./fixtures/cli.cordis.yml', import.meta.url))
 const deepseekDefaultsConfigPath = fileURLToPath(new URL('./fixtures/deepseek-defaults.cordis.yml', import.meta.url))
-
 const headlessOverlayPath = fileURLToPath(new URL('./fixtures/headless-profile.cordis.yml', import.meta.url))
 const headlessSessionExpected = join(snapshotsDir, 'headless-profile', 'session.expected.jsonl')
 const headlessFailureExpected = join(snapshotsDir, 'headless-profile', 'stderr.expected.txt')
@@ -71,14 +71,36 @@ interface PersistedLog {
   readonly header: JsonObject
 }
 
-interface ChatCompletionsDefaultsServer {
+/**
+ * Remove persistence envelopes before committing a refreshed replay fixture.
+ * @param rawLog - persisted or already-projected session JSONL.
+ * @returns projected session JSONL with its header line unchanged.
+ */
+function projectSessionFixture(rawLog: string): string {
+  let recordIndex = 0
+  return rawLog.split(/\r?\n/).map((line) => {
+    if (line.trim().length === 0) return line
+    const record = JSON.parse(line) as Record<string, unknown>
+    if (recordIndex++ === 0) {
+      if (record.type !== 'session') throw new Error('session fixture must start with a session header')
+      return line
+    }
+    delete record.seq
+    delete record.time
+    delete record.seq0
+    delete record.time0
+    return JSON.stringify(record)
+  }).join('\n')
+}
+
+interface DeepSeekDefaultsServer {
   readonly url: string
   readonly requests: JsonObject[]
   close(): Promise<void>
 }
 
-/** Serve one deterministic direct chat-completions response while retaining its request body. */
-async function chatCompletionsDefaultsServer(): Promise<ChatCompletionsDefaultsServer> {
+/** Serve one deterministic DeepSeek-compatible response while retaining its request body. */
+async function deepseekDefaultsServer(): Promise<DeepSeekDefaultsServer> {
   const requests: JsonObject[] = []
   const server = createServer((request: IncomingMessage, response: ServerResponse) => {
     let body = ''
@@ -106,9 +128,7 @@ async function chatCompletionsDefaultsServer(): Promise<ChatCompletionsDefaultsS
   })
   await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve))
   const address = server.address()
-  if (address === null || typeof address === 'string') {
-    throw new Error('chat-completions defaults snapshot server has no port')
-  }
+  if (address === null || typeof address === 'string') throw new Error('DeepSeek defaults snapshot server has no port')
   return {
     url: `http://127.0.0.1:${address.port}`,
     requests,
@@ -244,9 +264,9 @@ describe('headless stream-json snapshots', () => {
         const actual = logs[0]
         if (actual === undefined) throw new Error('the headless profile did not persist its session')
         const context = contextFromLogs([actual.content])
-        const session = scrubRequestHeaders(normalizeSessionLog(actual.content, context))
+        const session = normalizeSessionSnapshot(actual.content, context)
         if (refreshing) await writeFile(headlessSessionExpected, session)
-        expect(session).toBe(await readFile(headlessSessionExpected, 'utf8'))
+        await expect(session).toMatchFileSnapshot(headlessSessionExpected)
         expect(session).toContain(task)
         expect(session).toContain('CLI tool round trip complete: CLI_TOOL_ROUND_TRIP')
       },
@@ -386,14 +406,14 @@ describe('headless stream-json snapshots', () => {
             content: actual.content,
           }
           const replacements = refreshFixtureReplacements([harvested], [expectedSession])
-          expectedSession = tokenizeSessionFixtureCwd(
+          expectedSession = projectSessionFixture(tokenizeSessionFixtureCwd(
             stabilizeRefreshLog(actual.content, expectedSession, replacements, actualContext),
-          )
+          ))
           await writeFile(compactionSessionFixture, expectedSession)
         }
         const expectedContext = contextFromLogs([expectedSession])
-        expect(scrubRequestHeaders(normalizeSessionLog(actual.content, actualContext)))
-          .toBe(scrubRequestHeaders(normalizeSessionLog(expectedSession, expectedContext)))
+        expect(normalizeSessionSnapshot(actual.content, actualContext))
+          .toBe(normalizeSessionSnapshot(expectedSession, expectedContext))
       },
     })
 
@@ -520,7 +540,7 @@ describe('headless stream-json snapshots', () => {
   }, LOADER_SMOKE_TEST_TIMEOUT_MS)
 
   it('keeps provider comments alive and sends DeepSeek defaults through the one-shot app', async () => {
-    const server = await chatCompletionsDefaultsServer()
+    const server = await deepseekDefaultsServer()
     try {
       const result = await runLoaderSmoke({
         label: 'DeepSeek adapter defaults headless stream-json snapshot',
@@ -626,9 +646,9 @@ describe('headless stream-json snapshots', () => {
             if (existing === undefined || file === undefined) {
               throw new Error(`headless snapshot has no fixture for persisted log ${index}`)
             }
-            const stable = tokenizeSessionFixtureCwd(
+            const stable = projectSessionFixture(tokenizeSessionFixtureCwd(
               stabilizeRefreshLog(actual.content, existing, replacements, actualContext),
-            )
+            ))
             await writeFile(file, stable)
             return stable
           }))
@@ -637,8 +657,8 @@ describe('headless stream-json snapshots', () => {
         for (const [index, actual] of actualSessions.entries()) {
           const expected = expectedSessions[index]
           if (expected === undefined) throw new Error(`headless snapshot has no fixture for persisted log ${index}`)
-          expect(scrubRequestHeaders(normalizeSessionLog(actual.content, actualContext)))
-            .toBe(scrubRequestHeaders(normalizeSessionLog(expected, expectedContext)))
+          expect(normalizeSessionSnapshot(actual.content, actualContext))
+            .toBe(normalizeSessionSnapshot(expected, expectedContext))
         }
       },
     })
@@ -915,9 +935,9 @@ describe('headless stream-json snapshots', () => {
         expect(JSON.stringify(notices[0])).toContain('CHILD_RESULT')
 
         const context = contextFromLogs([parent.content, child.content])
-        const normalizedChild = scrubRequestHeaders(normalizeSessionLog(child.content, context))
+        const normalizedChild = normalizeSessionSnapshot(child.content, context)
         if (refreshing) await writeFile(childExpected, normalizedChild)
-        expect(normalizedChild).toBe(await readFile(childExpected, 'utf8'))
+        await expect(normalizedChild).toMatchFileSnapshot(childExpected)
         expect(normalizedChild).toContain('CHILD_RESULT')
         expect(normalizedChild).not.toContain('"name":"report"')
       },
@@ -969,14 +989,14 @@ describe('headless stream-json snapshots', () => {
             content: actual.content,
           }
           const replacements = refreshFixtureReplacements([harvested], [expectedSession])
-          expectedSession = tokenizeSessionFixtureCwd(
+          expectedSession = projectSessionFixture(tokenizeSessionFixtureCwd(
             stabilizeRefreshLog(actual.content, expectedSession, replacements, actualContext),
-          )
+          ))
           await writeFile(ptySessionFixture, expectedSession)
         }
         const expectedContext = contextFromLogs([expectedSession])
-        expect(scrubRequestHeaders(normalizeSessionLog(actual.content, actualContext)))
-          .toBe(scrubRequestHeaders(normalizeSessionLog(expectedSession, expectedContext)))
+        expect(normalizeSessionSnapshot(actual.content, actualContext))
+          .toBe(normalizeSessionSnapshot(expectedSession, expectedContext))
       },
     })
 

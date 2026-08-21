@@ -38,4 +38,4 @@ OpenCodex 删除复制的适配器、序列化器、解析器、转换器和 wir
 
 传输修复现在只需为两条路由实现一次，而提供方专属配置与发现仍独立记录。应用共享运行时和共享客户端凭据控制后，源代码重复检查报告零个克隆。
 
-共享位置仍以当前持有者命名。后续删除退役了专用 OpenCodex 包；见[退役专用 OpenCodex 提供方插件](../simplification/2026-08-19-retire-dedicated-opencodex-plugin.md)。
+共享位置仍以当前持有者命名。后续删除退役了专用 OpenCodex 包；见[退役专用 OpenCodex 提供方插件](../simplification/2026-08-19-retire-dedicated-opencodex-plugin.zh.md)。
