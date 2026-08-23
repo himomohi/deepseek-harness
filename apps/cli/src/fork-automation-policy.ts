@@ -27,13 +27,6 @@ const AUTOMATIC_TRIGGER = new RegExp(
 /** Marker shared by every active workflow stub in this fork. */
 export const DISABLED_WORKFLOW_MARKER = '# dsh-fork-automation: disabled'
 
-/** Relative paths used by the fork automation policy. */
-export const FORK_AUTOMATION_PATHS = {
-  workflows: WORKFLOW_DIRECTORY,
-  archive: ARCHIVE_DIRECTORY,
-  dependabot: DEPENDABOT_PATH,
-} as const
-
 /** Files changed while applying the fork automation policy. */
 export interface ForkAutomationPolicyResult {
   readonly changed: readonly string[]
@@ -128,7 +121,7 @@ export function disabledDependabotConfig(): string {
  * @param path - repository-relative path.
  * @returns true for a YAML workflow under `.github/workflows`.
  */
-export function isDisabledWorkflowPath(path: string): boolean {
+function isDisabledWorkflowPath(path: string): boolean {
   return path.startsWith(`${WORKFLOW_DIRECTORY}/`) && WORKFLOW_EXTENSION.test(path)
 }
 
