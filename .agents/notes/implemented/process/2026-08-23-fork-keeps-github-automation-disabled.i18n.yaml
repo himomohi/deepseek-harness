@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/process/2026-08-23-fork-keeps-github-automation-disabled.md
+2026-08-23-fork-keeps-github-automation-disabled.md: 5c7af09d806af92bf1d235c7e2365b8e83cc0d6b
+2026-08-23-fork-keeps-github-automation-disabled.zh.md: 7377b44b9ef653fa3e9fe0dc0b69f2b21e82afd5

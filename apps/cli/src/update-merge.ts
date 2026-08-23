@@ -14,6 +14,11 @@ import {
   forkFeaturePaths,
   forkFeaturesComplete,
 } from './update-fork-features.ts'
+import {
+  applyForkAutomationPolicy,
+  disabledAutomationStub,
+  isProtectedAutomationPath,
+} from './fork-automation-policy.ts'
 
 export { insertCompositionalMarker } from './update-fork-features.ts'
 
@@ -29,6 +34,7 @@ const FORK_OWNED_FILES = new Set([
   'apps/cli/src/update.ts',
   'apps/cli/src/stop.ts',
   'apps/cli/src/update-merge.ts',
+  'apps/cli/src/fork-automation-policy.ts',
   'apps/cli/src/update-fork-features.ts',
   'apps/cli/src/update-preview.ts',
   'apps/cli/src/custom-features.ts',
@@ -54,6 +60,7 @@ export interface MergeContinuationResult {
   readonly resolved: readonly string[]
   readonly remaining: readonly string[]
   readonly kept: readonly string[]
+  readonly disabledAutomation: readonly string[]
   readonly output: string
 }
 
@@ -212,6 +219,10 @@ export function planOfficialMergeContinuation(
   const takeOurs: string[] = []
   const unresolved: string[] = []
   for (const file of files) {
+    if (isProtectedAutomationPath(file.path)) {
+      writes.push({ path: file.path, content: disabledAutomationStub(file.path) })
+      continue
+    }
     if (basename(file.path) === LOCKFILE) {
       takeTheirs.push(file.path)
       continue
@@ -271,6 +282,7 @@ export function continueOfficialMerge(rootDir: string): MergeContinuationResult 
         resolved,
         remaining: listUnmerged(rootDir),
         kept: [],
+        disabledAutomation: [],
         output: error instanceof Error ? error.message : String(error),
       }
     }
@@ -287,6 +299,7 @@ export function continueOfficialMerge(rootDir: string): MergeContinuationResult 
         resolved,
         remaining: [...new Set([...listUnmerged(rootDir), path])],
         kept: [],
+        disabledAutomation: [],
         output: error instanceof Error ? error.message : String(error),
       }
     }
@@ -302,6 +315,7 @@ export function continueOfficialMerge(rootDir: string): MergeContinuationResult 
         resolved,
         remaining: [...new Set([...listUnmerged(rootDir), path])],
         kept: [],
+        disabledAutomation: [],
         output: error instanceof Error ? error.message : String(error),
       }
     }
@@ -313,17 +327,22 @@ export function continueOfficialMerge(rootDir: string): MergeContinuationResult 
       resolved,
       remaining,
       kept: [],
+      disabledAutomation: [],
       output: `unmerged after mechanical continue: ${remaining.join(', ')}`,
     }
   }
   let kept: readonly string[] = []
+  let disabledAutomation: readonly string[] = []
   try {
     kept = keepCompositionalMarkers(rootDir)
     for (const path of kept) git(rootDir, ['add', '--', path])
+    const automation = applyForkAutomationPolicy(rootDir)
+    disabledAutomation = [...automation.changed, ...automation.archived]
+    for (const path of disabledAutomation) git(rootDir, ['add', '--', path])
     if (mergeInProgress(rootDir)) {
       git(rootDir, ['commit', '--no-edit'])
-    } else if (kept.length > 0) {
-      git(rootDir, ['commit', '-m', 'chore(fork): keep fork features after official merge'])
+    } else if (kept.length > 0 || disabledAutomation.length > 0) {
+      git(rootDir, ['commit', '-m', 'chore(fork): keep fork features and disable automation'])
     }
   } catch (error) {
     return {
@@ -331,8 +350,9 @@ export function continueOfficialMerge(rootDir: string): MergeContinuationResult 
       resolved,
       remaining: listUnmerged(rootDir),
       kept,
+      disabledAutomation,
       output: error instanceof Error ? error.message : String(error),
     }
   }
-  return { ok: true, resolved, remaining: [], kept, output: '' }
+  return { ok: true, resolved, remaining: [], kept, disabledAutomation, output: '' }
 }

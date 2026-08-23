@@ -1,26 +1,14 @@
-name: Expected filenames
-
+# dsh-fork-automation: disabled
+# The upstream workflow is archived under .github/disabled-workflows/.
+# Re-enable it only after explicitly configuring this personal fork.
+name: dsh fork automation disabled - expected-filenames
 on:
-  pull_request:
-    paths:
-      - '*[gG][oO][lL][dD][eE][nN]*'
-      - '**/*[gG][oO][lL][dD][eE][nN]*'
-      - '!vendor/**'
-
-permissions:
-  contents: read
-
-env:
-  # CI runs must never report to the production telemetry endpoint baked
-  # into apps/cli/cordis.yml (AppCLIEntry disables the row when set).
-  DSH_TELEMETRY_DISABLED: '1'
-
+  workflow_dispatch:
 jobs:
-  expected-filenames:
-    name: no golden filenames
+  disabled:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-
-      - name: Check tracked filenames
-        run: scripts/check-expected-filenames.sh
+      - name: Explain disabled workflow
+        run: |
+          echo ".github/workflows/expected-filenames.yml is disabled in this fork."
+          echo "See .github/fork-automation-policy.md before reconnecting it."

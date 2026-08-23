@@ -138,6 +138,28 @@ describe('planOfficialMergeContinuation', () => {
     const plan = planOfficialMergeContinuation([{ path: 'gone.ts', content: undefined }], NEEDLES)
     expect(plan.unresolved).toEqual(['gone.ts'])
   })
+
+  it('replaces an upstream workflow conflict with the manual-only fork stub', () => {
+    const plan = planOfficialMergeContinuation([{
+      path: '.github/workflows/e2e.yml',
+      content: '<<<<<<< HEAD\nname: fork\n=======\nname: upstream\n>>>>>>> upstream/master\n',
+    }], NEEDLES)
+    expect(plan.writes[0]?.path).toBe('.github/workflows/e2e.yml')
+    expect(plan.writes[0]?.content).toContain('# dsh-fork-automation: disabled')
+    expect(plan.writes[0]?.content).toContain('workflow_dispatch:')
+    expect(plan.unresolved).toEqual([])
+  })
+
+  it('replaces a Dependabot conflict with the empty fork configuration', () => {
+    const plan = planOfficialMergeContinuation([{
+      path: '.github/dependabot.yml',
+      content: '<<<<<<< HEAD\nversion: 2\n=======\nversion: 2\n>>>>>>> upstream/master\n',
+    }], NEEDLES)
+    expect(plan.writes[0]?.path).toBe('.github/dependabot.yml')
+    expect(plan.writes[0]?.content).toContain('# dsh-fork-automation: disabled')
+    expect(plan.writes[0]?.content).toContain('updates: []')
+    expect(plan.unresolved).toEqual([])
+  })
 })
 
 describe('insertCompositionalMarker', () => {

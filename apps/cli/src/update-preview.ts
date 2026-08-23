@@ -54,7 +54,7 @@ export function formatUpdatePreview(preview: UpdatePreview): string {
   }
   const hidden = preview.officialAhead - shown.length
   if (hidden > 0) lines.push(`  … 외 ${hidden}개`)
-  lines.push('다음은 머지 → 설치 → 빌드 → 포크 기능 검사입니다.')
+  lines.push('다음은 머지 → 설치 → 빌드 → 포크 기능·자동화 정책 검사입니다.')
   return lines.join('\n')
 }
 

@@ -12,6 +12,7 @@ import { stdin as stdinStream, stdout as stdoutStream } from 'node:process'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { FORK_FEATURES, pickUpstreamBranch, verifyCustomFeatures } from './custom-features.ts'
+import { verifyForkAutomationPolicy } from './fork-automation-policy.ts'
 import { continueOfficialMerge } from './update-merge.ts'
 import {
   formatUpdateFailure,
@@ -356,6 +357,7 @@ export async function runUpdate(options: UpdateOptions = {}): Promise<void> {
   const extras: string[] = []
   if (!merged.ok && continued.resolved.length > 0) extras.push(`충돌 ${String(continued.resolved.length)}개 넘김`)
   if (continued.kept.length > 0) extras.push('포크 기능 유지')
+  if (continued.disabledAutomation.length > 0) extras.push('GitHub 자동화 비활성화')
   console.log(extras.length > 0 ? `완료 (${extras.join(', ')})` : '완료')
 
   process.stdout.write('[2/4] 의존성… ')
@@ -374,20 +376,27 @@ export async function runUpdate(options: UpdateOptions = {}): Promise<void> {
   }
   console.log('완료')
 
-  process.stdout.write('[4/4] 포크 기능 검사… ')
+  process.stdout.write('[4/4] 포크 정책 검사… ')
   const report = verifyCustomFeatures(
     relativePath => existsSync(resolve(rootDir, relativePath)),
     relativePath => readFileSync(resolve(rootDir, relativePath), 'utf8'),
   )
-  if (!report.ok) {
+  const automation = verifyForkAutomationPolicy(rootDir)
+  if (!report.ok || !automation.ok) {
     console.log('실패')
     fail({
       step: 'verify',
       rootDir,
-      detail: report.checks.filter(check => !check.ok).map(check => `${check.id}: ${check.missing.join(', ')}`).join('\n'),
-      missing: report.checks.flatMap(check => check.ok ? [] : check.missing.map(item => `${check.id}: ${item}`)),
+      detail: [
+        ...report.checks.filter(check => !check.ok).map(check => `${check.id}: ${check.missing.join(', ')}`),
+        ...(automation.ok ? [] : [`automation: ${automation.nonCompliant.join(', ')}`]),
+      ].join('\n'),
+      missing: [
+        ...report.checks.flatMap(check => check.ok ? [] : check.missing.map(item => `${check.id}: ${item}`)),
+        ...(automation.ok ? [] : automation.nonCompliant.map(item => `automation: ${item}`)),
+      ],
     })
   }
   console.log('통과')
-  console.log(`완료. ${upstreamBranch} 머지됨. ${FORK_FEATURES.map(feature => feature.id).join(' · ')} 검사 통과`)
+  console.log(`완료. ${upstreamBranch} 머지됨. ${FORK_FEATURES.map(feature => feature.id).join(' · ')} 및 GitHub Actions 정책 검사 통과`)
 }
