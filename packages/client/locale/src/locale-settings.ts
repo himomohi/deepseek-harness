@@ -8,13 +8,16 @@ export const LOCALE_SETTINGS_NAMESPACE = 'locale'
 /** Field carrying an explicit locale selection; absence delegates to the browser. */
 export const LOCALE_PREFERENCE_FIELD = 'preference'
 
-/** Locale identifiers provided by the base browser client. */
+/** Accepted BCP 47-style language ids. */
+export const LOCALE_ID_PATTERN = /^[A-Za-z]{2,8}(?:-[A-Za-z0-9]{1,8})*$/u
+
+/** Locale identifiers shipped by the browser client. */
 export const LOCALE_IDS = ['zh', 'en'] as const
 
-/** Locale identifiers whose dictionaries are owned by the base plugin. */
-export type BaseLocaleId = typeof LOCALE_IDS[number]
+/** Locale identifier shipped by the browser client. */
+export type BuiltInLocaleId = typeof LOCALE_IDS[number]
 
-/** Locale identifier persisted for a base or language-pack locale. */
+/** Open locale identifier accepted from language-pack plugins. */
 export type LocaleId = string
 
 /** Durable locale section shared by the Host schema and the browser scope. */
@@ -25,5 +28,5 @@ export interface LocaleSettings {
 
 /** Durable locale schema; also the wire envelope the browser scope validates against. */
 export const LocaleSettingsSchema: z<LocaleSettings> = z.object({
-  [LOCALE_PREFERENCE_FIELD]: z.string().required(false),
+  [LOCALE_PREFERENCE_FIELD]: z.string().pattern(LOCALE_ID_PATTERN).required(false),
 })

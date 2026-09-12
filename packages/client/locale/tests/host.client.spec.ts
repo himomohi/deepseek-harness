@@ -1,6 +1,6 @@
 import { Context } from '@deepseek-ai/cordis'
 import { describe, expect, it } from 'vitest'
-import { SettingsProvider, settingsNamespace, type SettingsNamespace } from '@deepseek-ai/dsh-settings'
+import { SettingsProvider, type SettingsNamespace } from '@deepseek-ai/dsh-settings'
 import {
   LOCALE_SETTINGS_NAMESPACE, apply,
 } from '@deepseek-ai/dsh-client-locale'
@@ -14,19 +14,19 @@ class MemorySettings extends SettingsProvider {
 }
 
 describe('locale host', () => {
-  it('registers an optional explicit locale preference with the Host settings lifecycle', async () => {
+  it('registers an open locale preference with the Host settings lifecycle', async () => {
     const ctx = new Context()
     await ctx.plugin(MemorySettings).await()
     const fiber = ctx.plugin({ apply })
     await fiber.await()
-    const ns = settingsNamespace(LOCALE_SETTINGS_NAMESPACE)
+    const ns = LOCALE_SETTINGS_NAMESPACE
     expect(ctx.settings.get(ns)).toEqual({})
     await ctx.settings.update(ns, { preference: 'en' })
     expect(ctx.settings.get(ns)).toEqual({ preference: 'en' })
-    // Language-pack ids are stored before their browser plugin is available;
-    // LocaleRuntime activates the value only after that locale registers.
-    await ctx.settings.update(ns, { preference: 'fr' })
-    expect(ctx.settings.get(ns)).toEqual({ preference: 'fr' })
+    await ctx.settings.update(ns, { preference: 'pt-BR' })
+    expect(ctx.settings.get(ns)).toEqual({ preference: 'pt-BR' })
+    await expect(ctx.settings.update(ns, { preference: 'bad locale' })).rejects.toThrow()
+    await expect(ctx.settings.update(ns, { preference: '123' })).rejects.toThrow()
     await fiber.dispose()
     expect(ctx.settings.describe().map(row => row.ns)).not.toContain(ns)
   })

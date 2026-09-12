@@ -9,13 +9,15 @@
  * covers everything the card shows.
  */
 
-import type { IApiClient } from '@deepseek-ai/dsh-client-connection/client'
-import type { SettingsScope, SnapshotStore } from '@deepseek-ai/dsh-client-runtime/client'
+import type { Context as ClientContext } from '@deepseek-ai/cordis'
+// Type-only: pulls the ctx.remote merge into this program.
+import type {} from '@deepseek-ai/dsh-api-remotes/client'
+import type { SnapshotStore } from '@deepseek-ai/dsh-client-store'
+import type { SettingsScope, SettingsScopeSnapshot } from '@deepseek-ai/dsh-client-ui-settings/client'
 import {
   CardForm, numberField, textField,
   type CardActions, type CardFieldState, type CardShell,
 } from './card-form.ts'
-import { CredentialControl } from './credential-control.ts'
 
 /**
  * Namespace of the DeepSeek search provider. Spelled here rather than
@@ -37,6 +39,16 @@ export interface WebSearchSettings {
   baseURL?: string
   /** Maximum searches served within one request. */
   maxUses?: number
+}
+
+/** What the credentials domain last reported, and for which reference. */
+interface CredentialState {
+  /** Reference this answer describes; a stale response for another one is dropped. */
+  ref: string
+  /** Whether any layer supplies a value for it. */
+  configured: boolean
+  /** Whether `credentials/set` can affect it; false disables the control. */
+  writable: boolean
 }
 
 /** What the web-search card renders. */
@@ -65,30 +77,25 @@ export interface WebSearchCardFace extends CardActions {
 export class WebSearchCardController {
   private readonly form: CardForm<WebSearchSettings>
   private readonly store: SnapshotStore<WebSearchCardState>
-  private readonly credential: CredentialControl<WebSearchSettings>
+  private credential: CredentialState = { ref: '', configured: false, writable: true }
 
   /**
    * @param scope - the bound settings scope for the `web-search-deepseek` namespace.
-   * @param api - wire face used for the credential the section references.
-  */
+   * @param ctx - the card plugin's context, whose `remote.credentials` namespace
+   * answers for the credential the section references.
+   */
   constructor(
-    scope: SettingsScope<WebSearchSettings>,
-    api: Pick<IApiClient, 'credentials'>,
+    private readonly scope: SettingsScope<WebSearchSettings>,
+    private readonly ctx: ClientContext,
   ) {
     this.form = new CardForm(
       scope,
       [textField('baseURL'), numberField('maxUses')],
       [{ field: API_KEY_FIELD, write: text => this.writeKey(text) }],
     )
-    this.credential = new CredentialControl(
-      scope,
-      api,
-      DEFAULT_API_KEY_REF,
-      () => { this.store.set(this.projection()) },
-    )
     this.store = this.form.bind(() => this.projection())
-    scope.subscribe(() => { void this.credential.read() })
-    void this.credential.read()
+    scope.subscribe(() => { void this.readCredential() })
+    void this.readCredential()
   }
 
   private projection(): WebSearchCardState {
@@ -97,9 +104,40 @@ export class WebSearchCardController {
       baseURL: this.form.field('baseURL'),
       maxUses: this.form.field('maxUses'),
       apiKey: this.form.field(API_KEY_FIELD),
-      apiKeyConfigured: this.credential.snapshot.configured,
-      apiKeyWritable: this.credential.snapshot.writable,
+      apiKeyConfigured: this.credential.configured,
+      apiKeyWritable: this.credential.writable,
     }
+  }
+
+  /**
+   * Ask the credentials domain about the reference the section currently names.
+   *
+   * The answer is stored with the reference it describes: `apiKeyEnv` can
+   * change between the request and its response, and two reads can settle out
+   * of order, so a response is published only while it still answers for the
+   * reference in force.
+   */
+  private async readCredential(): Promise<void> {
+    const ref = refOf(this.scope.getSnapshot())
+    if (ref !== this.credential.ref) {
+      // A new reference knows nothing yet; keeping the old answer would claim
+      // the key is configured under a name nobody has checked.
+      this.credential = { ref, configured: false, writable: true }
+      this.store.set(this.projection())
+    }
+    const response = await this.ctx.remote.credentials.describe([ref])
+    if (!response.ok || ref !== refOf(this.scope.getSnapshot())) return
+    const view = response.value[ref]
+    const next: CredentialState = {
+      ref,
+      configured: view?.configured ?? false,
+      // An unknown reference is treated as writable: the control stays usable
+      // and the Host is what refuses, rather than the card guessing a refusal.
+      writable: view?.writable ?? true,
+    }
+    if (next.configured === this.credential.configured && next.writable === this.credential.writable) return
+    this.credential = next
+    this.store.set(this.projection())
   }
 
   /**
@@ -111,7 +149,8 @@ export class WebSearchCardController {
    * @param ref - the reference the Host reports as changed.
    */
   refreshCredential(ref: string): void {
-    this.credential.refresh(ref)
+    if (ref !== this.credential.ref) return
+    void this.readCredential()
   }
 
   /**
@@ -128,6 +167,20 @@ export class WebSearchCardController {
    * @returns whether the Host reports a configured credential afterwards.
    */
   private async writeKey(value: string): Promise<boolean> {
-    return this.credential.write(value)
+    // Refusals surface through the re-read below: the Host is the only
+    // authority on whether the key now exists.
+    await this.ctx.remote.credentials.set(refOf(this.scope.getSnapshot()), value)
+    await this.readCredential()
+    return this.credential.configured
   }
+}
+
+/**
+ * The credential reference the section names, or the provider's default.
+ * @param snapshot - the current scope snapshot.
+ * @returns the reference to address.
+ */
+function refOf(snapshot: SettingsScopeSnapshot<WebSearchSettings>): string {
+  const declared = snapshot.value?.apiKeyEnv
+  return declared !== undefined && declared.length > 0 ? declared : DEFAULT_API_KEY_REF
 }

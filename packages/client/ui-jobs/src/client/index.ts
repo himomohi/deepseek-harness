@@ -1,13 +1,14 @@
 /**
  * Background-job plugin, browser half: contributes one session-header action
  * that renders this session's `ctx.jobs` records. The data arrives entirely
- * through the `jobsBySession` list mirror; cancellation crosses the Host API
- * through a narrow session-bound callback injected into the component.
+ * through the `jobsBySession` list mirror, so the plugin issues no RPC and
+ * holds no state of its own beyond popover visibility.
  */
-import type { ClientContext, SessionId } from '@deepseek-ai/dsh-client-runtime/client'
-import type { ConnectionHandle } from '@deepseek-ai/dsh-client-connection/client'
-import { JobListAction, type JobListActionInjected } from './JobListAction.tsx'
+import type { Context as ClientContext } from '@deepseek-ai/cordis'
+import { JobListAction } from './JobListAction.tsx'
 import type {} from '@deepseek-ai/dsh-client-locale/client'
+import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
+import type {} from '@deepseek-ai/dsh-client-ui-session/client'
 import { en, NS, zh, type JobKey } from './locales.ts'
 
 declare module '@deepseek-ai/dsh-client-ui-slots' {
@@ -20,14 +21,13 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
 export type { JobListActionProps } from './JobListAction.tsx'
 
 /** Required services for locale registration and header-slot contribution. */
-export const inject = ['connection', 'sessions', 'slots', 'locale']
+export const inject = ['sessions', 'slots', 'locale']
 
 /**
  * Client plugin body: register the dictionaries and the header action.
  * @param ctx - client root context.
  */
 export function apply(ctx: ClientContext): void {
-  const connection = ctx.get('connection') as ConnectionHandle
   ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'ui-job: dictionaries')
   ctx.slots.inject(
     'conversation.session.header.actions',
@@ -37,12 +37,6 @@ export function apply(ctx: ClientContext): void {
       // After the subagent catalog: session lineage reads before process work.
       order: 20,
       locale: NS,
-      inject: (sessionId: SessionId): JobListActionInjected => ({
-        cancelJob: async (jobId) => {
-          const response = await connection.api.jobs.cancel({ sessionId, jobId })
-          return response.result.ok ? null : response.result.error.message
-        },
-      }),
     }, JobListAction),
   )
 }
