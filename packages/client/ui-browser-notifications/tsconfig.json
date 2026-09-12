@@ -9,10 +9,19 @@
   ],
   "references": [
     {
+      "path": "../../api/remotes/tsconfig.client.json"
+    },
+    {
+      "path": "../../api/session-controller/tsconfig.client.json"
+    },
+    {
       "path": "../locale"
     },
     {
-      "path": "../runtime"
+      "path": "../store"
+    },
+    {
+      "path": "../ui-settings"
     },
     {
       "path": "../ui-slots"
@@ -27,7 +36,7 @@
       "path": "../../runtime-diagnostics/invariants"
     },
     {
-      "path": "../ui-settings"
+      "path": "../ui-session"
     }
   ]
 }

@@ -2,6 +2,8 @@
 
 import type { SessionId } from '@deepseek-ai/dsh-api-remotes/client'
 import type { ISessions, SessionListState, SessionSummary } from '@deepseek-ai/dsh-api-session-controller/client'
+import type { HostObservable } from '@deepseek-ai/dsh-client-ui-slots'
+import type { SessionPendingInteractionSnapshot } from '@deepseek-ai/dsh-client-ui-session/client'
 import type { SettingsScope } from '@deepseek-ai/dsh-client-ui-settings/client'
 import {
   BROWSER_NOTIFICATION_ENABLED_FIELD,
@@ -23,6 +25,8 @@ export interface BrowserNotificationControllerOptions {
   settings: SettingsScope<BrowserNotificationSettings>
   /** Session list and navigation face. */
   sessions: Pick<ISessions, 'list' | 'open'>
+  /** Session-scoped pending UI interactions; a `question` arrival notifies. */
+  pendingInteractions: HostObservable<SessionPendingInteractionSnapshot>
   /** Browser API adapter. */
   environment: BrowserNotificationEnvironment
   /** Live locale translator. */
@@ -45,10 +49,13 @@ export interface BrowserNotificationRowActionFace {
 export class BrowserNotificationController {
   private readonly settings: SettingsScope<BrowserNotificationSettings>
   private readonly sessions: Pick<ISessions, 'list' | 'open'>
+  private readonly pendingInteractions: HostObservable<SessionPendingInteractionSnapshot>
   private readonly environment: BrowserNotificationEnvironment
   private readonly translate: BrowserNotificationTranslate
   private previous = new Map<SessionId, SessionSummary>()
-  private primed = false
+  private seenQuestions = new Map<SessionId, ReadonlySet<string>>()
+  private sessionsPrimed = false
+  private pendingPrimed = false
   private actions: BrowserNotificationRowActionFace | undefined
   private state: BrowserNotificationRowState = {
     enabled: false,
@@ -58,11 +65,12 @@ export class BrowserNotificationController {
   }
 
   /**
-   * @param options - settings, sessions, browser API, and localized copy.
+   * @param options - settings, sessions, pending interactions, browser API, and localized copy.
    */
   constructor(options: BrowserNotificationControllerOptions) {
     this.settings = options.settings
     this.sessions = options.sessions
+    this.pendingInteractions = options.pendingInteractions
     this.environment = options.environment
     this.translate = options.translate
   }
@@ -77,17 +85,20 @@ export class BrowserNotificationController {
   }
 
   /**
-   * Subscribe to settings and session snapshots.
-   * @returns disposer for both subscriptions.
+   * Subscribe to settings, pending-interaction, and session snapshots.
+   * @returns disposer for every subscription.
    */
   start(): () => void {
     this.syncSettings()
     this.syncSessions()
+    this.syncPendingInteractions()
     const offSettings = this.settings.subscribe(() => { this.syncSettings() })
     const offSessions = this.sessions.list.subscribe(() => { this.syncSessions() })
+    const offPending = this.pendingInteractions.subscribe(() => { this.syncPendingInteractions() })
     return () => {
       offSettings()
       offSessions()
+      offPending()
     }
   }
 
@@ -154,38 +165,63 @@ export class BrowserNotificationController {
       if (summary !== undefined) next.set(id, summary)
     }
 
-    if (!this.primed) {
+    if (!this.sessionsPrimed) {
       this.previous = next
-      this.primed = true
+      this.sessionsPrimed = true
       return
     }
 
     for (const [id, summary] of next) {
       const prior = this.previous.get(id)
-      if (summary.pendingInteraction === 'question'
-        && prior?.pendingInteraction !== 'question') {
-        this.show('question', id, summary)
-      } else if (prior?.running === true && summary.running === false) {
-        this.show('complete', id, summary)
+      if (prior?.running === true && summary.running === false) {
+        this.show('complete', id)
       }
     }
     this.previous = next
   }
 
+  private syncPendingInteractions(): void {
+    const snapshot = this.pendingInteractions.getSnapshot()
+    if (!this.pendingPrimed) {
+      this.recordQuestionKeys(snapshot)
+      this.pendingPrimed = true
+      return
+    }
+
+    for (const [id, interaction] of snapshot) {
+      if (interaction.kind !== 'question') continue
+      if (this.seenQuestions.get(id)?.has(interaction.key) === true) continue
+      this.show('question', id)
+    }
+    this.recordQuestionKeys(snapshot)
+  }
+
+  /** Replace the known question keys so a re-asked question notifies again. */
+  private recordQuestionKeys(snapshot: SessionPendingInteractionSnapshot): void {
+    const next = new Map<SessionId, ReadonlySet<string>>()
+    for (const [id, interaction] of snapshot) {
+      if (interaction.kind !== 'question') continue
+      const known = new Set(next.get(id) ?? [])
+      known.add(interaction.key)
+      next.set(id, known)
+    }
+    this.seenQuestions = next
+  }
+
   private show(
     kind: 'question' | 'complete',
     sessionId: SessionId,
-    summary: SessionSummary,
   ): void {
     if (!this.state.enabled) return
     if (!this.environment.isSupported()) return
     if (this.environment.getPermission() !== 'granted') return
     if (this.environment.isPageActive()) return
 
+    const summary = this.sessions.list.getSnapshot().byId[sessionId]
     const displayed: { handle?: { close(): void } } = {}
     displayed.handle = this.environment.notify({
       title: this.translate(`notification.${kind}.title`),
-      body: this.translate(`notification.${kind}.body`, { name: summary.displayTitle }),
+      body: this.translate(`notification.${kind}.body`, { name: summary?.displayTitle ?? sessionId }),
       onClick: () => {
         this.environment.focusPage()
         const current: SessionListState = this.sessions.list.getSnapshot()

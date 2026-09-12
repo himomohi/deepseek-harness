@@ -1,7 +1,7 @@
 /** Host registration for the browser-notification preference. */
 
 import type { Context } from '@deepseek-ai/cordis'
-import { settingsNamespace } from '@deepseek-ai/dsh-settings'
+import type {} from '@deepseek-ai/dsh-settings'
 import {
   BROWSER_NOTIFICATION_SETTINGS_NAMESPACE,
   BrowserNotificationSettingsSchema,
@@ -14,8 +14,6 @@ export {
   type BrowserNotificationSettings,
 } from './settings.ts'
 
-const NAMESPACE = settingsNamespace(BROWSER_NOTIFICATION_SETTINGS_NAMESPACE)
-
 /** Host settings service required by this preference-owning plugin. */
 export const inject = ['settings']
 
@@ -24,5 +22,5 @@ export const inject = ['settings']
  * @param ctx - Host context carrying the settings service.
  */
 export function apply(ctx: Context): void {
-  ctx.settings.register(NAMESPACE, BrowserNotificationSettingsSchema)
+  ctx.settings.register(BROWSER_NOTIFICATION_SETTINGS_NAMESPACE, BrowserNotificationSettingsSchema)
 }

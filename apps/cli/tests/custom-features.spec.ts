@@ -25,9 +25,7 @@ describe('compositionalNeedles', () => {
     const needles = compositionalNeedles()
     expect(needles.some(item => item.needle === '@deepseek-ai/dsh-client-locale-ko')).toBe(true)
     expect(needles.some(item => item.needle === "const profile = options.profile ?? 'web'")).toBe(true)
-    expect(needles.some(item => item.needle === 'private readIndex = 0')).toBe(true)
     expect(needles.some(item => item.needle === 'queueReadIndex')).toBe(true)
-    expect(needles.some(item => item.needle === 'cancelJob')).toBe(true)
   })
 })
 

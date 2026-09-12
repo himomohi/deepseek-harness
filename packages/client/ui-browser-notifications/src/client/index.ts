@@ -2,6 +2,8 @@
 
 import type { Context as ClientContext } from '@deepseek-ai/cordis'
 import type {} from '@deepseek-ai/dsh-client-locale/client'
+import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
+import type {} from '@deepseek-ai/dsh-client-ui-session/client'
 import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
 import type { BoundActions } from '@deepseek-ai/dsh-client-ui-slots'
 import {
@@ -46,8 +48,8 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
 /** Locale namespace owned by this plugin. */
 export const SETTINGS_NS = 'settings.browserNotifications'
 
-/** Required services for settings, sessions, slots, and locale. */
-export const inject = ['slots', 'locale', 'connection', 'remote', 'settingsScope', 'sessions']
+/** Required services for settings, sessions, slots, locale, and pending interactions. */
+export const inject = ['slots', 'locale', 'connection', 'remote', 'settingsScope', 'sessions', 'uiSession']
 
 /**
  * Register the browser-notification client plugin with an injectable browser adapter.
@@ -64,6 +66,7 @@ export function applyWithEnvironment(
   const controller = new BrowserNotificationController({
     settings,
     sessions: ctx.sessions,
+    pendingInteractions: ctx.uiSession.pendingInteractions,
     environment,
     translate: ctx.locale.bind(SETTINGS_NS),
   })

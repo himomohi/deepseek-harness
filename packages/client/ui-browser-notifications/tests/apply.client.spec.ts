@@ -2,11 +2,9 @@
 import { Context } from '@deepseek-ai/cordis'
 import { describe, expect, it, vi } from 'vitest'
 import { LocaleRuntime } from '@deepseek-ai/dsh-client-locale/client'
-import {
-  createSnapshotStore,
-  SlotRegistry,
-  type SessionListState,
-} from '@deepseek-ai/dsh-client-runtime/client'
+import { createSnapshotStore } from '@deepseek-ai/dsh-client-store'
+import { SlotRegistry } from '@deepseek-ai/dsh-client-ui-renderer/client'
+import type { SessionListState } from '@deepseek-ai/dsh-api-session-controller/client'
 import { stubSettingsScope } from '@deepseek-ai/dsh-client-test-runtime'
 import {
   apply,
@@ -44,6 +42,7 @@ describe('browser-notification client apply', () => {
       currentAddress: undefined,
     })
     ctx.provide('sessions', { list: sessions, open: vi.fn() } as never)
+    ctx.provide('uiSession', { pendingInteractions: createSnapshotStore(new Map()) } as never)
     const environment: BrowserNotificationEnvironment = {
       isSupported: () => true,
       getPermission: () => 'granted',
@@ -97,6 +96,7 @@ describe('browser-notification client apply', () => {
       'remote',
       'settingsScope',
       'sessions',
+      'uiSession',
     ])
   })
 })

@@ -172,7 +172,7 @@ describe('directory-picker-browse client half', () => {
     expect(injected.t('browser.newFolder')).toBe('新建文件夹')
     expect(injected.t('browser.showHidden')).toBe('显示隐藏文件')
     const locale = b.ctx.get('locale') as LocaleRuntime
-    locale.registerLocale({ id: 'ko', label: '한국어' })
+    locale.addLanguage({ id: 'ko', label: '한국어', fallback: 'en' })
     locale.setLocale('ko')
     expect(injected.t('browser.title')).toBe('작업 공간 폴더 선택')
     expect(injected.t('browser.open')).toBe('열기')

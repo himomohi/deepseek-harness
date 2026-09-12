@@ -1,10 +1,6 @@
 import { Context } from '@deepseek-ai/cordis'
 import { describe, expect, it } from 'vitest'
-import {
-  SettingsProvider,
-  settingsNamespace,
-  type SettingsNamespace,
-} from '@deepseek-ai/dsh-settings'
+import { SettingsProvider, type SettingsNamespace } from '@deepseek-ai/dsh-settings'
 import {
   apply,
   BROWSER_NOTIFICATION_SETTINGS_NAMESPACE,
@@ -30,7 +26,7 @@ describe('browser-notification host', () => {
     await ctx.plugin(MemorySettings).await()
     const fiber = ctx.plugin({ inject, apply })
     await fiber.await()
-    const namespace = settingsNamespace(BROWSER_NOTIFICATION_SETTINGS_NAMESPACE)
+    const namespace = BROWSER_NOTIFICATION_SETTINGS_NAMESPACE
     expect(ctx.settings.get(namespace)).toEqual({ enabled: false })
     await ctx.settings.update(namespace, { enabled: true })
     expect(ctx.settings.get(namespace)).toEqual({ enabled: true })

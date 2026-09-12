@@ -4,6 +4,17 @@ All notable changes and release notes for DeepSeek Harness (`dsh`) are documente
 
 ---
 
+## [0.1.5-sync] - 2026-09-12
+
+### Sync the official 0.1.5 line and align fork features with the new transport
+
+* Merge `deepseek-ai/deepseek-harness` master through `c291e7961a` (0.1.5-rc.2 release line, ~4,200 commits since 0.1.1-rc.2): new `apps/` layout, Web auth, Agent presets, Desktop (Electron) track, unary API remote migration, plugin batch loading, Blacksmith CI runners, and the session-event reader deprecation.
+* Retire three fork features the official transport replacement absorbed or obsoleted: `browser-auto-open` (the official web app now opens the browser by default with its own SSH suppression), `job-cancel`, and the Host/WebSocket halves of `linear-streaming-queues` (the apiproxy transport was deleted). The SDK cursor queue remains.
+* Fork features kept and verified after the merge: Korean Web UI (`locale-ko`), default Web launch, `dsh update` / `dsh stop`, phone-width layouts, browser notifications, OpenCodex model sync on the Models page, and the DeepSeek hero title.
+* Retarget `locale-ko` and `ui-browser-notifications` from the removed `dsh-client-runtime` to `@deepseek-ai/cordis`, `dsh-client-store`, and the API controllers.
+
+---
+
 ## [0.1.0-rc.21] - 2026-08-19
 
 ### Official merge continues through mechanical conflicts

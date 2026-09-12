@@ -401,7 +401,7 @@ describe('LocaleRuntime', () => {
   it('registers and removes a language-pack locale, adopting a waiting browser preference', () => {
     stubLanguages('ko-KR')
     const { svc, events } = make()
-    const dispose = svc.registerLocale({ id: 'ko', label: '한국어' })
+    const dispose = svc.addLanguage({ id: 'ko', label: '한국어', fallback: 'en' })
     expect(svc.getLocale()).toMatchObject({
       active: 'ko',
       locales: [
@@ -411,7 +411,7 @@ describe('LocaleRuntime', () => {
       ],
     })
     expect(events).toHaveLength(1)
-    expect(() => svc.registerLocale({ id: 'ko', label: '한국어' })).toThrow('already registered')
+    expect(() => svc.addLanguage({ id: 'ko', label: '한국어', fallback: 'en' })).toThrow('already registered')
     dispose()
     expect(svc.getLocale().active).toBe('en')
     expect(svc.getLocale().locales.map(locale => locale.id)).toEqual(['zh', 'en'])
@@ -423,14 +423,14 @@ describe('LocaleRuntime', () => {
     host.publish({ status: 'ready', value: { preference: 'ko' }, revision: 1, writable: true })
     const { svc } = make(host)
     expect(svc.getLocale().active).toBe('zh')
-    svc.registerLocale({ id: 'ko', label: '한국어' })
+    svc.addLanguage({ id: 'ko', label: '한국어', fallback: 'en' })
     expect(svc.getLocale().active).toBe('ko')
   })
 
   it('rejects empty and duplicate locale definitions', () => {
     const { svc } = make()
-    expect(() => svc.registerLocale({ id: '', label: 'Empty' })).toThrow('id must not be empty')
-    expect(() => svc.registerLocale({ id: 'fr', label: '' })).toThrow('label must not be empty')
-    expect(() => svc.registerLocale({ id: 'en', label: 'English' })).toThrow('already registered')
+    expect(() => svc.addLanguage({ id: '', label: 'Empty', fallback: 'en' })).toThrow('is not a BCP 47-style tag')
+    expect(() => svc.addLanguage({ id: 'fr', label: '', fallback: 'en' })).toThrow('label must not be empty')
+    expect(() => svc.addLanguage({ id: 'en', label: 'English', fallback: 'zh' })).toThrow('already registered')
   })
 })

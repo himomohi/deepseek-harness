@@ -1,6 +1,12 @@
 /**
  * Fork-owned features that `dsh update` must still find after an upstream merge.
  * Independent packages usually survive a clean merge; core-file patches do not.
+ *
+ * Retired with the 2026-09 official sync (0.1.5 transport replacement):
+ * `browser-auto-open` (the official web app now owns the handoff, on by
+ * default, with its own SSH suppression), `job-cancel`, and the Host/WebSocket
+ * halves of `linear-streaming-queues` (the unary-remote migration deleted the
+ * apiproxy transport they patched; the SDK cursor queue remains).
  * @module @deepseek-ai/dsh/custom-features
  */
 
@@ -60,22 +66,6 @@ export const FORK_FEATURES: readonly ForkFeature[] = [
     ],
   },
   {
-    id: 'browser-auto-open',
-    kind: 'core-patch',
-    contains: [
-      {
-        path: 'packages/bundle/web-app/cordis.patch.yml',
-        needle: 'openBrowser: !!js ctx.webStartup.openBrowser',
-        restorable: true,
-      },
-      {
-        path: 'packages/bundle/web-app/src/index.ts',
-        needle: 'internals.openBrowser(webUrl)',
-        restorable: true,
-      },
-    ],
-  },
-  {
     id: 'update-command',
     kind: 'core-patch',
     paths: ['apps/cli/src/update.ts'],
@@ -125,16 +115,6 @@ export const FORK_FEATURES: readonly ForkFeature[] = [
     kind: 'core-patch',
     contains: [
       {
-        path: 'packages/host/apiproxy/src/api-proxy.ts',
-        needle: 'private readIndex = 0',
-        restorable: true,
-      },
-      {
-        path: 'packages/client/connection/src/client/web-api-client.ts',
-        needle: 'let readIndex = 0',
-        restorable: true,
-      },
-      {
         path: 'packages/sdk/client/src/client.ts',
         needle: 'queueReadIndex',
         restorable: true,
@@ -149,22 +129,6 @@ export const FORK_FEATURES: readonly ForkFeature[] = [
       {
         path: 'packages/bundle/web-app/cordis.patch.yml',
         needle: '@deepseek-ai/dsh-client-ui-browser-notifications',
-        restorable: true,
-      },
-    ],
-  },
-  {
-    id: 'job-cancel',
-    kind: 'core-patch',
-    contains: [
-      {
-        path: 'packages/client/ui-jobs/src/client/JobListAction.tsx',
-        needle: 'cancelJob',
-        restorable: true,
-      },
-      {
-        path: 'packages/host/apiproxy/src/api/rpc-map.ts',
-        needle: "'job.cancel'",
         restorable: true,
       },
     ],

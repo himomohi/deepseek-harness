@@ -1,11 +1,9 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
-import {
-  createSnapshotStore,
-  type SessionListState,
-  type WorkspaceListState,
-} from '@deepseek-ai/dsh-client-runtime/client'
+import { createSnapshotStore } from '@deepseek-ai/dsh-client-store'
+import type { SessionListState } from '@deepseek-ai/dsh-api-session-controller/client'
+import type { WorkspaceSnapshot } from '@deepseek-ai/dsh-api-workspace-controller/client'
 import { bindSnapshotSelector } from '@deepseek-ai/dsh-client-test-runtime'
 import { BrowserNotificationsRow } from '../src/client/BrowserNotificationsRow.tsx'
 import type { BrowserNotificationsRowProps } from '../src/client/BrowserNotificationsRow.tsx'
@@ -26,28 +24,26 @@ function emptySessions() {
 }
 
 function emptyWorkspaces() {
-  return bindSnapshotSelector(createSnapshotStore<WorkspaceListState>({
+  return bindSnapshotSelector(createSnapshotStore<WorkspaceSnapshot>({
     items: [],
     archivedSessionIds: [],
     state: 'idle',
     phase: 'ready',
     error: null,
-    baselinesReady: true,
-    recentWorkspaceId: undefined,
   }))
 }
 
 function mount() {
   const store = createBrowserNotificationRowStore().create()
   const setEnabled = vi.fn()
-  const props: BrowserNotificationsRowProps = {
+  const props = {
     useSessions: emptySessions(),
     useWorkspaces: emptyWorkspaces(),
     useStore: bindSnapshotSelector(store),
     actions: store.actions,
-    t: key => key,
+    t: (key: unknown) => key as never,
     setEnabled,
-  }
+  } as unknown as BrowserNotificationsRowProps
   render(<BrowserNotificationsRow {...props} />)
   return { store, setEnabled }
 }

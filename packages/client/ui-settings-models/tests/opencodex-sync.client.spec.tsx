@@ -10,17 +10,17 @@ describe('OpenCodex catalog sync', () => {
   it('replaces the whole catalog from the provider list', async () => {
     const onChange = vi.fn()
     const discoverModels = vi.fn(async () => ({
-      result: { ok: true as const, value: { models: [
+      models: [
         { id: 'fresh-a', name: 'A', contextWindow: 1000 },
         { id: 'fresh-b', name: 'B', maxTokens: 200 },
-      ] } },
+      ],
     }))
     render(
       <ModelListEditor
         models={[{ id: 'stale', contextWindow: 111 }]}
         onChange={onChange}
         probe={{ settingsNs: 'llm-pi-ai', provider: 'opencodex', baseURL: 'http://127.0.0.1:10100/v1' }}
-        api={{ llm: { discoverModels } } as never}
+        operations={{ discoverModels } as never}
         t={key => en[key]}
         disabled={false}
       />,
@@ -31,6 +31,6 @@ describe('OpenCodex catalog sync', () => {
       { id: 'fresh-a', name: 'A', contextWindow: 1000 },
       { id: 'fresh-b', name: 'B', maxTokens: 200 },
     ])
-    expect(screen.queryByText(en.fetchTitle)).toBeNull()
+    expect(screen.queryByText(en.fetchModels)).toBeNull()
   })
 })
