@@ -1,6 +1,6 @@
 /** Korean locale definition and dictionaries supplied as one browser plugin. */
 
-import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client'
+import type { Context as ClientContext } from '@deepseek-ai/cordis'
 import type {} from '@deepseek-ai/dsh-client-locale/client'
 import { ko as common } from './dictionaries/common.ts'
 import { ko as localeSettings } from './dictionaries/settings-locale.ts'
@@ -71,7 +71,7 @@ const DICTIONARIES: readonly [namespace: string, dictionary: Record<string, stri
  */
 export function apply(ctx: ClientContext): void {
   ctx.effect(
-    () => ctx.locale.registerLocale({ id: 'ko', label: '한국어' }),
+    () => ctx.locale.addLanguage({ id: 'ko', label: '한국어', fallback: 'en' }),
     'locale-ko: locale definition',
   )
   for (const [namespace, dictionary] of DICTIONARIES) {
