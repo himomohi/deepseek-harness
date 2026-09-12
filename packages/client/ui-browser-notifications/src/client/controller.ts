@@ -1,12 +1,8 @@
 /** Notification permission, settings, and session-transition controller. */
 
 import type { SessionId } from '@deepseek-ai/dsh-api-remotes/client'
-import type {
-  ISessions,
-  SessionListState,
-  SessionSummary,
-  SettingsScope,
-} from '@deepseek-ai/dsh-client-runtime/client'
+import type { ISessions, SessionListState, SessionSummary } from '@deepseek-ai/dsh-api-session-controller/client'
+import type { SettingsScope } from '@deepseek-ai/dsh-client-ui-settings/client'
 import {
   BROWSER_NOTIFICATION_ENABLED_FIELD,
   type BrowserNotificationSettings,

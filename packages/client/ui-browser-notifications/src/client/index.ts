@@ -1,6 +1,6 @@
 /** Browser plugin wiring for notification settings and session transitions. */
 
-import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client'
+import type { Context as ClientContext } from '@deepseek-ai/cordis'
 import type {} from '@deepseek-ai/dsh-client-locale/client'
 import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
 import type { BoundActions } from '@deepseek-ai/dsh-client-ui-slots'

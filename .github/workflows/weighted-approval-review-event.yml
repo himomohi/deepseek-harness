@@ -1,0 +1,14 @@
+# dsh-fork-automation: disabled
+# The upstream workflow is archived under .github/disabled-workflows/.
+# Re-enable it only after explicitly configuring this personal fork.
+name: dsh fork automation disabled - weighted-approval-review-event
+on:
+  workflow_dispatch:
+jobs:
+  disabled:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Explain disabled workflow
+        run: |
+          echo ".github/workflows/weighted-approval-review-event.yml is disabled in this fork."
+          echo "See .github/fork-automation-policy.md before reconnecting it."

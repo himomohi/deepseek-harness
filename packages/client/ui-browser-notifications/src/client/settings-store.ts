@@ -1,6 +1,6 @@
 /** General-settings row state for the browser-notification plugin. */
 
-import { defineStore, type EngineStoreHandle } from '@deepseek-ai/dsh-client-runtime/client'
+import { defineStore, type EngineStoreHandle } from '@deepseek-ai/dsh-client-store'
 
 /** Browser-notification settings-row availability. */
 export type BrowserNotificationStatus =
